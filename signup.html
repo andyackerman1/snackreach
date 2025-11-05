@@ -383,13 +383,16 @@
                     };
                     
                     const existingUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
-                    // Check if user already exists (by email)
-                    const existingIndex = existingUsers.findIndex(u => u.email === userData.email);
+                    // Check if user already exists (by email) - but allow duplicates for now
+                    const existingIndex = existingUsers.findIndex(u => u.email === userData.email && u.id === userData.id);
                     if (existingIndex >= 0) {
-                        existingUsers[existingIndex] = userData; // Update existing
+                        existingUsers[existingIndex] = userData; // Update existing (same ID)
                     } else {
+                        // Always add new - don't filter by email alone (allow multiple accounts)
                         existingUsers.push(userData); // Add new
+                        console.log('Added new user to localStorage:', userData.email);
                     }
+                    console.log('Total users in localStorage after adding:', existingUsers.length);
                     localStorage.setItem('snackreach_users', JSON.stringify(existingUsers));
                     
                     alert(`Welcome to SnackReach, ${name}!\n\nYour account has been created and saved successfully!`);

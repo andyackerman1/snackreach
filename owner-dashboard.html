@@ -871,9 +871,13 @@
             
             // Get regular user accounts from localStorage
             const regularUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
-            regularUsers.forEach(user => {
+            console.log('Raw regularUsers from localStorage:', regularUsers);
+            console.log('Regular users count:', regularUsers.length);
+            
+            regularUsers.forEach((user, index) => {
+                console.log(`Adding user ${index + 1}:`, user.email, user.name, user.userType);
                 accounts.push({
-                    id: user.id,
+                    id: user.id || `user-${index}-${Date.now()}`,
                     name: user.name,
                     email: user.email,
                     companyName: user.companyName,
@@ -881,6 +885,9 @@
                     createdAt: user.createdAt
                 });
             });
+            
+            console.log('Total accounts after adding regular users:', accounts.length);
+            console.log('All accounts:', accounts);
             
             return accounts;
         }
@@ -917,8 +924,11 @@
                 return;
             }
 
-            // Filter out owner accounts from display
+            // Filter out owner accounts from display (but keep all other accounts)
             const displayableAccounts = accounts.filter(acc => acc.userType !== 'owner');
+            
+            console.log('Displayable accounts (after filtering owners):', displayableAccounts.length);
+            console.log('Displayable accounts details:', displayableAccounts);
             
             if (displayableAccounts.length === 0 && accounts.length > 0) {
                 // Only owner accounts found
@@ -946,7 +956,12 @@
                 return;
             }
             
-            tbody.innerHTML = displayableAccounts.map(account => `
+            // Ensure we show ALL accounts - no deduplication
+            console.log('Rendering', displayableAccounts.length, 'accounts to table');
+            
+            tbody.innerHTML = displayableAccounts.map((account, index) => {
+                console.log(`Rendering account ${index + 1}:`, account.email, account.name);
+                return `
                 <tr>
                     <td>${account.name || '-'}</td>
                     <td>${account.email || '-'}</td>
@@ -961,7 +976,10 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
+            
+            console.log('Table rendered with', displayableAccounts.length, 'rows');
         }
 
         function loadStats() {
