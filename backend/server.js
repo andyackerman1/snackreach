@@ -16,11 +16,10 @@ try {
     console.warn('⚠️  Stripe initialization warning:', error.message);
     // Stripe will be null, but endpoints will check before using it
 }
-const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
-
-// Plaid configuration - handle missing env vars gracefully
+// Plaid configuration - handle missing package gracefully
 let plaidClient = null;
 try {
+    const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
     const plaidConfig = new Configuration({
         basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
         baseOptions: {
@@ -43,14 +42,19 @@ const JWT_SECRET = process.env.JWT_SECRET || 'snackreach_secret_key_2024';
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files from root (frontend HTML/CSS/JS)
-app.use(express.static(path.join(__dirname, '..')));
-
-// Serve API routes
-app.use('/api', (req, res, next) => {
-    next();
-});
+// This must come before API routes to serve static files correctly
+const staticOptions = {
+    dotfiles: 'ignore',
+    etag: true,
+    extensions: ['html', 'css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'json', 'woff', 'woff2', 'ttf', 'eot'],
+    index: false, // Don't serve index.html automatically, we'll handle it in the catch-all
+    maxAge: '1d',
+    redirect: false
+};
+app.use(express.static(path.join(__dirname, '..'), staticOptions));
 
 // Database file path
 const DB_PATH = path.join(__dirname, 'data', 'database.json');
@@ -889,14 +893,27 @@ app.get('/api/owner/stripe-status', authenticateToken, async (req, res) => {
 
 // Serve index.html for all non-API routes (frontend routing)
 // This MUST be last, after all API routes
-app.get('*', (req, res) => {
-    // Don't serve HTML for API routes (shouldn't reach here, but safety check)
+app.get('*', (req, res, next) => {
+    // Don't serve HTML for API routes
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'API endpoint not found' });
     }
     
+    // Check if it's a file request (has extension)
+    const hasExtension = /\.[a-zA-Z0-9]+$/.test(req.path);
+    if (hasExtension) {
+        // Let Express handle it or return 404
+        return res.status(404).send('File not found');
+    }
+    
     // Serve index.html for all other routes (enables frontend routing)
-    res.sendFile(path.join(__dirname, '..', 'index.html'));
+    const indexPath = path.join(__dirname, '..', 'index.html');
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            console.error('Error sending index.html:', err);
+            res.status(500).send('Error loading page');
+        }
+    });
 });
 
 // Start server
