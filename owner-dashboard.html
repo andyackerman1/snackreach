@@ -548,6 +548,13 @@
         // Dynamic API URL detection - works across all environments
         const API_BASE_URL = (() => {
             const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            
+            // If opened as file://, use production API
+            if (protocol === 'file:' || hostname === '') {
+                return 'https://snackreach-production.up.railway.app/api';
+            }
+            
             if (hostname.includes('railway.app')) {
                 return '/api'; // Same domain on Railway
             } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
@@ -556,6 +563,8 @@
                 return 'http://localhost:3000/api'; // Local development
             }
         })();
+        
+        console.log('API Base URL:', API_BASE_URL);
 
         // Check if user is owner - session persists until explicit logout
         document.addEventListener('DOMContentLoaded', function() {
@@ -574,6 +583,9 @@
                 document.getElementById('owner-name').textContent = ownerName;
             }
 
+            // Make functions available globally for onclick handlers
+            // These will be defined below, but we'll expose them here too
+            
             loadBankingInfo();
             loadAccounts();
             loadStats();
@@ -585,9 +597,26 @@
             if (messageForm) {
                 messageForm.addEventListener('submit', sendMessage);
             }
+            
+            // Attach click handlers to tab buttons if onclick isn't working
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const onclick = this.getAttribute('onclick');
+                    if (onclick) {
+                        const match = onclick.match(/showTab\(['"]([^'"]+)['"]\)/);
+                        if (match) {
+                            e.target = this;
+                            showTab(match[1]);
+                        }
+                    }
+                });
+            });
+            
+            console.log('Owner dashboard initialized');
         });
 
         function showTab(tabName) {
+            // Remove active class from all tabs and content
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
@@ -595,8 +624,17 @@
                 btn.classList.remove('active');
             });
             
-            document.getElementById(tabName + '-tab').classList.add('active');
-            event.target.classList.add('active');
+            // Add active class to selected tab and content
+            const tabContent = document.getElementById(tabName + '-tab');
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            
+            // Add active class to clicked button
+            const clickedBtn = event ? event.target : document.querySelector(`[onclick*="'${tabName}'"]`);
+            if (clickedBtn) {
+                clickedBtn.classList.add('active');
+            }
             
             // Load users when messages tab is opened
             if (tabName === 'messages') {
@@ -608,6 +646,13 @@
                 loadLoginActivity();
             }
         }
+        
+        // Make showTab available globally
+        window.showTab = showTab;
+        
+        // Also make loadAccounts and loadLoginActivity globally available
+        window.loadAccounts = loadAccounts;
+        window.loadLoginActivity = loadLoginActivity;
         
         let currentSelectedUserId = null;
         
@@ -1114,21 +1159,28 @@
             }
         }
 
-        function editBankingInfo() {
-            document.getElementById('banking-details').style.display = 'none';
-            document.getElementById('banking-form').style.display = 'block';
+        // Make functions globally available
+        window.editBankingInfo = function() {
+            const bankingDetails = document.getElementById('banking-details');
+            const bankingForm = document.getElementById('banking-form');
+            if (bankingDetails) bankingDetails.style.display = 'none';
+            if (bankingForm) bankingForm.style.display = 'block';
             switchPaymentType('card');
-        }
+        };
 
-        function cancelEditBanking() {
-            document.getElementById('banking-details').style.display = 'block';
-            document.getElementById('banking-form').style.display = 'none';
+        window.cancelEditBanking = function() {
+            const bankingDetails = document.getElementById('banking-details');
+            const bankingForm = document.getElementById('banking-form');
+            if (bankingDetails) bankingDetails.style.display = 'block';
+            if (bankingForm) bankingForm.style.display = 'none';
             // Reset forms
-            document.getElementById('card-payment-form-owner').reset();
-            document.getElementById('bank-payment-form-owner').reset();
-        }
+            const cardForm = document.getElementById('card-payment-form-owner');
+            const bankForm = document.getElementById('bank-payment-form-owner');
+            if (cardForm) cardForm.reset();
+            if (bankForm) bankForm.reset();
+        };
 
-        function switchPaymentType(type) {
+        window.switchPaymentType = function(type) {
             const cardForm = document.getElementById('card-payment-form-owner');
             const bankForm = document.getElementById('bank-payment-form-owner');
             const cardTab = document.querySelectorAll('.payment-tab-btn')[0];
@@ -1147,17 +1199,22 @@
             }
         }
 
-        // Handle "Other" bank selection
-        document.getElementById('bank-name-owner').addEventListener('change', function() {
-            const otherInput = document.getElementById('other-bank-input-owner');
-            if (this.value === 'other') {
-                otherInput.style.display = 'block';
-                document.getElementById('other-bank-name-owner').required = true;
-            } else {
-                otherInput.style.display = 'none';
-                document.getElementById('other-bank-name-owner').required = false;
-            }
-        });
+        // Handle "Other" bank selection (with safety check)
+        const bankNameSelect = document.getElementById('bank-name-owner');
+        if (bankNameSelect) {
+            bankNameSelect.addEventListener('change', function() {
+                const otherInput = document.getElementById('other-bank-input-owner');
+                if (this.value === 'other') {
+                    if (otherInput) otherInput.style.display = 'block';
+                    const otherBankName = document.getElementById('other-bank-name-owner');
+                    if (otherBankName) otherBankName.required = true;
+                } else {
+                    if (otherInput) otherInput.style.display = 'none';
+                    const otherBankName = document.getElementById('other-bank-name-owner');
+                    if (otherBankName) otherBankName.required = false;
+                }
+            });
+        }
 
         // Format card number with spaces
         document.getElementById('card-number-owner').addEventListener('input', function(e) {
@@ -1319,7 +1376,7 @@
             alert('Password changed successfully!');
         });
 
-        async function exportData() {
+        window.exportData = async function() {
             try {
                 const token = localStorage.getItem('snackreach_token');
                 if (!token) {
@@ -1351,9 +1408,9 @@
                 console.error('Export error:', error);
                 alert('Failed to export data');
             }
-        }
+        };
 
-        function logout() {
+        window.logout = function() {
             if (confirm('Are you sure you want to logout?')) {
                 localStorage.removeItem('snackreach_token');
                 localStorage.removeItem('snackreach_user_type');
@@ -1361,7 +1418,7 @@
                 localStorage.removeItem('snackreach_company_name');
                 window.location.href = 'owner-login.html';
             }
-        }
+        };
     </script>
     <style>
         .accounts-table-container {

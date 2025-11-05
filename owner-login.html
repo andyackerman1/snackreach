@@ -72,19 +72,39 @@
     </section>
 
     <script>
-        // Dynamic API URL detection - works across all environments
-        const API_BASE_URL = (() => {
-            const hostname = window.location.hostname;
-            if (hostname.includes('railway.app')) {
-                return '/api'; // Same domain on Railway
-            } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                return 'https://snackreach-production.up.railway.app/api'; // Production Railway backend
-            } else {
-                return 'http://localhost:3000/api'; // Local development
+        // Ensure DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Owner login page loaded');
+            
+            // Make sure form exists before adding listener
+            const form = document.getElementById('owner-login-form');
+            if (!form) {
+                console.error('Login form not found!');
+                return;
             }
-        })();
 
-        document.getElementById('owner-login-form').addEventListener('submit', async function(e) {
+            // Dynamic API URL detection - works across all environments
+            const API_BASE_URL = (() => {
+                const hostname = window.location.hostname;
+                const protocol = window.location.protocol;
+                
+                // If opened as file://, use production API
+                if (protocol === 'file:' || hostname === '') {
+                    return 'https://snackreach-production.up.railway.app/api';
+                }
+                
+                if (hostname.includes('railway.app')) {
+                    return '/api'; // Same domain on Railway
+                } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                    return 'https://snackreach-production.up.railway.app/api'; // Production Railway backend
+                } else {
+                    return 'http://localhost:3000/api'; // Local development
+                }
+            })();
+
+            console.log('API Base URL:', API_BASE_URL);
+
+            form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const email = document.getElementById('login-email').value.trim();
@@ -219,8 +239,10 @@
                     alert('Owner account not found. Please sign up first, use "Quick Demo Access", or use admin credentials:\n\nUsername: andy\nPassword: BoJackson421');
                 }
             }
+            });
         });
 
+        // Make bypassOwnerLogin available globally
         function bypassOwnerLogin() {
             // Create demo owner account
             const demoOwner = {
