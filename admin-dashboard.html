@@ -485,7 +485,15 @@
                     container.innerHTML = `
                         <div class="no-accounts">
                             <i class="fas fa-users"></i>
-                            <p>No accounts found</p>
+                            <p style="font-size: 1.1rem; margin-bottom: 1rem;">No accounts found in database</p>
+                            <p style="color: #64748b; font-size: 0.9rem; max-width: 600px; margin: 0 auto;">
+                                <strong>Note:</strong> Local and Railway use separate databases.<br>
+                                Accounts created locally won't appear here on Railway.<br>
+                                To see accounts on Railway, create them via:<br>
+                                <a href="${API_BASE_URL.replace('/api', '/signup.html')}" target="_blank" style="color: #667eea; text-decoration: underline;">
+                                    Railway Signup Page
+                                </a>
+                            </p>
                         </div>
                     `;
                     updateStats(accounts);

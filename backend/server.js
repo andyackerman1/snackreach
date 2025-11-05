@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -558,6 +559,8 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
         console.log('Admin accounts request received');
         console.log('User ID:', req.userId);
         console.log('User Type:', req.userType);
+        console.log('Environment:', process.env.NODE_ENV || 'development');
+        console.log('Database path:', DB_PATH);
         
         // Check if user is admin
         if (req.userType !== 'admin') {
@@ -565,11 +568,27 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Admin access required' });
         }
 
+        // Check if database file exists
+        try {
+            await fs.access(DB_PATH);
+            console.log('✅ Database file exists');
+        } catch {
+            console.warn('⚠️  Database file does not exist, will be created on first write');
+        }
+
         const db = await readDB();
         console.log('✅ Database loaded successfully');
-        console.log('✅ Admin requesting all accounts. Total users in database:', db.users ? db.users.length : 0);
-        console.log('✅ Database path:', DB_PATH);
-        console.log('✅ Environment:', process.env.NODE_ENV || 'development');
+        console.log('✅ Total users in database:', db.users ? db.users.length : 0);
+        console.log('✅ Database structure:', {
+            hasUsers: !!db.users,
+            usersArrayLength: db.users ? db.users.length : 0,
+            hasOtherData: {
+                snackCompanies: db.snackCompanies ? db.snackCompanies.length : 0,
+                offices: db.offices ? db.offices.length : 0,
+                products: db.products ? db.products.length : 0,
+                orders: db.orders ? db.orders.length : 0
+            }
+        });
 
         // Return all accounts with safe data (no passwords)
         const accounts = (db.users || []).map(u => ({
@@ -585,7 +604,16 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
         }));
 
         console.log('✅ Returning', accounts.length, 'accounts to admin');
-        console.log('✅ Sample account:', accounts.length > 0 ? accounts[0] : 'No accounts');
+        if (accounts.length > 0) {
+            console.log('✅ Sample account:', accounts[0]);
+        } else {
+            console.warn('⚠️  WARNING: Database is empty! No accounts found.');
+            console.warn('   This is normal if:');
+            console.warn('   1. This is a fresh Railway deployment');
+            console.warn('   2. No accounts have been created on Railway yet');
+            console.warn('   3. Accounts created locally are NOT synced to Railway');
+            console.warn('   Solution: Create accounts via Railway signup page');
+        }
         
         res.json(accounts);
     } catch (error) {
