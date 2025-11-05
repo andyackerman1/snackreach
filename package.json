@@ -1,0 +1,14 @@
+{
+  "name": "snackreach",
+  "version": "1.0.0",
+  "description": "SnackReach B2B Marketplace",
+  "scripts": {
+    "start": "cd backend && node server.js",
+    "install": "cd backend && npm install"
+  },
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  }
+}
+
