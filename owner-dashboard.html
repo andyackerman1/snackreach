@@ -35,31 +35,31 @@
 
             <!-- Dashboard Tabs -->
             <div class="dashboard-tabs">
-                <button class="tab-btn active" onclick="showTab('overview')">
+                <button class="tab-btn active" onclick="window.showTab('overview', event); return false;" type="button">
                     <i class="fas fa-chart-line"></i>
                     Overview
                 </button>
-                <button class="tab-btn" onclick="showTab('accounts')">
+                <button class="tab-btn" onclick="window.showTab('accounts', event); return false;" type="button">
                     <i class="fas fa-users"></i>
                     All Accounts
                 </button>
-                <button class="tab-btn" onclick="showTab('banking')">
+                <button class="tab-btn" onclick="window.showTab('banking', event); return false;" type="button">
                     <i class="fas fa-university"></i>
                     Banking Info
                 </button>
-                <button class="tab-btn" onclick="showTab('login-activity')">
+                <button class="tab-btn" onclick="window.showTab('login-activity', event); return false;" type="button">
                     <i class="fas fa-sign-in-alt"></i>
                     Login Activity
                 </button>
-                <button class="tab-btn" onclick="showTab('payments')">
+                <button class="tab-btn" onclick="window.showTab('payments', event); return false;" type="button">
                     <i class="fas fa-dollar-sign"></i>
                     Payments
                 </button>
-                <button class="tab-btn" onclick="showTab('messages')">
+                <button class="tab-btn" onclick="window.showTab('messages', event); return false;" type="button">
                     <i class="fas fa-envelope"></i>
                     Messages
                 </button>
-                <button class="tab-btn" onclick="showTab('settings')">
+                <button class="tab-btn" onclick="window.showTab('settings', event); return false;" type="button">
                     <i class="fas fa-cog"></i>
                     Settings
                 </button>
@@ -607,19 +607,24 @@
                 messageForm.addEventListener('submit', sendMessage);
             }
             
-            // Attach click handlers to tab buttons as fallback for onclick
+            // Attach click handlers to tab buttons - keep both onclick and addEventListener
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                // Remove onclick and use addEventListener instead for better compatibility
                 const onclick = btn.getAttribute('onclick');
                 if (onclick) {
-                    btn.removeAttribute('onclick');
                     const match = onclick.match(/showTab\(['"]([^'"]+)['"]\)/);
                     if (match) {
+                        const tabName = match[1];
+                        // Add event listener as primary handler (works even if onclick fails)
                         btn.addEventListener('click', function(e) {
                             e.preventDefault();
                             e.stopPropagation();
-                            showTab(match[1]);
-                        });
+                            console.log('Tab button clicked via event listener:', tabName);
+                            showTab(tabName, e);
+                        }, true); // Use capture phase to ensure it fires
+                        
+                        // Ensure button is clickable
+                        btn.style.cursor = 'pointer';
+                        btn.style.pointerEvents = 'auto';
                     }
                 }
             });
@@ -644,8 +649,8 @@
             });
         });
 
-        function showTab(tabName) {
-            console.log('showTab called with:', tabName);
+        function showTab(tabName, event) {
+            console.log('showTab called with:', tabName, 'event:', event);
             
             // Remove active class from all tabs and content
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -665,18 +670,32 @@
             }
             
             // Add active class to clicked button
-            const clickedBtn = event && event.target ? event.target : 
-                              document.querySelector(`button[onclick*="'${tabName}'"], button[onclick*='"${tabName}"']`);
-            if (clickedBtn) {
-                clickedBtn.classList.add('active');
-            } else {
-                // Fallback: find button by text content
+            let clickedBtn = null;
+            if (event && event.target) {
+                // Find the button element (might be a child element like icon)
+                clickedBtn = event.target.closest('.tab-btn') || event.target;
+            }
+            
+            if (!clickedBtn) {
+                // Fallback: find button by onclick attribute
+                clickedBtn = document.querySelector(`button[onclick*="'${tabName}'"], button[onclick*='"${tabName}"']`);
+            }
+            
+            if (!clickedBtn) {
+                // Final fallback: find by tab name in onclick
                 document.querySelectorAll('.tab-btn').forEach(btn => {
                     const onclick = btn.getAttribute('onclick') || '';
                     if (onclick.includes(tabName)) {
-                        btn.classList.add('active');
+                        clickedBtn = btn;
                     }
                 });
+            }
+            
+            if (clickedBtn) {
+                clickedBtn.classList.add('active');
+                console.log('Activated button for tab:', tabName);
+            } else {
+                console.warn('Could not find button for tab:', tabName);
             }
             
             // Load users when messages tab is opened
