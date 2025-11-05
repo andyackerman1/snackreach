@@ -120,7 +120,18 @@
             <!-- All Accounts Tab -->
             <div id="accounts-tab" class="tab-content">
                 <div class="section-header">
-                    <h3>All User Accounts</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div>
+                            <h3>All User Accounts</h3>
+                            <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">
+                                Accounts are stored in localStorage. If someone signs up on a different browser, you won't see them here until they sign up on your browser too.
+                            </p>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadAccounts()" style="margin-left: 1rem;">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                    </div>
                     <div class="account-filters">
                         <select id="account-type-filter">
                             <option value="">All Types</option>
