@@ -772,8 +772,17 @@
 
         async function loadAccounts() {
             // PRIORITIZE localStorage - load accounts from localStorage first
+            console.log('=== Loading Accounts ===');
             const accounts = getAllAccountsFromStorage();
             console.log('Loaded accounts from localStorage:', accounts.length);
+            console.log('Account details:', accounts);
+            
+            // Also log what's in localStorage directly
+            const rawUsers = localStorage.getItem('snackreach_users');
+            console.log('Raw localStorage data:', rawUsers);
+            const parsedUsers = JSON.parse(rawUsers || '[]');
+            console.log('Parsed users:', parsedUsers);
+            
             displayAccounts(accounts);
             
             // Also try to sync with backend in the background (optional)
@@ -868,7 +877,15 @@
         function displayAccounts(accounts) {
             const tbody = document.getElementById('accounts-table-body');
             
+            console.log('Displaying accounts:', accounts);
+            console.log('Accounts count:', accounts.length);
+            
             if (accounts.length === 0) {
+                // Check localStorage directly
+                const storedUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
+                console.log('Stored users in localStorage:', storedUsers);
+                console.log('Stored users count:', storedUsers.length);
+                
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="7" style="text-align: center; padding: 2rem;">
@@ -878,6 +895,10 @@
                                 </div>
                                 <h4>No accounts yet</h4>
                                 <p>User accounts will appear here once they sign up</p>
+                                <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                                    Found ${storedUsers.length} accounts in localStorage. 
+                                    <button onclick="loadAccounts()" class="btn btn-small" style="margin-left: 10px;">Refresh</button>
+                                </p>
                             </div>
                         </td>
                     </tr>
