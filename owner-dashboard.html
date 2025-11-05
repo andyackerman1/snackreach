@@ -166,7 +166,7 @@
             <div id="banking-tab" class="tab-content">
                 <div class="profile-section">
                     <h3>Banking Information</h3>
-                    <p class="section-description">This is where payments from users ($2/month subscriptions) will be deposited</p>
+                    <p class="section-description">This is where payments from users will be deposited</p>
                     
                     <div class="banking-card">
                         <div class="banking-header">
@@ -202,57 +202,130 @@
                     </div>
 
                     <div class="banking-form" id="banking-form" style="display: none;">
-                        <h4>Update Banking Information</h4>
-                        <form id="update-banking-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="edit-bank-name">Bank Name</label>
-                                    <input type="text" id="edit-bank-name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit-account-name">Account Holder Name</label>
-                                    <input type="text" id="edit-account-name" required>
-                                </div>
+                        <h4>Add Payment Method</h4>
+                        <div class="payment-type-tabs">
+                            <button class="payment-tab-btn active" onclick="switchPaymentType('card')">
+                                <i class="fas fa-credit-card"></i>
+                                Credit/Debit Card
+                            </button>
+                            <button class="payment-tab-btn" onclick="switchPaymentType('bank')">
+                                <i class="fas fa-university"></i>
+                                Bank Account
+                            </button>
+                        </div>
+                        
+                        <!-- Credit Card Form -->
+                        <form id="card-payment-form-owner" class="payment-form">
+                            <div class="form-group">
+                                <label for="card-type-owner">Card Type</label>
+                                <select id="card-type-owner" required>
+                                    <option value="">Select card type...</option>
+                                    <option value="visa">Visa</option>
+                                    <option value="mastercard">Mastercard</option>
+                                    <option value="amex">American Express</option>
+                                    <option value="discover">Discover</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="card-number-owner">Card Number</label>
+                                <input type="text" id="card-number-owner" placeholder="1234 5678 9012 3456" maxlength="19" required>
                             </div>
                             
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="edit-account-number">Account Number</label>
-                                    <input type="text" id="edit-account-number" required>
+                                    <label for="card-expiry-owner">Expiry Date</label>
+                                    <input type="text" id="card-expiry-owner" placeholder="MM/YY" maxlength="5" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="edit-routing-number">Routing Number</label>
-                                    <input type="text" id="edit-routing-number" required>
+                                    <label for="card-cvv-owner">CVV</label>
+                                    <input type="text" id="card-cvv-owner" placeholder="123" maxlength="4" required>
                                 </div>
                             </div>
                             
                             <div class="form-group">
-                                <label for="edit-bank-address">Bank Address</label>
-                                <input type="text" id="edit-bank-address">
+                                <label for="card-name-owner">Name on Card</label>
+                                <input type="text" id="card-name-owner" placeholder="John Doe" required>
                             </div>
                             
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="edit-bank-city">City</label>
-                                    <input type="text" id="edit-bank-city" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit-bank-state">State</label>
-                                    <input type="text" id="edit-bank-state" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit-bank-zip">ZIP Code</label>
-                                    <input type="text" id="edit-bank-zip" required>
-                                </div>
+                            <div class="form-group">
+                                <label for="card-billing-address-owner">Billing Address</label>
+                                <input type="text" id="card-billing-address-owner" placeholder="123 Main St, City, State 12345" required>
+                            </div>
+                            
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="set-default-card-owner">
+                                <label for="set-default-card-owner">Set as default payment method</label>
                             </div>
                             
                             <div class="form-actions">
+                                <button type="button" class="btn btn-outline" onclick="cancelEditBanking()">Cancel</button>
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i>
-                                    Save Changes
+                                    <i class="fas fa-lock"></i>
+                                    Add Card
                                 </button>
-                                <button type="button" class="btn btn-outline" onclick="cancelEditBanking()">
-                                    Cancel
+                            </div>
+                        </form>
+                        
+                        <!-- Bank Account Form -->
+                        <form id="bank-payment-form-owner" class="payment-form" style="display: none;">
+                            <div class="form-group">
+                                <label for="bank-name-owner">Bank Name</label>
+                                <select id="bank-name-owner" required>
+                                    <option value="">Select bank...</option>
+                                    <option value="chase">Chase</option>
+                                    <option value="bank-of-america">Bank of America</option>
+                                    <option value="wells-fargo">Wells Fargo</option>
+                                    <option value="citibank">Citibank</option>
+                                    <option value="us-bank">U.S. Bank</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" id="other-bank-input-owner" style="display: none;">
+                                <label for="other-bank-name-owner">Enter Bank Name</label>
+                                <input type="text" id="other-bank-name-owner" placeholder="Bank name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="account-type-owner">Account Type</label>
+                                <select id="account-type-owner" required>
+                                    <option value="">Select account type...</option>
+                                    <option value="checking">Checking</option>
+                                    <option value="savings">Savings</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="account-number-owner">Account Number</label>
+                                <input type="text" id="account-number-owner" placeholder="Enter account number" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="routing-number-owner">Routing Number</label>
+                                <input type="text" id="routing-number-owner" placeholder="Enter 9-digit routing number" maxlength="9" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="account-holder-name-owner">Account Holder Name</label>
+                                <input type="text" id="account-holder-name-owner" placeholder="Name as it appears on account" required>
+                            </div>
+                            
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="set-default-bank-owner">
+                                <label for="set-default-bank-owner">Set as default payment method</label>
+                            </div>
+                            
+                            <div class="security-note">
+                                <i class="fas fa-shield-alt"></i>
+                                <p>Your bank account information is encrypted and secure. We use industry-standard security measures to protect your financial data.</p>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline" onclick="cancelEditBanking()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-lock"></i>
+                                    Link Bank Account
                                 </button>
                             </div>
                         </form>
@@ -796,46 +869,125 @@
         function editBankingInfo() {
             document.getElementById('banking-details').style.display = 'none';
             document.getElementById('banking-form').style.display = 'block';
-            
-            const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
-            if (ownerData.bankingInfo) {
-                document.getElementById('edit-bank-name').value = ownerData.bankingInfo.bankName || '';
-                document.getElementById('edit-account-name').value = ownerData.bankingInfo.accountName || '';
-                document.getElementById('edit-account-number').value = ownerData.bankingInfo.accountNumber || '';
-                document.getElementById('edit-routing-number').value = ownerData.bankingInfo.routingNumber || '';
-                document.getElementById('edit-bank-address').value = ownerData.bankingInfo.address || '';
-                document.getElementById('edit-bank-city').value = ownerData.bankingInfo.city || '';
-                document.getElementById('edit-bank-state').value = ownerData.bankingInfo.state || '';
-                document.getElementById('edit-bank-zip').value = ownerData.bankingInfo.zip || '';
-            }
+            switchPaymentType('card');
         }
 
         function cancelEditBanking() {
             document.getElementById('banking-details').style.display = 'block';
             document.getElementById('banking-form').style.display = 'none';
+            // Reset forms
+            document.getElementById('card-payment-form-owner').reset();
+            document.getElementById('bank-payment-form-owner').reset();
         }
 
-        document.getElementById('update-banking-form').addEventListener('submit', function(e) {
+        function switchPaymentType(type) {
+            const cardForm = document.getElementById('card-payment-form-owner');
+            const bankForm = document.getElementById('bank-payment-form-owner');
+            const cardTab = document.querySelectorAll('.payment-tab-btn')[0];
+            const bankTab = document.querySelectorAll('.payment-tab-btn')[1];
+            
+            if (type === 'card') {
+                cardForm.style.display = 'block';
+                bankForm.style.display = 'none';
+                cardTab.classList.add('active');
+                bankTab.classList.remove('active');
+            } else {
+                cardForm.style.display = 'none';
+                bankForm.style.display = 'block';
+                cardTab.classList.remove('active');
+                bankTab.classList.add('active');
+            }
+        }
+
+        // Handle "Other" bank selection
+        document.getElementById('bank-name-owner').addEventListener('change', function() {
+            const otherInput = document.getElementById('other-bank-input-owner');
+            if (this.value === 'other') {
+                otherInput.style.display = 'block';
+                document.getElementById('other-bank-name-owner').required = true;
+            } else {
+                otherInput.style.display = 'none';
+                document.getElementById('other-bank-name-owner').required = false;
+            }
+        });
+
+        // Format card number with spaces
+        document.getElementById('card-number-owner').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            if (formattedValue.length <= 19) {
+                e.target.value = formattedValue;
+            }
+        });
+
+        // Card form submission
+        document.getElementById('card-payment-form-owner').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
             
-            ownerData.bankingInfo = {
-                bankName: document.getElementById('edit-bank-name').value,
-                accountName: document.getElementById('edit-account-name').value,
-                accountNumber: document.getElementById('edit-account-number').value,
-                routingNumber: document.getElementById('edit-routing-number').value,
-                address: document.getElementById('edit-bank-address').value,
-                city: document.getElementById('edit-bank-city').value,
-                state: document.getElementById('edit-bank-state').value,
-                zip: document.getElementById('edit-bank-zip').value
+            if (!ownerData.paymentMethods) {
+                ownerData.paymentMethods = [];
+            }
+            
+            const cardData = {
+                id: Date.now().toString(),
+                type: 'card',
+                cardType: document.getElementById('card-type-owner').value,
+                last4: document.getElementById('card-number-owner').value.slice(-4),
+                expiry: document.getElementById('card-expiry-owner').value,
+                name: document.getElementById('card-name-owner').value,
+                isDefault: document.getElementById('set-default-card-owner').checked || !ownerData.paymentMethods.length
             };
             
+            // If setting as default, unset others
+            if (cardData.isDefault) {
+                ownerData.paymentMethods.forEach(pm => pm.isDefault = false);
+            }
+            
+            ownerData.paymentMethods.push(cardData);
             localStorage.setItem('snackreach_owner_data', JSON.stringify(ownerData));
             
-            loadBankingInfo();
+            alert('Credit card added successfully!');
             cancelEditBanking();
-            alert('Banking information updated successfully!');
+            loadBankingInfo();
+        });
+
+        // Bank form submission
+        document.getElementById('bank-payment-form-owner').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
+            
+            if (!ownerData.paymentMethods) {
+                ownerData.paymentMethods = [];
+            }
+            
+            const bankName = document.getElementById('bank-name-owner').value === 'other' 
+                ? document.getElementById('other-bank-name-owner').value 
+                : document.getElementById('bank-name-owner').value;
+            
+            const bankData = {
+                id: Date.now().toString(),
+                type: 'bank',
+                bankName: bankName,
+                accountType: document.getElementById('account-type-owner').value,
+                last4: document.getElementById('account-number-owner').value.slice(-4),
+                accountHolder: document.getElementById('account-holder-name-owner').value,
+                isDefault: document.getElementById('set-default-bank-owner').checked || !ownerData.paymentMethods.length
+            };
+            
+            // If setting as default, unset others
+            if (bankData.isDefault) {
+                ownerData.paymentMethods.forEach(pm => pm.isDefault = false);
+            }
+            
+            ownerData.paymentMethods.push(bankData);
+            localStorage.setItem('snackreach_owner_data', JSON.stringify(ownerData));
+            
+            alert('Bank account linked successfully!');
+            cancelEditBanking();
+            loadBankingInfo();
         });
 
         function loadOwnerProfile() {
