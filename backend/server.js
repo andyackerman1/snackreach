@@ -586,67 +586,6 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
 
 // ==================== REAL PAYMENT ENDPOINTS ====================
 
-// Get user profile
-app.get('/api/profile', authenticateToken, async (req, res) => {
-    try {
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        res.json({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone || '',
-            companyName: user.companyName,
-            userType: user.userType,
-            subscription: user.subscription
-        });
-    } catch (error) {
-        console.error('Get profile error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Update user profile
-app.put('/api/profile', authenticateToken, async (req, res) => {
-    try {
-        const { name, email, phone, companyName } = req.body;
-        const db = await readDB();
-        const userIndex = db.users.findIndex(u => u.id === req.userId);
-        
-        if (userIndex === -1) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        if (name) db.users[userIndex].name = name;
-        if (email) db.users[userIndex].email = email;
-        if (phone !== undefined) db.users[userIndex].phone = phone;
-        if (companyName) db.users[userIndex].companyName = companyName;
-
-        await writeDB(db);
-
-        res.json({
-            message: 'Profile updated successfully',
-            user: {
-                id: db.users[userIndex].id,
-                name: db.users[userIndex].name,
-                email: db.users[userIndex].email,
-                phone: db.users[userIndex].phone,
-                companyName: db.users[userIndex].companyName
-            }
-        });
-    } catch (error) {
-        console.error('Update profile error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// ==================== REAL PAYMENT ENDPOINTS ====================
-
 // Get Stripe publishable key
 app.get('/api/stripe-key', (req, res) => {
     const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder';
