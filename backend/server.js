@@ -46,15 +46,36 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files from root (frontend HTML/CSS/JS)
 // This must come before API routes to serve static files correctly
-const staticOptions = {
+app.use(express.static(path.join(__dirname, '..'), {
     dotfiles: 'ignore',
     etag: true,
-    extensions: ['html', 'css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'json', 'woff', 'woff2', 'ttf', 'eot'],
-    index: false, // Don't serve index.html automatically, we'll handle it in the catch-all
-    maxAge: '1d',
-    redirect: false
-};
-app.use(express.static(path.join(__dirname, '..'), staticOptions));
+    maxAge: '1d'
+}));
+
+// Explicit routes for common pages (for better reliability)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'login.html'));
+});
+
+app.get('/signup.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'signup.html'));
+});
+
+app.get('/owner-login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'owner-login.html'));
+});
+
+app.get('/owner-dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'owner-dashboard.html'));
+});
 
 // Database file path
 const DB_PATH = path.join(__dirname, 'data', 'database.json');
@@ -893,16 +914,16 @@ app.get('/api/owner/stripe-status', authenticateToken, async (req, res) => {
 
 // Serve index.html for all non-API routes (frontend routing)
 // This MUST be last, after all API routes
-app.get('*', (req, res, next) => {
+app.get('*', (req, res) => {
     // Don't serve HTML for API routes
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'API endpoint not found' });
     }
     
-    // Check if it's a file request (has extension)
-    const hasExtension = /\.[a-zA-Z0-9]+$/.test(req.path);
+    // Check if it's a file request (has extension) - static middleware should have handled it
+    const hasExtension = /\.[a-zA-Z0-9]+$/.test(req.path.split('?')[0]);
     if (hasExtension) {
-        // Let Express handle it or return 404
+        // File should have been served by static middleware, return 404
         return res.status(404).send('File not found');
     }
     
