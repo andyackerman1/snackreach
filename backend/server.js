@@ -36,7 +36,8 @@ try {
 }
 
 const app = express();
-const PORT = process.env.PORT || 8080; // Railway uses PORT env var
+// Use 3000 for local development, 8080 for Railway production
+const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? 8080 : 3000);
 const JWT_SECRET = process.env.JWT_SECRET || 'snackreach_secret_key_2024';
 
 // Middleware
