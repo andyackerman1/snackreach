@@ -34,28 +34,40 @@
             </div>
 
             <!-- Dashboard Tabs -->
-            <div class="dashboard-tabs">
-                <button class="tab-btn active" data-tab="overview" type="button">
+            <div class="dashboard-tabs" style="position: relative; z-index: 1000;">
+                <button class="tab-btn active" data-tab="overview" type="button" 
+                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
+                        onclick="switchTab('overview'); return false;">
                     <i class="fas fa-chart-line"></i>
                     Overview
                 </button>
-                <button class="tab-btn" data-tab="accounts" type="button">
+                <button class="tab-btn" data-tab="accounts" type="button"
+                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
+                        onclick="switchTab('accounts'); return false;">
                     <i class="fas fa-users"></i>
                     All Accounts
                 </button>
-                <button class="tab-btn" data-tab="banking" type="button">
+                <button class="tab-btn" data-tab="banking" type="button"
+                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
+                        onclick="switchTab('banking'); return false;">
                     <i class="fas fa-university"></i>
                     Banking Info
                 </button>
-                <button class="tab-btn" data-tab="payments" type="button">
+                <button class="tab-btn" data-tab="payments" type="button"
+                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
+                        onclick="switchTab('payments'); return false;">
                     <i class="fas fa-dollar-sign"></i>
                     Payments
                 </button>
-                <button class="tab-btn" data-tab="messages" type="button">
+                <button class="tab-btn" data-tab="messages" type="button"
+                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
+                        onclick="switchTab('messages'); return false;">
                     <i class="fas fa-envelope"></i>
                     Messages
                 </button>
-                <button class="tab-btn" data-tab="settings" type="button">
+                <button class="tab-btn" data-tab="settings" type="button"
+                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
+                        onclick="switchTab('settings'); return false;">
                     <i class="fas fa-cog"></i>
                     Settings
                 </button>
@@ -525,51 +537,47 @@
         
         console.log('API Base URL:', API_BASE_URL);
 
-        // SIMPLE, DIRECT tab switching function - defined FIRST and SIMPLE
+        // ULTRA-SIMPLE tab switching - defined in HEADER SCRIPT before everything
         window.switchTab = function(tabName) {
-            console.log('Switching to tab:', tabName);
+            alert('Tab clicked: ' + tabName); // TEMPORARY - to confirm clicks work
             
-            // Hide all tab content
-            const allTabs = document.querySelectorAll('.tab-content');
-            allTabs.forEach(function(tab) {
-                tab.style.display = 'none';
-                tab.classList.remove('active');
-            });
+            // Hide all tabs
+            var tabs = document.querySelectorAll('.tab-content');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].style.display = 'none';
+                tabs[i].classList.remove('active');
+            }
             
-            // Remove active from all buttons
-            const allButtons = document.querySelectorAll('.tab-btn');
-            allButtons.forEach(function(btn) {
-                btn.classList.remove('active');
-            });
+            // Remove active from buttons
+            var buttons = document.querySelectorAll('.tab-btn');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
             
             // Show selected tab
-            const tabElement = document.getElementById(tabName + '-tab');
-            if (tabElement) {
-                tabElement.style.display = 'block';
-                tabElement.classList.add('active');
-                console.log('✅ Tab shown:', tabName);
-            } else {
-                console.error('❌ Tab not found:', tabName + '-tab');
+            var tab = document.getElementById(tabName + '-tab');
+            if (tab) {
+                tab.style.display = 'block';
+                tab.classList.add('active');
             }
             
             // Activate button
-            const btn = document.querySelector('.tab-btn[data-tab="' + tabName + '"]');
+            var btn = document.querySelector('[data-tab="' + tabName + '"]');
             if (btn) {
                 btn.classList.add('active');
-                console.log('✅ Button activated');
             }
             
-            // Load data if needed
-            if (tabName === 'messages' && typeof loadUsersForMessaging === 'function') {
-                setTimeout(loadUsersForMessaging, 50);
+            // Load data
+            if (tabName === 'messages' && window.loadUsersForMessaging) {
+                setTimeout(window.loadUsersForMessaging, 100);
             }
-            if (tabName === 'accounts' && typeof loadAccounts === 'function') {
-                setTimeout(loadAccounts, 50);
+            if (tabName === 'accounts' && window.loadAccounts) {
+                setTimeout(window.loadAccounts, 100);
             }
         };
         
-        // Alias
-        window.showTab = window.switchTab;
+        // Make it available immediately
+        console.log('switchTab function defined:', typeof window.switchTab);
 
         // Check if user is owner - session persists until explicit logout
         document.addEventListener('DOMContentLoaded', function() {

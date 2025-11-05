@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tab Diagnostic</title>
+</head>
+<body>
+    <h1>Click Test</h1>
+    <button onclick="alert('Click works!')">Test Click</button>
+    <button onclick="switchTab('test')">Test SwitchTab</button>
+    <div id="test-tab" style="display:none;">Tab Content</div>
+    <script>
+        function switchTab(name) {
+            alert('switchTab called with: ' + name);
+            document.getElementById(name + '-tab').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
