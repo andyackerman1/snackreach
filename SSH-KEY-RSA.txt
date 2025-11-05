@@ -1,0 +1,14 @@
+✅ NEW RSA KEY (In Your Clipboard - Try This One!)
+
+The RSA key is now in your clipboard. 
+
+Paste it in GitHub:
+1. Go to: https://github.com/settings/keys
+2. Click "New SSH key"
+3. Title: "SnackReach Mac"
+4. Key type: "Authentication Key"
+5. Key: Paste (Cmd+V)
+6. Click "Add SSH key"
+
+This RSA key should work better than the ED25519 one!
+

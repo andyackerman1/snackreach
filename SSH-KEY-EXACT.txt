@@ -1,0 +1,10 @@
+Copy this EXACT key (all on one line, no spaces at start/end):
+
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHNFAQdpztd04kiXPVgldhU9sV/QmF2wzAebHpu0b+4L snackreach@github
+
+Make sure:
+- It's all one line
+- No extra spaces before or after
+- Starts with "ssh-ed25519"
+- Ends with "snackreach@github"
+

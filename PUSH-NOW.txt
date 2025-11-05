@@ -1,0 +1,15 @@
+🚀 PUSH TO GITHUB NOW
+
+Copy and paste this command in your Terminal:
+
+cd /Users/andy.ackerman/snackconnect && git push -u origin main
+
+When prompted:
+  Username: andyackerman1
+  Password: [paste your Personal Access Token here]
+
+The token will be saved so you won't need to enter it again!
+
+After pushing, your code will be at:
+https://github.com/andyackerman1/snackreach
+
