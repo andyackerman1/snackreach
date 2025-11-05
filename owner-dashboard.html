@@ -624,14 +624,80 @@
         window.saveBankingInfo = saveBankingInfo;
         window.changePassword = changePassword;
 
-        // Plaid integration
-        if (typeof initiatePlaidBankLinkOwner === 'undefined') {
-            window.initiatePlaidBankLinkOwner = function() {
-                alert('Plaid integration not available. Please use the production site for full functionality.');
-            };
-        } else {
-            window.initiatePlaidBankLinkOwner = initiatePlaidBankLinkOwner;
+        // Plaid integration for owner dashboard
+        async function initiatePlaidBankLinkOwner() {
+            try {
+                const token = localStorage.getItem('snackreach_token');
+                if (!token) {
+                    alert('Please log in to add a bank account.');
+                    return;
+                }
+
+                // Get link token from backend
+                const response = await fetch(`${window.API_BASE_URL}/plaid/create-link-token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to get bank verification token');
+                }
+
+                if (!data.link_token) {
+                    throw new Error('No link token received from server');
+                }
+
+                // Use PlaidLink.setup from plaid-link.js
+                if (window.PlaidLink && typeof window.PlaidLink.setup === 'function') {
+                    await window.PlaidLink.setup(
+                        // onSuccess callback
+                        (result) => {
+                            console.log('Bank account linked successfully:', result);
+                            const statusDiv = document.getElementById('plaid-link-status-owner');
+                            const statusMessage = document.getElementById('plaid-status-message-owner');
+                            if (statusDiv && statusMessage) {
+                                statusDiv.style.display = 'block';
+                                statusDiv.style.background = '#f0fdf4';
+                                statusMessage.innerHTML = '<i class="fas fa-check-circle"></i> Bank account linked successfully!';
+                            }
+                            // Reload banking info
+                            if (typeof loadBankingInfo === 'function') {
+                                loadBankingInfo();
+                            }
+                            // Hide form and show info
+                            document.getElementById('banking-info-display').style.display = 'block';
+                            document.getElementById('banking-form').style.display = 'none';
+                        },
+                        // onExit callback
+                        (err, metadata) => {
+                            if (err) {
+                                console.error('Plaid Link error:', err);
+                                const statusDiv = document.getElementById('plaid-link-status-owner');
+                                const statusMessage = document.getElementById('plaid-status-message-owner');
+                                if (statusDiv && statusMessage) {
+                                    statusDiv.style.display = 'block';
+                                    statusDiv.style.background = '#fef2f2';
+                                    statusMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + err.display_message || 'Bank linking cancelled';
+                                }
+                            }
+                        }
+                    );
+                } else {
+                    throw new Error('Plaid Link library not loaded. Please refresh the page.');
+                }
+            } catch (error) {
+                console.error('Error initiating Plaid Link:', error);
+                alert('Failed to connect bank account: ' + error.message);
+            }
         }
+        
+        // Make function globally available
+        window.initiatePlaidBankLinkOwner = initiatePlaidBankLinkOwner;
 
         // Owner profile
         async function loadOwnerProfile() {
