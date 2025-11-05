@@ -664,6 +664,88 @@ app.post('/api/admin/change-password', authenticateToken, async (req, res) => {
     }
 });
 
+// Send message from owner to user
+app.post('/api/admin/send-message', authenticateToken, async (req, res) => {
+    try {
+        const db = await readDB();
+        const sender = db.users.find(u => u.id === req.userId);
+        
+        if (!sender || sender.userType !== 'owner') {
+            return res.status(403).json({ error: 'Owner access required' });
+        }
+        
+        const { recipientId, recipientEmail, recipientName, recipientType, subject, content } = req.body;
+        
+        if (!recipientId || !recipientEmail || !subject || !content) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Verify recipient exists
+        const recipient = db.users.find(u => u.id === recipientId);
+        if (!recipient) {
+            return res.status(404).json({ error: 'Recipient not found' });
+        }
+        
+        // Create message
+        const message = {
+            id: Date.now().toString(),
+            senderId: sender.id,
+            senderName: sender.name || 'Owner',
+            senderEmail: sender.email,
+            senderType: 'owner',
+            recipientId: recipientId,
+            recipientEmail: recipientEmail,
+            recipientName: recipientName || recipient.name || recipient.companyName,
+            recipientType: recipientType || recipient.userType,
+            subject: subject,
+            content: content,
+            createdAt: new Date().toISOString(),
+            read: false
+        };
+        
+        // Initialize messages array if it doesn't exist
+        if (!db.messages) {
+            db.messages = [];
+        }
+        
+        db.messages.push(message);
+        await writeDB(db);
+        
+        console.log(`Message sent from owner to ${recipientEmail}`);
+        
+        res.json({
+            success: true,
+            message: 'Message sent successfully',
+            messageId: message.id
+        });
+    } catch (error) {
+        console.error('Send message error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get messages sent by owner
+app.get('/api/admin/messages', authenticateToken, async (req, res) => {
+    try {
+        const db = await readDB();
+        const user = db.users.find(u => u.id === req.userId);
+        
+        if (!user || user.userType !== 'owner') {
+            return res.status(403).json({ error: 'Owner access required' });
+        }
+        
+        // Get all messages sent by this owner
+        const messages = (db.messages || [])
+            .filter(msg => msg.senderId === req.userId && msg.senderType === 'owner')
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Most recent first
+        
+        res.json(messages);
+    } catch (error) {
+        console.error('Get messages error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/api/admin/login-activity', authenticateToken, async (req, res) => {
     try {
         const db = await readDB();
