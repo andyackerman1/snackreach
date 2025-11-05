@@ -95,9 +95,37 @@
             // Special admin credentials (case-insensitive for username/email)
             const normalizedEmail = email.toLowerCase();
             if ((normalizedEmail === 'andy' || normalizedEmail === 'andy@snackreach.com') && password === 'BoJackson421') {
-                console.log('Admin credentials matched');
+                console.log('Admin credentials matched - attempting backend login first...');
                 
-                // Set up admin account
+                // Try backend login first for admin credentials
+                try {
+                    const backendResponse = await fetch(`${API_BASE_URL}/login-owner`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email: 'Andy', password: 'BoJackson421' })
+                    });
+                    
+                    if (backendResponse.ok) {
+                        const backendData = await backendResponse.json();
+                        if (backendData.token) {
+                            localStorage.setItem('snackreach_token', backendData.token);
+                            localStorage.setItem('snackreach_user_type', 'owner');
+                            localStorage.setItem('snackreach_user_name', backendData.user.name || 'Andy');
+                            localStorage.setItem('snackreach_company_name', backendData.user.companyName || 'SnackReach Admin');
+                            
+                            console.log('Admin login successful via backend, redirecting...');
+                            window.location.href = 'owner-dashboard.html';
+                            return;
+                        }
+                    }
+                } catch (backendError) {
+                    console.log('Backend login failed, using local fallback:', backendError);
+                }
+                
+                // Fallback: Set up admin account locally if backend fails
+                localStorage.setItem('snackreach_token', 'admin-token-' + Date.now());
                 localStorage.setItem('snackreach_user_type', 'owner');
                 localStorage.setItem('snackreach_user_name', 'Andy');
                 localStorage.setItem('snackreach_company_name', 'SnackReach Admin');
@@ -117,8 +145,7 @@
                 
                 localStorage.setItem('snackreach_owner_data', JSON.stringify(adminData));
                 
-                console.log('Admin login successful, redirecting to owner dashboard...');
-                alert('Login successful! Welcome, Andy.');
+                console.log('Admin login successful (local fallback), redirecting...');
                 window.location.href = 'owner-dashboard.html';
                 return;
             }
