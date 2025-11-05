@@ -498,12 +498,14 @@
     <script>
         const API_BASE_URL = 'http://localhost:3000/api';
 
-        // Check if user is owner
+        // Check if user is owner - session persists until explicit logout
         document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('snackreach_token');
             const userType = localStorage.getItem('snackreach_user_type');
             const ownerName = localStorage.getItem('snackreach_user_name');
             
-            if (userType !== 'owner') {
+            // Session check - only redirect if truly not logged in
+            if (!token || userType !== 'owner') {
                 alert('Access denied. Owner account required.');
                 window.location.href = 'owner-login.html';
                 return;
@@ -519,7 +521,10 @@
             loadOwnerProfile();
             
             // Set up message form
-            document.getElementById('message-form').addEventListener('submit', sendMessage);
+            const messageForm = document.getElementById('message-form');
+            if (messageForm) {
+                messageForm.addEventListener('submit', sendMessage);
+            }
         });
 
         function showTab(tabName) {
