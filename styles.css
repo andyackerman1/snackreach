@@ -2610,6 +2610,80 @@ body {
     font-size: 0.9375rem;
 }
 
+/* Plaid Link Integration Styles */
+.plaid-link-container {
+    padding: 20px;
+}
+
+.security-info {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 12px;
+    border: 2px solid #0ea5e9;
+}
+
+.security-info i {
+    font-size: 48px;
+    color: #0ea5e9;
+    margin-bottom: 15px;
+}
+
+.security-info h4 {
+    color: #0c4a6e;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.security-info p {
+    color: #075985;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.plaid-features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 3px solid #0ea5e9;
+}
+
+.feature-item i {
+    color: #10b981;
+    font-size: 18px;
+}
+
+.feature-item span {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#plaid-link-status {
+    text-align: center;
+}
+
+#plaid-link-status p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+#plaid-link-status i {
+    margin-right: 8px;
+}
+
 .security-note {
     background: #f0f9ff;
     border-left: 4px solid #3b82f6;

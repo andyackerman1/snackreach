@@ -1,0 +1,42 @@
+PUSH TO GITHUB - QUICK GUIDE
+=============================
+
+Every time you make changes, use these 3 commands:
+
+1. ADD CHANGES:
+   git add .
+
+   (Or add specific files: git add filename.html)
+
+2. COMMIT CHANGES:
+   git commit -m "Description of what you changed"
+
+3. PUSH TO GITHUB:
+   git push
+
+That's it! Your changes will be on GitHub.
+
+─────────────────────────────────────────────────────────────
+
+QUICK COMMANDS:
+─────────────────────────────────────────────────────────────
+
+See what changed:
+  git status
+
+Add all changes:
+  git add .
+
+Commit with message:
+  git commit -m "Your message here"
+
+Push to GitHub:
+  git push
+
+─────────────────────────────────────────────────────────────
+
+YOUR REPOSITORY:
+  https://github.com/andyackerman1/snackreach
+
+─────────────────────────────────────────────────────────────
+

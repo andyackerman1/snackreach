@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="js/plaid-link.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -278,68 +279,52 @@
                             </div>
                         </form>
                         
-                        <!-- Bank Account Form -->
-                        <form id="bank-payment-form-owner" class="payment-form" style="display: none;">
-                            <div class="form-group">
-                                <label for="bank-name-owner">Bank Name</label>
-                                <select id="bank-name-owner" required>
-                                    <option value="">Select bank...</option>
-                                    <option value="chase">Chase</option>
-                                    <option value="bank-of-america">Bank of America</option>
-                                    <option value="wells-fargo">Wells Fargo</option>
-                                    <option value="citibank">Citibank</option>
-                                    <option value="us-bank">U.S. Bank</option>
-                                    <option value="other">Other</option>
-                                </select>
+                        <!-- Bank Account Form - Using Plaid Link -->
+                        <div id="bank-payment-form-owner" class="payment-form" style="display: none;">
+                            <div class="plaid-link-container">
+                                <div class="security-info">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <h4>Secure Bank Verification</h4>
+                                    <p>We use Plaid to securely connect your bank account. Your bank credentials are never stored on our servers.</p>
+                                </div>
+                                
+                                <div class="plaid-features">
+                                    <div class="feature-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>256-bit SSL encryption</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Bank-level security</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>No account numbers stored</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Read-only access</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group checkbox-group">
+                                    <input type="checkbox" id="set-default-bank-plaid-owner">
+                                    <label for="set-default-bank-plaid-owner">Set as default payment method</label>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-outline" onclick="cancelEditBanking()">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="plaid-link-button-owner" onclick="initiatePlaidBankLinkOwner()">
+                                        <i class="fas fa-university"></i>
+                                        Connect Bank Account
+                                    </button>
+                                </div>
+                                
+                                <div id="plaid-link-status-owner" style="display: none; margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px;">
+                                    <p id="plaid-status-message-owner"></p>
+                                </div>
                             </div>
-                            
-                            <div class="form-group" id="other-bank-input-owner" style="display: none;">
-                                <label for="other-bank-name-owner">Enter Bank Name</label>
-                                <input type="text" id="other-bank-name-owner" placeholder="Bank name">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="account-type-owner">Account Type</label>
-                                <select id="account-type-owner" required>
-                                    <option value="">Select account type...</option>
-                                    <option value="checking">Checking</option>
-                                    <option value="savings">Savings</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="account-number-owner">Account Number</label>
-                                <input type="text" id="account-number-owner" placeholder="Enter account number" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="routing-number-owner">Routing Number</label>
-                                <input type="text" id="routing-number-owner" placeholder="Enter 9-digit routing number" maxlength="9" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="account-holder-name-owner">Account Holder Name</label>
-                                <input type="text" id="account-holder-name-owner" placeholder="Name as it appears on account" required>
-                            </div>
-                            
-                            <div class="form-group checkbox-group">
-                                <input type="checkbox" id="set-default-bank-owner">
-                                <label for="set-default-bank-owner">Set as default payment method</label>
-                            </div>
-                            
-                            <div class="security-note">
-                                <i class="fas fa-shield-alt"></i>
-                                <p>Your bank account information is encrypted and secure. We use industry-standard security measures to protect your financial data.</p>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="button" class="btn btn-outline" onclick="cancelEditBanking()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-lock"></i>
-                                    Link Bank Account
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="js/plaid-link.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -456,68 +457,52 @@
                     </div>
                 </form>
                 
-                <!-- Bank Account Form -->
-                <form id="bank-payment-form" class="payment-form" style="display: none;">
-                    <div class="form-group">
-                        <label for="bank-name">Bank Name</label>
-                        <select id="bank-name" required>
-                            <option value="">Select bank...</option>
-                            <option value="chase">Chase</option>
-                            <option value="bank-of-america">Bank of America</option>
-                            <option value="wells-fargo">Wells Fargo</option>
-                            <option value="citibank">Citibank</option>
-                            <option value="us-bank">U.S. Bank</option>
-                            <option value="other">Other</option>
-                        </select>
+                <!-- Bank Account Form - Using Plaid Link -->
+                <div id="bank-payment-form" class="payment-form" style="display: none;">
+                    <div class="plaid-link-container">
+                        <div class="security-info">
+                            <i class="fas fa-shield-alt"></i>
+                            <h4>Secure Bank Verification</h4>
+                            <p>We use Plaid to securely connect your bank account. Your bank credentials are never stored on our servers.</p>
+                        </div>
+                        
+                        <div class="plaid-features">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>256-bit SSL encryption</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Bank-level security</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>No account numbers stored</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Read-only access</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="set-default-bank-plaid">
+                            <label for="set-default-bank-plaid">Set as default payment method</label>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-outline" onclick="closeModal('add-payment-modal')">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="plaid-link-button" onclick="initiatePlaidBankLink()">
+                                <i class="fas fa-university"></i>
+                                Connect Bank Account
+                            </button>
+                        </div>
+                        
+                        <div id="plaid-link-status" style="display: none; margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px;">
+                            <p id="plaid-status-message"></p>
+                        </div>
                     </div>
-                    
-                    <div class="form-group" id="other-bank-input" style="display: none;">
-                        <label for="other-bank-name">Enter Bank Name</label>
-                        <input type="text" id="other-bank-name" placeholder="Bank name">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="account-type">Account Type</label>
-                        <select id="account-type" required>
-                            <option value="">Select account type...</option>
-                            <option value="checking">Checking</option>
-                            <option value="savings">Savings</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="account-number">Account Number</label>
-                        <input type="text" id="account-number" placeholder="Enter account number" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="routing-number">Routing Number</label>
-                        <input type="text" id="routing-number" placeholder="Enter 9-digit routing number" maxlength="9" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="account-holder-name">Account Holder Name</label>
-                        <input type="text" id="account-holder-name" placeholder="Name as it appears on account" required>
-                    </div>
-                    
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="set-default-bank">
-                        <label for="set-default-bank">Set as default payment method</label>
-                    </div>
-                    
-                    <div class="security-note">
-                        <i class="fas fa-shield-alt"></i>
-                        <p>Your bank account information is encrypted and secure. We use industry-standard security measures to protect your financial data.</p>
-                    </div>
-                    
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-outline" onclick="closeModal('add-payment-modal')">Cancel</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-lock"></i>
-                            Link Bank Account
-                        </button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
@@ -576,17 +561,51 @@
             }
         }
         
-        // Handle "Other" bank selection
-        document.getElementById('bank-name').addEventListener('change', function() {
-            const otherInput = document.getElementById('other-bank-input');
-            if (this.value === 'other') {
-                otherInput.style.display = 'block';
-                document.getElementById('other-bank-name').required = true;
-            } else {
-                otherInput.style.display = 'none';
-                document.getElementById('other-bank-name').required = false;
+        // Initialize Plaid Link for bank accounts
+        async function initiatePlaidBankLink() {
+            const button = document.getElementById('plaid-link-button');
+            const statusDiv = document.getElementById('plaid-link-status');
+            const statusMessage = document.getElementById('plaid-status-message');
+            
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+            statusDiv.style.display = 'block';
+            statusMessage.textContent = 'Initializing secure bank connection...';
+            
+            try {
+                await window.PlaidLink.setup(
+                    // onSuccess callback
+                    (data) => {
+                        statusDiv.style.background = '#d4edda';
+                        statusMessage.innerHTML = `<i class="fas fa-check-circle"></i> Bank account linked successfully!<br>Account ending in ${data.last4}`;
+                        button.style.display = 'none';
+                        
+                        // Reload payment methods
+                        setTimeout(() => {
+                            loadPaymentMethods();
+                            closeModal('add-payment-modal');
+                        }, 2000);
+                    },
+                    // onExit callback
+                    (err, metadata) => {
+                        if (err) {
+                            statusDiv.style.background = '#f8d7da';
+                            statusMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${err.display_message || 'Connection cancelled'}`;
+                        } else {
+                            statusDiv.style.display = 'none';
+                        }
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-university"></i> Connect Bank Account';
+                    }
+                );
+            } catch (error) {
+                console.error('Plaid setup error:', error);
+                statusDiv.style.background = '#f8d7da';
+                statusMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> Error: ${error.message}`;
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-university"></i> Connect Bank Account';
             }
-        });
+        }
         
         function loadPaymentMethods() {
             const paymentMethodsList = document.getElementById('payment-methods-list');

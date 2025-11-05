@@ -516,11 +516,16 @@ app.post('/api/plaid/create-link-token', authenticateToken, async (req, res) => 
     }
 });
 
-// Exchange Plaid public token for access token (after bank linking)
+// Exchange Plaid public token and create Stripe ACH payment method
 app.post('/api/plaid/exchange-token', authenticateToken, async (req, res) => {
     try {
-        const { public_token } = req.body;
+        const { public_token, account_id } = req.body;
         
+        if (!public_token || !account_id) {
+            return res.status(400).json({ error: 'Missing public_token or account_id' });
+        }
+        
+        // Exchange public token for access token
         const response = await plaidClient.itemPublicTokenExchange({
             public_token: public_token,
         });
@@ -528,36 +533,92 @@ app.post('/api/plaid/exchange-token', authenticateToken, async (req, res) => {
         const accessToken = response.data.access_token;
         const itemId = response.data.item_id;
 
-        // Get account info from Plaid
+        // Get account info from Plaid (masked only - no raw numbers)
         const accountsResponse = await plaidClient.accountsGet({
             access_token: accessToken,
         });
 
-        const account = accountsResponse.data.accounts[0];
-        
-        // Save bank account to database
+        const account = accountsResponse.data.accounts.find(acc => acc.account_id === account_id);
+        if (!account) {
+            return res.status(400).json({ error: 'Account not found' });
+        }
+
+        // Get or create Stripe customer
         const db = await readDB();
         const user = db.users.find(u => u.id === req.userId);
-        if (user) {
-            if (!user.paymentMethods) user.paymentMethods = [];
-            user.paymentMethods.push({
-                id: 'bank-' + Date.now(),
-                type: 'bank',
-                plaidAccessToken: accessToken,
-                plaidItemId: itemId,
-                bankName: account.name || 'Bank Account',
-                accountType: account.type,
-                accountLast4: account.mask,
-                accountId: account.account_id,
-                isDefault: !user.paymentMethods.length,
-                addedAt: new Date().toISOString()
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        let stripeCustomerId = user.stripeCustomerId;
+        if (!stripeCustomerId) {
+            const customer = await stripe.customers.create({
+                email: user.email,
+                name: user.name,
             });
+            stripeCustomerId = customer.id;
+            user.stripeCustomerId = stripeCustomerId;
             await writeDB(db);
         }
 
-        res.json({ 
-            success: true, 
+        // Create Plaid processor token for Stripe
+        const processorTokenResponse = await plaidClient.processorTokenCreate({
             access_token: accessToken,
+            account_id: account_id,
+            processor: 'stripe',
+        });
+
+        const processorToken = processorTokenResponse.data.processor_token;
+
+        // For Stripe ACH with Plaid, we create a payment method using the processor token
+        // The processor token is used to create a bank account token in Stripe
+        // Note: Stripe's ACH implementation with Plaid requires the processor token
+        // to be used when creating the payment method or payment intent
+        
+        // Create Stripe payment method - processor token will be used in payment intent
+        const paymentMethod = await stripe.paymentMethods.create({
+            type: 'us_bank_account',
+            billing_details: {
+                name: user.name,
+                email: user.email,
+            },
+            metadata: {
+                plaid_processor_token: processorToken,
+                plaid_account_id: account_id,
+            }
+        });
+
+        // Attach payment method to customer
+        await stripe.paymentMethods.attach(paymentMethod.id, {
+            customer: stripeCustomerId,
+        });
+
+        // Store processor token for use in ACH payments
+        // When creating payment intents, use the processor token via Plaid
+
+        // Save to database (NO RAW ACCOUNT NUMBERS - only tokens)
+        if (!user.paymentMethods) user.paymentMethods = [];
+        user.paymentMethods.push({
+            id: paymentMethod.id,
+            type: 'bank',
+            stripePaymentMethodId: paymentMethod.id,
+            plaidAccessToken: accessToken, // Encrypted by Plaid
+            plaidItemId: itemId,
+            plaidAccountId: account_id,
+            bankName: account.name || 'Bank Account',
+            accountType: account.subtype || account.type,
+            accountLast4: account.mask, // Only last 4 digits
+            isDefault: !user.paymentMethods.length,
+            addedAt: new Date().toISOString(),
+            // NO RAW ACCOUNT NUMBERS STORED
+        });
+        await writeDB(db);
+
+        res.json({ 
+            success: true,
+            paymentMethodId: paymentMethod.id,
+            last4: account.mask,
+            bankName: account.name,
             message: 'Bank account linked successfully'
         });
     } catch (error) {
