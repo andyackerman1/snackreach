@@ -92,14 +92,6 @@ app.get('/signup.html', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'signup.html'));
 });
 
-app.get('/owner-login.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'owner-login.html'));
-});
-
-app.get('/owner-dashboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'owner-dashboard.html'));
-});
-
 // Database file path
 const DB_PATH = path.join(__dirname, 'data', 'database.json');
 
@@ -385,210 +377,87 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Owner registration
-app.post('/api/register-owner', async (req, res) => {
+// Authentication middleware
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'Access token required' });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Invalid or expired token' });
+        }
+        req.userId = user.userId;
+        req.userType = user.userType;
+        next();
+    });
+}
+
+// Get user profile
+app.get('/api/profile', authenticateToken, async (req, res) => {
     try {
-        const { name, email, password, companyName, phone, bankingInfo } = req.body;
-
-        if (!name || !email || !password) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-
         const db = await readDB();
+        const user = db.users.find(u => u.id === req.userId);
         
-        const existingUser = db.users.find(u => u.email === email);
-        if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
         }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const newOwner = {
-            id: 'owner-' + Date.now().toString(),
-            name,
-            email,
-            password: hashedPassword,
-            companyName: companyName || 'SnackReach Admin',
-            phone: phone || '',
-            userType: 'owner',
-            bankingInfo: bankingInfo || {},
-            stripeAccountId: null,
-            createdAt: new Date().toISOString()
-        };
-
-        db.users.push(newOwner);
-        await writeDB(db);
-
-        // Generate JWT token with very long expiration (essentially permanent)
-        const token = jwt.sign(
-            { userId: newOwner.id, email: newOwner.email, userType: 'owner' },
-            JWT_SECRET,
-            { expiresIn: '3650d' } // 10 years - essentially permanent session
-        );
-
+        
         res.json({
-            message: 'Owner registered successfully',
-            token,
-            user: {
-                id: newOwner.id,
-                name: newOwner.name,
-                email: newOwner.email,
-                companyName: newOwner.companyName,
-                userType: 'owner'
-            }
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            companyName: user.companyName,
+            userType: user.userType,
+            phone: user.phone || '',
+            subscription: user.subscription
         });
     } catch (error) {
-        console.error('Owner registration error:', error);
+        console.error('Get profile error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Owner login
-app.post('/api/login-owner', async (req, res) => {
+// Update user profile
+app.put('/api/profile', authenticateToken, async (req, res) => {
     try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password required' });
-        }
-
-        // Special admin credentials
-        if (email === 'Andy' && password === 'BoJackson421') {
-            const db = await readDB();
-            let adminUser = db.users.find(u => u.email === 'Andy' && u.userType === 'owner');
-            if (!adminUser) {
-                const hashedPassword = await bcrypt.hash('BoJackson421', 10);
-                adminUser = {
-                    id: 'admin-andy',
-                    name: 'Andy',
-                    email: 'Andy',
-                    password: hashedPassword,
-                    companyName: 'SnackReach Admin',
-                    userType: 'owner',
-                    isAdmin: true,
-                    createdAt: new Date().toISOString()
-                };
-                db.users.push(adminUser);
-                await writeDB(db);
-            }
-            // Generate JWT token with very long expiration (essentially permanent)
-            const token = jwt.sign({ userId: adminUser.id, email: adminUser.email, userType: 'owner' }, JWT_SECRET, { expiresIn: '3650d' }); // 10 years
-            
-        // Track login activity
-        const loginActivity = {
-            userId: adminUser.id,
-            email: adminUser.email,
-            name: adminUser.name || 'Owner',
-            userType: 'owner',
-            timestamp: new Date().toISOString(),
-            ipAddress: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown',
-            userAgent: req.headers['user-agent'] || 'unknown'
-        };
-        
-        // Ensure loginActivity array exists
-        if (!db.loginActivity) {
-            db.loginActivity = [];
-            console.log('Initialized loginActivity array for owner login');
-        }
-        
-        db.loginActivity.push(loginActivity);
-        console.log('Owner login activity added. Total login records:', db.loginActivity.length);
-        console.log('Owner login details:', {
-            userId: loginActivity.userId,
-            email: loginActivity.email,
-            timestamp: loginActivity.timestamp
-        });
-        
-        // Keep only last 1000 login activities to prevent database bloat
-        if (db.loginActivity.length > 1000) {
-            db.loginActivity = db.loginActivity.slice(-1000);
-            console.log('Trimmed loginActivity to last 1000 entries');
-        }
-        
-        await writeDB(db);
-        
-        // Verify login activity was saved
-        const verifyDb = await readDB();
-        console.log('Verification: Login activity count after owner login save:', verifyDb.loginActivity ? verifyDb.loginActivity.length : 0);
-            
-            return res.json({ message: 'Login successful', token, user: { id: adminUser.id, name: adminUser.name, email: adminUser.email, companyName: adminUser.companyName, userType: 'owner' } });
-        }
-
         const db = await readDB();
-        const user = db.users.find(u => u.email === email && u.userType === 'owner');
-
+        const user = db.users.find(u => u.id === req.userId);
+        
         if (!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        // Generate JWT token with very long expiration (essentially permanent)
-        const token = jwt.sign(
-            { userId: user.id, email: user.email, userType: 'owner' },
-            JWT_SECRET,
-            { expiresIn: '3650d' } // 10 years - essentially permanent session
-        );
-
-        // Track login activity
-        const loginActivity = {
-            userId: user.id,
-            email: user.email,
-            name: user.name || 'Owner',
-            userType: 'owner',
-            timestamp: new Date().toISOString(),
-            ipAddress: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown',
-            userAgent: req.headers['user-agent'] || 'unknown'
-        };
-        
-        // Ensure loginActivity array exists
-        if (!db.loginActivity) {
-            db.loginActivity = [];
-            console.log('Initialized loginActivity array for regular owner login');
+            return res.status(404).json({ error: 'User not found' });
         }
         
-        db.loginActivity.push(loginActivity);
-        console.log('Owner login activity added. Total login records:', db.loginActivity.length);
-        console.log('Owner login details:', {
-            userId: loginActivity.userId,
-            email: loginActivity.email,
-            timestamp: loginActivity.timestamp
-        });
+        const { name, email, companyName, phone } = req.body;
         
-        // Keep only last 1000 login activities to prevent database bloat
-        if (db.loginActivity.length > 1000) {
-            db.loginActivity = db.loginActivity.slice(-1000);
-            console.log('Trimmed loginActivity to last 1000 entries');
-        }
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (companyName) user.companyName = companyName;
+        if (phone) user.phone = phone;
         
         await writeDB(db);
         
-        // Verify login activity was saved
-        const verifyDb = await readDB();
-        console.log('Verification: Login activity count after owner login save:', verifyDb.loginActivity ? verifyDb.loginActivity.length : 0);
-
-        console.log('Owner login successful for:', email);
         res.json({
-            message: 'Login successful',
-            token,
+            success: true,
+            message: 'Profile updated successfully',
             user: {
                 id: user.id,
                 name: user.name,
                 email: user.email,
                 companyName: user.companyName,
-                userType: 'owner'
+                phone: user.phone
             }
         });
     } catch (error) {
-        console.error('Owner login error:', error);
+        console.error('Update profile error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Authentication middleware
+// ==================== REAL PAYMENT ENDPOINTS ====================
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -662,235 +531,6 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Update profile error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Get all accounts (owner only)
-app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
-    try {
-        const db = await readDB();
-        console.log('Get all accounts request - userId:', req.userId);
-        console.log('Total users in database:', db.users.length);
-        
-        const user = db.users.find(u => u.id === req.userId);
-        
-        if (!user) {
-            console.error('User not found for userId:', req.userId);
-            return res.status(403).json({ error: 'User not found. Please log in again.' });
-        }
-        
-        if (user.userType !== 'owner') {
-            console.error('User is not owner. User type:', user.userType);
-            return res.status(403).json({ error: 'Owner access required. Current user type: ' + user.userType });
-        }
-
-        console.log('Owner authenticated. Returning all accounts...');
-        const accounts = db.users.map(u => ({
-            id: u.id,
-            name: u.name,
-            email: u.email,
-            companyName: u.companyName,
-            userType: u.userType,
-            phone: u.phone || '',
-            password: u.password || 'N/A', // Include password for owner view
-            createdAt: u.createdAt,
-            subscription: u.subscription
-        }));
-
-        console.log('Returning', accounts.length, 'accounts');
-        res.json(accounts);
-    } catch (error) {
-        console.error('Get all accounts error:', error);
-        res.status(500).json({ error: 'Internal server error: ' + error.message });
-    }
-});
-
-// Update owner profile
-app.post('/api/admin/update-profile', authenticateToken, async (req, res) => {
-    try {
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        if (!user || user.userType !== 'owner') {
-            return res.status(403).json({ error: 'Owner access required' });
-        }
-        
-        const { name, email, companyName, username, phone } = req.body;
-        
-        // Update user fields
-        if (name) user.name = name;
-        if (email) user.email = email;
-        if (companyName) user.companyName = companyName;
-        if (username) user.username = username;
-        if (phone) user.phone = phone;
-        
-        await writeDB(db);
-        
-        res.json({
-            success: true,
-            message: 'Profile updated successfully',
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                companyName: user.companyName,
-                username: user.username,
-                phone: user.phone
-            }
-        });
-    } catch (error) {
-        console.error('Update profile error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Change owner password
-app.post('/api/admin/change-password', authenticateToken, async (req, res) => {
-    try {
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        if (!user || user.userType !== 'owner') {
-            return res.status(403).json({ error: 'Owner access required' });
-        }
-        
-        const { currentPassword, newPassword } = req.body;
-        
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ error: 'Current password and new password required' });
-        }
-        
-        // Verify current password
-        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ error: 'Invalid current password' });
-        }
-        
-        // Validate new password
-        if (newPassword.length < 6) {
-            return res.status(400).json({ error: 'New password must be at least 6 characters long' });
-        }
-        
-        // Hash and update password
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedPassword;
-        
-        await writeDB(db);
-        
-        res.json({
-            success: true,
-            message: 'Password changed successfully'
-        });
-    } catch (error) {
-        console.error('Change password error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Send message from owner to user
-app.post('/api/admin/send-message', authenticateToken, async (req, res) => {
-    try {
-        const db = await readDB();
-        const sender = db.users.find(u => u.id === req.userId);
-        
-        if (!sender || sender.userType !== 'owner') {
-            return res.status(403).json({ error: 'Owner access required' });
-        }
-        
-        const { recipientId, recipientEmail, recipientName, recipientType, subject, content } = req.body;
-        
-        if (!recipientId || !recipientEmail || !subject || !content) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-        
-        // Verify recipient exists
-        const recipient = db.users.find(u => u.id === recipientId);
-        if (!recipient) {
-            return res.status(404).json({ error: 'Recipient not found' });
-        }
-        
-        // Create message
-        const message = {
-            id: Date.now().toString(),
-            senderId: sender.id,
-            senderName: sender.name || 'Owner',
-            senderEmail: sender.email,
-            senderType: 'owner',
-            recipientId: recipientId,
-            recipientEmail: recipientEmail,
-            recipientName: recipientName || recipient.name || recipient.companyName,
-            recipientType: recipientType || recipient.userType,
-            subject: subject,
-            content: content,
-            createdAt: new Date().toISOString(),
-            read: false
-        };
-        
-        // Initialize messages array if it doesn't exist
-        if (!db.messages) {
-            db.messages = [];
-        }
-        
-        db.messages.push(message);
-        await writeDB(db);
-        
-        console.log(`Message sent from owner to ${recipientEmail}`);
-        
-        res.json({
-            success: true,
-            message: 'Message sent successfully',
-            messageId: message.id
-        });
-    } catch (error) {
-        console.error('Send message error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Get messages sent by owner
-app.get('/api/admin/messages', authenticateToken, async (req, res) => {
-    try {
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        if (!user || user.userType !== 'owner') {
-            return res.status(403).json({ error: 'Owner access required' });
-        }
-        
-        // Get all messages sent by this owner
-        const messages = (db.messages || [])
-            .filter(msg => msg.senderId === req.userId && msg.senderType === 'owner')
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Most recent first
-        
-        res.json(messages);
-    } catch (error) {
-        console.error('Get messages error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-app.get('/api/admin/login-activity', authenticateToken, async (req, res) => {
-    try {
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        if (!user || user.userType !== 'owner') {
-            return res.status(403).json({ error: 'Owner access required' });
-        }
-
-        // Get login activity, sorted by most recent first
-        const loginActivity = (db.loginActivity || []).sort((a, b) => 
-            new Date(b.timestamp) - new Date(a.timestamp)
-        );
-
-        // Optionally limit results
-        const limit = parseInt(req.query.limit) || 100;
-        const limitedActivity = loginActivity.slice(0, limit);
-
-        res.json(limitedActivity);
-    } catch (error) {
-        console.error('Get login activity error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -1172,87 +812,6 @@ app.post('/api/payments/subscribe', authenticateToken, async (req, res) => {
 });
 
 // Setup owner Stripe Connect account
-app.post('/api/owner/setup-stripe', authenticateToken, async (req, res) => {
-    try {
-        if (!stripe) {
-            return res.status(503).json({ error: 'Stripe not configured. Please set STRIPE_SECRET_KEY environment variable.' });
-        }
-        
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        if (!user || user.userType !== 'owner') {
-            return res.status(403).json({ error: 'Owner access required' });
-        }
-
-        // Create Stripe Connect account
-        const account = await stripe.accounts.create({
-            type: 'express',
-            country: 'US',
-            email: user.email,
-            capabilities: {
-                card_payments: { requested: true },
-                transfers: { requested: true },
-            },
-        });
-
-        // Create account link for onboarding
-        const accountLink = await stripe.accountLinks.create({
-            account: account.id,
-            refresh_url: `${req.headers.origin || 'http://localhost:3000'}/owner-dashboard.html`,
-            return_url: `${req.headers.origin || 'http://localhost:3000'}/owner-dashboard.html`,
-            type: 'account_onboarding',
-        });
-
-        // Save Stripe account ID
-        user.stripeAccountId = account.id;
-        await writeDB(db);
-
-        res.json({ 
-            accountId: account.id,
-            onboardingUrl: accountLink.url,
-            message: 'Stripe account created. Complete onboarding to receive payments.'
-        });
-    } catch (error) {
-        console.error('Stripe setup error:', error);
-        res.status(400).json({ error: error.message || 'Failed to setup Stripe' });
-    }
-});
-
-// Get owner's Stripe account status
-app.get('/api/owner/stripe-status', authenticateToken, async (req, res) => {
-    try {
-        if (!stripe) {
-            return res.status(503).json({ error: 'Stripe not configured. Please set STRIPE_SECRET_KEY environment variable.' });
-        }
-        
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        if (!user || user.userType !== 'owner') {
-            return res.status(403).json({ error: 'Owner access required' });
-        }
-
-        if (!user.stripeAccountId) {
-            return res.json({ connected: false, message: 'Stripe not connected' });
-        }
-
-        const account = await stripe.accounts.retrieve(user.stripeAccountId);
-        
-        res.json({
-            connected: true,
-            accountId: account.id,
-            chargesEnabled: account.charges_enabled,
-            payoutsEnabled: account.payouts_enabled,
-            detailsSubmitted: account.details_submitted,
-            email: account.email
-        });
-    } catch (error) {
-        console.error('Stripe status error:', error);
-        res.status(400).json({ error: error.message || 'Failed to get status' });
-    }
-});
-
 // Serve index.html for all non-API routes (frontend routing)
 // This MUST be last, after all API routes
 app.get('*', (req, res) => {
