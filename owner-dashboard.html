@@ -607,24 +607,46 @@
                 messageForm.addEventListener('submit', sendMessage);
             }
             
-            // Attach click handlers to tab buttons if onclick isn't working
+            // Attach click handlers to tab buttons as fallback for onclick
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    const onclick = this.getAttribute('onclick');
-                    if (onclick) {
-                        const match = onclick.match(/showTab\(['"]([^'"]+)['"]\)/);
-                        if (match) {
-                            e.target = this;
+                // Remove onclick and use addEventListener instead for better compatibility
+                const onclick = btn.getAttribute('onclick');
+                if (onclick) {
+                    btn.removeAttribute('onclick');
+                    const match = onclick.match(/showTab\(['"]([^'"]+)['"]\)/);
+                    if (match) {
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
                             showTab(match[1]);
-                        }
+                        });
                     }
-                });
+                }
+            });
+            
+            // Attach click handlers to all buttons with onclick attributes
+            document.querySelectorAll('[onclick]').forEach(element => {
+                const onclick = element.getAttribute('onclick');
+                if (onclick && onclick.includes('showTab') || onclick.includes('loadAccounts') || onclick.includes('loadLoginActivity')) {
+                    // Keep onclick but also add event listener as backup
+                    element.style.cursor = 'pointer';
+                }
             });
             
             console.log('Owner dashboard initialized');
+            console.log('All functions available:', {
+                showTab: typeof window.showTab,
+                loadAccounts: typeof window.loadAccounts,
+                loadLoginActivity: typeof window.loadLoginActivity,
+                editBankingInfo: typeof window.editBankingInfo,
+                exportData: typeof window.exportData,
+                logout: typeof window.logout
+            });
         });
 
         function showTab(tabName) {
+            console.log('showTab called with:', tabName);
+            
             // Remove active class from all tabs and content
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -637,12 +659,24 @@
             const tabContent = document.getElementById(tabName + '-tab');
             if (tabContent) {
                 tabContent.classList.add('active');
+                console.log('Activated tab:', tabName);
+            } else {
+                console.error('Tab content not found:', tabName + '-tab');
             }
             
             // Add active class to clicked button
-            const clickedBtn = event ? event.target : document.querySelector(`[onclick*="'${tabName}'"]`);
+            const clickedBtn = event && event.target ? event.target : 
+                              document.querySelector(`button[onclick*="'${tabName}'"], button[onclick*='"${tabName}"']`);
             if (clickedBtn) {
                 clickedBtn.classList.add('active');
+            } else {
+                // Fallback: find button by text content
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    const onclick = btn.getAttribute('onclick') || '';
+                    if (onclick.includes(tabName)) {
+                        btn.classList.add('active');
+                    }
+                });
             }
             
             // Load users when messages tab is opened
