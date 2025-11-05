@@ -227,14 +227,26 @@ async function readDB() {
 
 // Send welcome email to new users
 async function sendWelcomeEmail(user) {
+    console.log('📧 Attempting to send welcome email to:', user.email);
+    console.log('📧 Email configured:', emailConfigured);
+    console.log('📧 Email transporter exists:', !!emailTransporter);
+    console.log('📧 EMAIL_USER set:', !!process.env.EMAIL_USER);
+    console.log('📧 EMAIL_PASSWORD set:', !!process.env.EMAIL_PASSWORD);
+    console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'gmail');
+    
     if (!emailConfigured || !emailTransporter) {
-        console.log('⚠️  Email not configured, skipping welcome email for:', user.email);
+        console.warn('⚠️  Email not configured, skipping welcome email for:', user.email);
+        console.warn('   To enable emails, set EMAIL_USER and EMAIL_PASSWORD in .env');
+        console.warn('   See EMAIL-SETUP.md for instructions');
         return;
     }
 
     try {
         const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@snackreach.com';
         const baseUrl = process.env.BASE_URL || 'https://snackreach-production.up.railway.app';
+        
+        console.log('📧 Sending email from:', emailFrom);
+        console.log('📧 Base URL:', baseUrl);
         
         const mailOptions = {
             from: emailFrom,
@@ -357,10 +369,30 @@ async function sendWelcomeEmail(user) {
             `
         };
 
-        await emailTransporter.sendMail(mailOptions);
+        const info = await emailTransporter.sendMail(mailOptions);
         console.log('✅ Welcome email sent successfully to:', user.email);
+        console.log('✅ Email message ID:', info.messageId);
+        console.log('✅ Email response:', info.response);
     } catch (error) {
-        console.error('❌ Error sending welcome email:', error);
+        console.error('❌ Error sending welcome email to:', user.email);
+        console.error('❌ Error details:', {
+            message: error.message,
+            code: error.code,
+            command: error.command,
+            response: error.response,
+            responseCode: error.responseCode
+        });
+        console.error('❌ Full error:', error);
+        
+        // More specific error messages
+        if (error.code === 'EAUTH') {
+            console.error('❌ Authentication failed - check EMAIL_USER and EMAIL_PASSWORD');
+        } else if (error.code === 'ECONNECTION') {
+            console.error('❌ Connection failed - check SMTP settings');
+        } else if (error.code === 'ETIMEDOUT') {
+            console.error('❌ Connection timeout - check network/firewall');
+        }
+        
         throw error;
     }
 }
@@ -517,7 +549,8 @@ app.post('/api/register', async (req, res) => {
         
         // Send welcome email (async, don't wait for it)
         sendWelcomeEmail(newUser).catch(err => {
-            console.error('Failed to send welcome email:', err.message);
+            console.error('❌ Failed to send welcome email after registration:', err.message);
+            console.error('   Registration succeeded, but email failed. User can still login.');
             // Don't fail registration if email fails
         });
         
@@ -977,6 +1010,19 @@ app.post('/api/reset-password', async (req, res) => {
         console.error('Reset password error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+// Email configuration check endpoint (for debugging)
+app.get('/api/email-status', (req, res) => {
+    res.json({
+        emailConfigured: emailConfigured,
+        hasTransporter: !!emailTransporter,
+        emailService: process.env.EMAIL_SERVICE || 'gmail',
+        hasEmailUser: !!process.env.EMAIL_USER,
+        hasEmailPassword: !!process.env.EMAIL_PASSWORD,
+        emailFrom: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'not set',
+        baseUrl: process.env.BASE_URL || 'not set'
+    });
 });
 
 // ==================== REAL PAYMENT ENDPOINTS ====================
