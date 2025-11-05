@@ -7,40 +7,6 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Simple tab styles */
-        .simple-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 10px;
-        }
-        .simple-tab-btn {
-            padding: 15px 30px;
-            background: transparent;
-            border: none;
-            border-bottom: 3px solid transparent;
-            font-size: 16px;
-            font-weight: 600;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .simple-tab-btn:hover {
-            color: #dc2626;
-        }
-        .simple-tab-btn.active {
-            color: #dc2626;
-            border-bottom-color: #dc2626;
-        }
-        .simple-tab-content {
-            display: none;
-        }
-        .simple-tab-content.active {
-            display: block;
-        }
-    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -67,15 +33,15 @@
                 <p>Platform administration and payment management</p>
             </div>
 
-            <!-- Simple Tabs -->
-            <div class="simple-tabs">
-                <button class="simple-tab-btn active" onclick="showTab('accounts')">All Accounts</button>
-                <button class="simple-tab-btn" onclick="showTab('banking')">Banking Info</button>
-                <button class="simple-tab-btn" onclick="showTab('settings')">Settings</button>
+            <!-- SIMPLE TABS - Bulletproof -->
+            <div style="border-bottom: 2px solid #e5e7eb; margin-bottom: 30px; padding-bottom: 10px;">
+                <button id="tab-btn-accounts" onclick="showAccounts()" style="padding: 15px 30px; margin-right: 10px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600;">All Accounts</button>
+                <button id="tab-btn-banking" onclick="showBanking()" style="padding: 15px 30px; margin-right: 10px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600;">Banking Info</button>
+                <button id="tab-btn-settings" onclick="showSettings()" style="padding: 15px 30px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600;">Settings</button>
             </div>
 
             <!-- Accounts Tab -->
-            <div id="accounts-tab" class="simple-tab-content active">
+            <div id="tab-accounts" style="display: block;">
                 <div class="section-header">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div>
@@ -121,7 +87,7 @@
             </div>
 
             <!-- Banking Info Tab -->
-            <div id="banking-tab" class="simple-tab-content">
+            <div id="tab-banking" style="display: none;">
                 <div class="profile-section">
                     <h3>Banking Information</h3>
                     <p class="section-description">This is where payments from users will be deposited</p>
@@ -273,7 +239,7 @@
             </div>
 
             <!-- Settings Tab -->
-            <div id="settings-tab" class="simple-tab-content">
+            <div id="tab-settings" style="display: none;">
                 <div class="profile-section">
                     <h3>Owner Profile & Settings</h3>
                     
@@ -349,53 +315,62 @@
         
         console.log('API Base URL:', API_BASE_URL);
 
-        // SIMPLE tab switching function
-        function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.simple-tab-content').forEach(function(tab) {
-                tab.classList.remove('active');
-                tab.style.display = 'none';
-            });
+        // SIMPLEST POSSIBLE TAB FUNCTIONS - using direct onclick
+        function showAccounts() {
+            document.getElementById('tab-accounts').style.display = 'block';
+            document.getElementById('tab-banking').style.display = 'none';
+            document.getElementById('tab-settings').style.display = 'none';
             
-            // Remove active from all buttons
-            document.querySelectorAll('.simple-tab-btn').forEach(function(btn) {
-                btn.classList.remove('active');
-            });
+            document.getElementById('tab-btn-accounts').style.background = '#dc2626';
+            document.getElementById('tab-btn-accounts').style.color = 'white';
+            document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
+            document.getElementById('tab-btn-banking').style.color = '#64748b';
+            document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
+            document.getElementById('tab-btn-settings').style.color = '#64748b';
             
-            // Show selected tab
-            var tab = document.getElementById(tabName + '-tab');
-            if (tab) {
-                tab.classList.add('active');
-                tab.style.display = 'block';
-            }
-            
-            // Activate button
-            var buttons = document.querySelectorAll('.simple-tab-btn');
-            buttons.forEach(function(btn) {
-                if (btn.onclick && btn.onclick.toString().includes(tabName)) {
-                    btn.classList.add('active');
-                }
-            });
-            
-            // Load data if needed
-            if (tabName === 'accounts') {
-                setTimeout(function() {
-                    if (typeof loadAccounts === 'function') {
-                        loadAccounts();
-                    }
-                }, 100);
-            }
-            if (tabName === 'banking') {
-                setTimeout(function() {
-                    if (typeof loadBankingInfo === 'function') {
-                        loadBankingInfo();
-                    }
-                }, 100);
+            if (typeof loadAccounts === 'function') {
+                loadAccounts();
             }
         }
         
-        // Make it global
-        window.showTab = showTab;
+        function showBanking() {
+            document.getElementById('tab-accounts').style.display = 'none';
+            document.getElementById('tab-banking').style.display = 'block';
+            document.getElementById('tab-settings').style.display = 'none';
+            
+            document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
+            document.getElementById('tab-btn-accounts').style.color = '#64748b';
+            document.getElementById('tab-btn-banking').style.background = '#dc2626';
+            document.getElementById('tab-btn-banking').style.color = 'white';
+            document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
+            document.getElementById('tab-btn-settings').style.color = '#64748b';
+            
+            if (typeof loadBankingInfo === 'function') {
+                loadBankingInfo();
+            }
+        }
+        
+        function showSettings() {
+            document.getElementById('tab-accounts').style.display = 'none';
+            document.getElementById('tab-banking').style.display = 'none';
+            document.getElementById('tab-settings').style.display = 'block';
+            
+            document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
+            document.getElementById('tab-btn-accounts').style.color = '#64748b';
+            document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
+            document.getElementById('tab-btn-banking').style.color = '#64748b';
+            document.getElementById('tab-btn-settings').style.background = '#dc2626';
+            document.getElementById('tab-btn-settings').style.color = 'white';
+            
+            if (typeof loadOwnerProfile === 'function') {
+                loadOwnerProfile();
+            }
+        }
+        
+        // Make functions global
+        window.showAccounts = showAccounts;
+        window.showBanking = showBanking;
+        window.showSettings = showSettings;
 
         // Check authentication
         document.addEventListener('DOMContentLoaded', function() {
@@ -482,7 +457,6 @@
 
         // Banking functions
         async function loadBankingInfo() {
-            // Load banking info logic here
             const bankName = localStorage.getItem('owner_bank_name');
             const accountName = localStorage.getItem('owner_account_name');
             const accountNumber = localStorage.getItem('owner_account_number');
