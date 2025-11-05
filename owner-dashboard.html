@@ -772,17 +772,64 @@
 
         async function loadAccounts() {
             try {
+                // Determine API base URL
+                const hostname = window.location.hostname;
+                let API_BASE_URL;
+                if (hostname.includes('railway.app')) {
+                    API_BASE_URL = '/api';
+                } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                    API_BASE_URL = 'https://snackreach-production.up.railway.app/api';
+                } else {
+                    API_BASE_URL = 'http://localhost:3000/api';
+                }
+                
+                const token = localStorage.getItem('snackreach_token');
+                if (!token) {
+                    console.warn('No auth token found. Owner may need to log in.');
+                    // Still try to load from localStorage as fallback
+                    const accounts = getAllAccountsFromStorage();
+                    displayAccounts(accounts);
+                    return;
+                }
+                
                 const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('snackreach_token')}`
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+                
                 const accounts = await response.json();
+                console.log('Loaded accounts from backend:', accounts.length);
                 displayAccounts(accounts);
             } catch (error) {
-                // Fallback to localStorage
+                console.error('Error loading accounts from backend:', error);
+                // Fallback to localStorage but show a warning
                 const accounts = getAllAccountsFromStorage();
-                displayAccounts(accounts);
+                if (accounts.length === 0) {
+                    const tbody = document.getElementById('accounts-table-body');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 2rem;">
+                                <div class="empty-state">
+                                    <div class="empty-icon">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <h4>Unable to load accounts</h4>
+                                    <p>Could not connect to backend API. Please check your connection and try refreshing.</p>
+                                    <p style="color: #dc2626; margin-top: 1rem; font-size: 0.9rem;">Error: ${error.message}</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    displayAccounts(accounts);
+                    console.warn('Using localStorage fallback. Accounts may be incomplete.');
+                }
             }
         }
 
