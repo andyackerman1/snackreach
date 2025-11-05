@@ -1,0 +1,23 @@
+QUICK CONSOLE TEST COMMANDS
+===========================
+
+1. Open console (F12), then click "Console" tab
+
+2. Copy and paste these one at a time:
+
+   Test if button exists:
+   document.getElementById('tab-btn-accounts')
+
+   Test if functions exist:
+   typeof window.showAccounts
+
+   Test clicking button:
+   document.getElementById('tab-btn-accounts').click()
+
+   Check pointer events:
+   window.getComputedStyle(document.getElementById('tab-btn-accounts')).pointerEvents
+
+   Check if button is visible:
+   document.getElementById('tab-btn-accounts').offsetParent
+
+3. Tell me what each one shows!
