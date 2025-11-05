@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to View SnackReach Locally</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .method {
+            background: #f3f4f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .method h3 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+        .warning {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+            margin: 20px 0;
+        }
+        code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .button {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>📍 How to View SnackReach Locally</h1>
+    
+    <div class="warning">
+        <strong>⚠️ Important:</strong> This is a full-stack application with a backend server. 
+        You can view the pages, but login/signup won't work without the server running.
+    </div>
+
+    <div class="method">
+        <h3>Method 1: View Pages Directly (Read-Only)</h3>
+        <p>You can open HTML files directly in your browser, but functionality will be limited:</p>
+        <ol>
+            <li>Open Finder</li>
+            <li>Navigate to: <code>/Users/andy.ackerman/snackconnect</code></li>
+            <li>Double-click any HTML file:
+                <ul>
+                    <li><code>index.html</code> - Main page</li>
+                    <li><code>login.html</code> - Login page</li>
+                    <li><code>signup.html</code> - Signup page</li>
+                    <li><code>owner-login.html</code> - Owner login</li>
+                </ul>
+            </li>
+        </ol>
+        <p><strong>Note:</strong> Pages will load, but login/signup won't work because they need the backend API.</p>
+    </div>
+
+    <div class="method">
+        <h3>Method 2: Use Production Site (Full Functionality)</h3>
+        <p>The easiest way to use the site with full functionality:</p>
+        <p><a href="https://snackreach-production.up.railway.app/" class="button" target="_blank">🌐 Open Production Site</a></p>
+        <p>This works immediately - no installation needed!</p>
+    </div>
+
+    <div class="method">
+        <h3>Method 3: Run Local Server (Full Functionality)</h3>
+        <p>For full functionality locally, you need to run the server:</p>
+        <ol>
+            <li><strong>Install Node.js:</strong> <a href="https://nodejs.org/" target="_blank">https://nodejs.org/</a></li>
+            <li><strong>Open Terminal and run:</strong>
+                <pre><code>cd /Users/andy.ackerman/snackconnect/backend
+npm install
+node server.js</code></pre>
+            </li>
+            <li><strong>Then open:</strong> <code>http://localhost:3000</code></li>
+        </ol>
+    </div>
+
+    <div class="method">
+        <h3>Why Do I Need Node.js?</h3>
+        <p>This application has:</p>
+        <ul>
+            <li><strong>Frontend:</strong> HTML/CSS/JavaScript (can view directly)</li>
+            <li><strong>Backend:</strong> Node.js server that handles:
+                <ul>
+                    <li>User registration and login</li>
+                    <li>Database storage</li>
+                    <li>API endpoints</li>
+                    <li>Authentication</li>
+                </ul>
+            </li>
+        </ul>
+        <p>The backend server is required for login, signup, and data storage to work.</p>
+    </div>
+
+    <hr>
+    <p style="text-align: center; color: #6b7280;">
+        <strong>Quick Start:</strong> Use the production site above for immediate access with full functionality!
+    </p>
+</body>
+</html>
+

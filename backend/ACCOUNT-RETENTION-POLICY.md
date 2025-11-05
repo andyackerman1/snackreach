@@ -37,3 +37,6 @@
 - Database file is append-only (only adds, never removes unless explicit)
 - All user data preserved indefinitely
 
+
+
+

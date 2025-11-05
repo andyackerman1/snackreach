@@ -64,3 +64,6 @@
 - Explicitly clearing localStorage
 - Browser data being cleared
 
+
+
+

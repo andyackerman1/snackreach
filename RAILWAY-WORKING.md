@@ -47,3 +47,6 @@ The server is running - we just need to make sure the domain is pointing to the 
 
 Let me know what happens when you try the `/api/health` endpoint!
 
+
+
+
