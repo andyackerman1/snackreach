@@ -693,23 +693,13 @@ app.post('/api/forgot-password', async (req, res) => {
 
         console.log('Password reset link generated:', resetLink);
 
-        // TODO: Send email with reset link
-        // For now, return the link in development mode
-        const isDevelopment = process.env.NODE_ENV !== 'production' || !process.env.RAILWAY_ENVIRONMENT;
-        
-        if (isDevelopment) {
-            // In development, return the link so user can use it
-            return res.json({ 
-                message: `Password reset link generated. Click here to reset: ${resetLink}`,
-                resetLink: resetLink // Include for development
-            });
-        } else {
-            // In production, say email was sent (even though we're not sending it yet)
-            // TODO: Implement actual email sending
-            return res.json({ 
-                message: 'If an account exists with that email, a password reset link has been sent. Please check your email.' 
-            });
-        }
+        // TODO: Send email with reset link using email service (SendGrid, Nodemailer, etc.)
+        // For now, return the link in the response so user can use it
+        // In production, you would send an email and NOT return the link
+        return res.json({ 
+            message: `Password reset link generated! Click the link below to reset your password.`,
+            resetLink: resetLink // Include reset link (remove this when email is implemented)
+        });
 
     } catch (error) {
         console.error('Forgot password error:', error);
