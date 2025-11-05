@@ -49,6 +49,10 @@
                     <i class="fas fa-university"></i>
                     Banking Info
                 </button>
+                <button class="tab-btn" onclick="showTab('login-activity')">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login Activity
+                </button>
                 <button class="tab-btn" onclick="showTab('payments')">
                     <i class="fas fa-dollar-sign"></i>
                     Payments
@@ -125,7 +129,7 @@
                         <div>
                             <h3>All User Accounts</h3>
                             <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">
-                                Accounts are stored in localStorage. If someone signs up on a different browser, you won't see them here until they sign up on your browser too.
+                                All accounts are stored in the centralized backend database. All users who sign up or log in from any environment are saved here.
                             </p>
                         </div>
                         <button class="btn btn-primary" onclick="loadAccounts()" style="margin-left: 1rem;">
@@ -330,6 +334,52 @@
                 </div>
             </div>
 
+            <!-- Login Activity Tab -->
+            <div id="login-activity-tab" class="tab-content">
+                <div class="section-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div>
+                            <h3>Login Activity</h3>
+                            <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">
+                                Track all user login activity across all environments (local and production)
+                            </p>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadLoginActivity()" style="margin-left: 1rem;">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="accounts-table-container">
+                    <table class="accounts-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Timestamp</th>
+                                <th>IP Address</th>
+                                <th>User Agent</th>
+                            </tr>
+                        </thead>
+                        <tbody id="login-activity-table-body">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem;">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">
+                                            <i class="fas fa-sign-in-alt"></i>
+                                        </div>
+                                        <h4>No login activity yet</h4>
+                                        <p>Login activity will appear here once users log in</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Payments Tab -->
             <div id="payments-tab" class="tab-content">
                 <div class="section-header">
@@ -496,7 +546,17 @@
     </section>
 
     <script>
-        const API_BASE_URL = 'http://localhost:3000/api';
+        // Dynamic API URL detection - works across all environments
+        const API_BASE_URL = (() => {
+            const hostname = window.location.hostname;
+            if (hostname.includes('railway.app')) {
+                return '/api'; // Same domain on Railway
+            } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                return 'https://snackreach-production.up.railway.app/api'; // Production Railway backend
+            } else {
+                return 'http://localhost:3000/api'; // Local development
+            }
+        })();
 
         // Check if user is owner - session persists until explicit logout
         document.addEventListener('DOMContentLoaded', function() {
@@ -519,6 +579,7 @@
             loadAccounts();
             loadStats();
             loadOwnerProfile();
+            loadLoginActivity(); // Load login activity on page load
             
             // Set up message form
             const messageForm = document.getElementById('message-form');
@@ -541,6 +602,11 @@
             // Load users when messages tab is opened
             if (tabName === 'messages') {
                 loadUsersForMessaging();
+            }
+            
+            // Load login activity when tab is opened
+            if (tabName === 'login-activity') {
+                loadLoginActivity();
             }
         }
         
@@ -773,76 +839,106 @@
         }
 
         async function loadAccounts() {
-            // PRIORITIZE localStorage - load accounts from localStorage first
-            console.log('=== Loading Accounts ===');
-            const accounts = getAllAccountsFromStorage();
-            console.log('Loaded accounts from localStorage:', accounts.length);
-            console.log('Account details:', accounts);
+            // PRIORITIZE backend - load accounts from centralized backend database
+            console.log('=== Loading Accounts from Centralized Backend ===');
             
-            // Also log what's in localStorage directly
-            const rawUsers = localStorage.getItem('snackreach_users');
-            console.log('Raw localStorage data:', rawUsers);
-            const parsedUsers = JSON.parse(rawUsers || '[]');
-            console.log('Parsed users:', parsedUsers);
-            
-            displayAccounts(accounts);
-            
-            // Also try to sync with backend in the background (optional)
             try {
-                const hostname = window.location.hostname;
-                let API_BASE_URL;
-                if (hostname.includes('railway.app')) {
-                    API_BASE_URL = '/api';
-                } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                    API_BASE_URL = 'https://snackreach-production.up.railway.app/api';
-                } else {
-                    API_BASE_URL = 'http://localhost:3000/api';
+                const token = localStorage.getItem('snackreach_token');
+                if (!token) {
+                    console.error('No authentication token found');
+                    displayAccounts([]);
+                    return;
                 }
                 
-                const token = localStorage.getItem('snackreach_token');
-                if (token) {
-                    const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const backendAccounts = await response.json();
-                        console.log('Also loaded accounts from backend:', backendAccounts.length);
-                        
-                        // Merge backend accounts with localStorage (avoid duplicates)
-                        backendAccounts.forEach(backendAccount => {
-                            const exists = accounts.find(acc => acc.email === backendAccount.email);
-                            if (!exists) {
-                                accounts.push(backendAccount);
-                                // Also save to localStorage
-                                const existingUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
-                                const userExists = existingUsers.find(u => u.email === backendAccount.email);
-                                if (!userExists) {
-                                    existingUsers.push({
-                                        id: backendAccount.id,
-                                        name: backendAccount.name,
-                                        email: backendAccount.email,
-                                        companyName: backendAccount.companyName,
-                                        userType: backendAccount.userType,
-                                        password: backendAccount.password || 'N/A', // Include password if available
-                                        createdAt: backendAccount.createdAt
-                                    });
-                                    localStorage.setItem('snackreach_users', JSON.stringify(existingUsers));
-                                }
-                            }
-                        });
-                        
-                        // Re-display with merged accounts
-                        displayAccounts(accounts);
+                const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
+                });
+                
+                if (response.ok) {
+                    const accounts = await response.json();
+                    console.log('Loaded accounts from centralized backend:', accounts.length);
+                    displayAccounts(accounts);
+                } else {
+                    console.error('Failed to load accounts from backend');
+                    displayAccounts([]);
                 }
             } catch (error) {
-                console.log('Backend sync optional - using localStorage only:', error.message);
-                // That's okay, we're using localStorage as primary source
+                console.error('Error loading accounts from backend:', error);
+                displayAccounts([]);
             }
+        }
+
+        async function loadLoginActivity() {
+            console.log('=== Loading Login Activity ===');
+            
+            try {
+                const token = localStorage.getItem('snackreach_token');
+                if (!token) {
+                    console.error('No authentication token found');
+                    displayLoginActivity([]);
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/admin/login-activity?limit=100`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const activity = await response.json();
+                    console.log('Loaded login activity:', activity.length);
+                    displayLoginActivity(activity);
+                } else {
+                    console.error('Failed to load login activity from backend');
+                    displayLoginActivity([]);
+                }
+            } catch (error) {
+                console.error('Error loading login activity from backend:', error);
+                displayLoginActivity([]);
+            }
+        }
+
+        function displayLoginActivity(activity) {
+            const tbody = document.getElementById('login-activity-table-body');
+            
+            if (activity.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem;">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                </div>
+                                <h4>No login activity yet</h4>
+                                <p>Login activity will appear here once users log in</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = activity.map(item => {
+                const date = new Date(item.timestamp);
+                const userAgent = item.userAgent || 'unknown';
+                const shortUserAgent = userAgent.length > 50 ? userAgent.substring(0, 50) + '...' : userAgent;
+                
+                return `
+                    <tr>
+                        <td>${item.name || '-'}</td>
+                        <td>${item.email || '-'}</td>
+                        <td><span class="status-badge ${item.userType}">${item.userType === 'startup' ? 'Snack Company' : item.userType === 'office' ? 'Office Manager' : 'Owner'}</span></td>
+                        <td>${date.toLocaleString()}</td>
+                        <td>${item.ipAddress || '-'}</td>
+                        <td title="${userAgent}">${shortUserAgent}</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function getAllAccountsFromStorage() {

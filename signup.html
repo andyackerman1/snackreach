@@ -345,9 +345,19 @@
             }
             
 
-            // Try to save to backend
+            // Try to save to backend (centralized storage)
             try {
-                const API_BASE_URL = 'http://localhost:3000/api';
+                // Dynamic API URL detection - works across all environments
+                const API_BASE_URL = (() => {
+                    const hostname = window.location.hostname;
+                    if (hostname.includes('railway.app')) {
+                        return '/api'; // Same domain on Railway
+                    } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                        return 'https://snackreach-production.up.railway.app/api'; // Production Railway backend
+                    } else {
+                        return 'http://localhost:3000/api'; // Local development
+                    }
+                })();
                 const response = await fetch(`${API_BASE_URL}/register`, {
                     method: 'POST',
                     headers: {
@@ -374,32 +384,9 @@
                         localStorage.setItem('snackreach_company_name', data.user.companyName);
                     }
                     
-                    // ALWAYS save to localStorage as well (for owner dashboard visibility)
-                    const userData = {
-                        id: data.user.id || Date.now().toString(),
-                        name: data.user.name || name,
-                        email: data.user.email || email,
-                        password: password, // In real app, this would be hashed
-                        companyName: data.user.companyName || company,
-                        phone: data.user.phone || phone,
-                        userType: data.user.userType || (selectedUserType === 'startup' ? 'startup' : 'office'),
-                        createdAt: data.user.createdAt || new Date().toISOString()
-                    };
-                    
-                    const existingUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
-                    // Check if user already exists (by email) - but allow duplicates for now
-                    const existingIndex = existingUsers.findIndex(u => u.email === userData.email && u.id === userData.id);
-                    if (existingIndex >= 0) {
-                        existingUsers[existingIndex] = userData; // Update existing (same ID)
-                    } else {
-                        // Always add new - don't filter by email alone (allow multiple accounts)
-                        existingUsers.push(userData); // Add new
-                        console.log('Added new user to localStorage:', userData.email);
-                    }
-                    console.log('Total users in localStorage after adding:', existingUsers.length);
-                    localStorage.setItem('snackreach_users', JSON.stringify(existingUsers));
-                    
-                    alert(`Welcome to SnackReach, ${name}!\n\nYour account has been created and saved successfully!`);
+                    // Account is saved to centralized backend database
+                    // localStorage is only used for session token (not account storage)
+                    alert(`Welcome to SnackReach, ${name}!\n\nYour account has been created and saved to the centralized system!`);
                     
                     // Redirect to appropriate dashboard
                     if (selectedUserType === 'startup') {
@@ -412,34 +399,8 @@
                 }
             } catch (error) {
                 console.error('Backend registration error:', error);
-                // Fallback: Save to localStorage if backend unavailable
-                const userData = {
-                    id: Date.now().toString(),
-                    name,
-                    email,
-                    password, // In real app, this would be hashed
-                    companyName: company,
-                    phone,
-                    userType: selectedUserType === 'startup' ? 'startup' : 'office',
-                    createdAt: new Date().toISOString()
-                };
-                
-                // Save to localStorage
-                const existingUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
-                existingUsers.push(userData);
-                localStorage.setItem('snackreach_users', JSON.stringify(existingUsers));
-                
-                // Store login information
-                storeLoginInfo(selectedUserType === 'startup' ? 'startup' : 'office', name, company);
-                
-                alert(`Welcome to SnackReach, ${name}!\n\nYour account has been created!\n\n(Note: Saved locally - backend not available)`);
-                
-                // Redirect to appropriate dashboard
-                if (selectedUserType === 'startup') {
-                    window.location.href = 'snack-dashboard.html';
-                } else {
-                    window.location.href = 'office-dashboard.html';
-                }
+                // Show error - backend is required for centralized storage
+                alert(`Registration failed: ${error.message}\n\nPlease ensure you have an internet connection and try again. All accounts must be saved to the centralized backend system.`);
             }
         });
     </script>

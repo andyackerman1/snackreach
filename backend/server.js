@@ -208,6 +208,27 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '3650d' } // 10 years - essentially permanent session
         );
 
+        // Track login activity
+        const loginActivity = {
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            userType: user.userType,
+            timestamp: new Date().toISOString(),
+            ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        };
+        
+        db.loginActivity = db.loginActivity || [];
+        db.loginActivity.push(loginActivity);
+        
+        // Keep only last 1000 login activities to prevent database bloat
+        if (db.loginActivity.length > 1000) {
+            db.loginActivity = db.loginActivity.slice(-1000);
+        }
+        
+        await writeDB(db);
+
         res.json({
             message: 'Login successful',
             token,
@@ -313,6 +334,28 @@ app.post('/api/login-owner', async (req, res) => {
             }
             // Generate JWT token with very long expiration (essentially permanent)
             const token = jwt.sign({ userId: adminUser.id, email: adminUser.email, userType: 'owner' }, JWT_SECRET, { expiresIn: '3650d' }); // 10 years
+            
+            // Track login activity
+            const loginActivity = {
+                userId: adminUser.id,
+                email: adminUser.email,
+                name: adminUser.name,
+                userType: 'owner',
+                timestamp: new Date().toISOString(),
+                ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+                userAgent: req.headers['user-agent'] || 'unknown'
+            };
+            
+            db.loginActivity = db.loginActivity || [];
+            db.loginActivity.push(loginActivity);
+            
+            // Keep only last 1000 login activities to prevent database bloat
+            if (db.loginActivity.length > 1000) {
+                db.loginActivity = db.loginActivity.slice(-1000);
+            }
+            
+            await writeDB(db);
+            
             return res.json({ message: 'Login successful', token, user: { id: adminUser.id, name: adminUser.name, email: adminUser.email, companyName: adminUser.companyName, userType: 'owner' } });
         }
 
@@ -334,6 +377,27 @@ app.post('/api/login-owner', async (req, res) => {
             JWT_SECRET,
             { expiresIn: '3650d' } // 10 years - essentially permanent session
         );
+
+        // Track login activity
+        const loginActivity = {
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            userType: 'owner',
+            timestamp: new Date().toISOString(),
+            ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        };
+        
+        db.loginActivity = db.loginActivity || [];
+        db.loginActivity.push(loginActivity);
+        
+        // Keep only last 1000 login activities to prevent database bloat
+        if (db.loginActivity.length > 1000) {
+            db.loginActivity = db.loginActivity.slice(-1000);
+        }
+        
+        await writeDB(db);
 
         res.json({
             message: 'Login successful',
@@ -454,6 +518,32 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
         res.json(accounts);
     } catch (error) {
         console.error('Get all accounts error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get login activity (owner only)
+app.get('/api/admin/login-activity', authenticateToken, async (req, res) => {
+    try {
+        const db = await readDB();
+        const user = db.users.find(u => u.id === req.userId);
+        
+        if (!user || user.userType !== 'owner') {
+            return res.status(403).json({ error: 'Owner access required' });
+        }
+
+        // Get login activity, sorted by most recent first
+        const loginActivity = (db.loginActivity || []).sort((a, b) => 
+            new Date(b.timestamp) - new Date(a.timestamp)
+        );
+
+        // Optionally limit results
+        const limit = parseInt(req.query.limit) || 100;
+        const limitedActivity = loginActivity.slice(0, limit);
+
+        res.json(limitedActivity);
+    } catch (error) {
+        console.error('Get login activity error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
