@@ -260,7 +260,7 @@
 </head>
 <body>
     <!-- Login Screen (shown if not authenticated) -->
-    <div id="login-screen" class="login-container" style="display: none;">
+    <div id="login-screen" class="login-container" style="display: block;">
         <h1><i class="fas fa-shield-alt"></i> Admin Login</h1>
         <div id="login-error" class="error" style="display: none;"></div>
         <form id="login-form">
@@ -332,14 +332,28 @@
         // Dynamic API URL detection
         const API_BASE_URL = (() => {
             const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            
+            // If opened directly as file://, use Railway production
+            if (protocol === 'file:') {
+                return 'https://snackreach-production.up.railway.app/api';
+            }
+            
+            // If on Railway domain
             if (hostname.includes('railway.app')) {
                 return '/api'; // Same domain on Railway
-            } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                return 'https://snackreach-production.up.railway.app/api'; // Production Railway backend
-            } else {
+            }
+            
+            // If on localhost
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
                 return 'http://localhost:3000/api'; // Local development
             }
+            
+            // Default to Railway production
+            return 'https://snackreach-production.up.railway.app/api';
         })();
+        
+        console.log('API Base URL:', API_BASE_URL);
 
         // Check if already logged in
         function checkAuth() {
@@ -378,6 +392,9 @@
             errorDiv.style.display = 'none';
             
             try {
+                console.log('Attempting login to:', `${API_BASE_URL}/admin/login`);
+                console.log('Email:', email);
+                
                 const response = await fetch(`${API_BASE_URL}/admin/login`, {
                     method: 'POST',
                     headers: {
@@ -386,18 +403,33 @@
                     body: JSON.stringify({ email, password }),
                 });
 
-                const data = await response.json();
+                console.log('Response status:', response.status);
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    const text = await response.text();
+                    console.error('Response text:', text);
+                    errorDiv.textContent = `Server error: ${response.status}. Make sure the server is running.`;
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                console.log('Response data:', data);
 
                 if (response.ok && data.token) {
                     localStorage.setItem('admin_token', data.token);
                     showDashboard();
                     loadAccounts();
                 } else {
-                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.textContent = data.error || 'Login failed. Check your credentials.';
                     errorDiv.style.display = 'block';
+                    console.error('Login failed:', data);
                 }
             } catch (error) {
-                errorDiv.textContent = 'Connection error. Please try again.';
+                console.error('Login error:', error);
+                errorDiv.textContent = `Connection error: ${error.message}. Make sure the server is running at ${API_BASE_URL}`;
                 errorDiv.style.display = 'block';
             }
         });
