@@ -7,6 +7,40 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Simple tab styles */
+        .simple-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .simple-tab-btn {
+            padding: 15px 30px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .simple-tab-btn:hover {
+            color: #dc2626;
+        }
+        .simple-tab-btn.active {
+            color: #dc2626;
+            border-bottom-color: #dc2626;
+        }
+        .simple-tab-content {
+            display: none;
+        }
+        .simple-tab-content.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -33,124 +67,27 @@
                 <p>Platform administration and payment management</p>
             </div>
 
-            <!-- Dashboard Tabs -->
-            <div class="dashboard-tabs" style="position: relative; z-index: 1000;">
-                <button class="tab-btn active" data-tab="overview" type="button" 
-                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
-                        onclick="switchTab('overview'); return false;">
-                    <i class="fas fa-chart-line"></i>
-                    Overview
-                </button>
-                <button class="tab-btn" data-tab="accounts" type="button"
-                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
-                        onclick="switchTab('accounts'); return false;">
-                    <i class="fas fa-users"></i>
-                    All Accounts
-                </button>
-                <button class="tab-btn" data-tab="banking" type="button"
-                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
-                        onclick="switchTab('banking'); return false;">
-                    <i class="fas fa-university"></i>
-                    Banking Info
-                </button>
-                <button class="tab-btn" data-tab="payments" type="button"
-                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
-                        onclick="switchTab('payments'); return false;">
-                    <i class="fas fa-dollar-sign"></i>
-                    Payments
-                </button>
-                <button class="tab-btn" data-tab="messages" type="button"
-                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
-                        onclick="switchTab('messages'); return false;">
-                    <i class="fas fa-envelope"></i>
-                    Messages
-                </button>
-                <button class="tab-btn" data-tab="settings" type="button"
-                        style="cursor: pointer !important; pointer-events: auto !important; position: relative !important; z-index: 1001 !important;"
-                        onclick="switchTab('settings'); return false;">
-                    <i class="fas fa-cog"></i>
-                    Settings
-                </button>
+            <!-- Simple Tabs -->
+            <div class="simple-tabs">
+                <button class="simple-tab-btn active" onclick="showTab('accounts')">All Accounts</button>
+                <button class="simple-tab-btn" onclick="showTab('banking')">Banking Info</button>
+                <button class="simple-tab-btn" onclick="showTab('settings')">Settings</button>
             </div>
 
-            <!-- Overview Tab -->
-            <div id="overview-tab" class="tab-content active" style="display: block;">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="total-users">0</h3>
-                            <p>Total Users</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-rocket"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="total-startups">0</h3>
-                            <p>Snack Companies</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-building"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="total-offices">0</h3>
-                            <p>Office Spaces</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="total-revenue">$0</h3>
-                            <p>Total Revenue</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="recent-activity">
-                    <h3>Recent Activity</h3>
-                    <div class="activity-list" id="recent-activity-list">
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="fas fa-inbox"></i>
-                            </div>
-                            <h4>No recent activity</h4>
-                            <p>User activity will appear here</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- All Accounts Tab -->
-            <div id="accounts-tab" class="tab-content" style="display: none;">
+            <!-- Accounts Tab -->
+            <div id="accounts-tab" class="simple-tab-content active">
                 <div class="section-header">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div>
                             <h3>All User Accounts</h3>
                             <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">
-                                All accounts are stored in the centralized backend database. All users who sign up or log in from any environment are saved here.
+                                All accounts are stored in the centralized backend database
                             </p>
                         </div>
                         <button class="btn btn-primary" onclick="loadAccounts()" style="margin-left: 1rem;">
                             <i class="fas fa-sync-alt"></i>
                             Refresh
                         </button>
-                    </div>
-                    <div class="account-filters">
-                        <select id="account-type-filter">
-                            <option value="">All Types</option>
-                            <option value="startup">Snack Companies</option>
-                            <option value="office">Offices</option>
-                            <option value="owner">Owners</option>
-                        </select>
-                        <input type="text" id="account-search" placeholder="Search accounts...">
                     </div>
                 </div>
                 
@@ -160,23 +97,21 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Company</th>
                                 <th>Type</th>
+                                <th>Company</th>
+                                <th>Created</th>
                                 <th>Password</th>
-                                <th>Status</th>
-                                <th>Joined</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="accounts-table-body">
                             <tr>
-                                <td colspan="8" style="text-align: center; padding: 2rem;">
+                                <td colspan="6" style="text-align: center; padding: 2rem;">
                                     <div class="empty-state">
                                         <div class="empty-icon">
                                             <i class="fas fa-users"></i>
                                         </div>
                                         <h4>No accounts yet</h4>
-                                        <p>User accounts will appear here once they sign up</p>
+                                        <p>Accounts will appear here once users sign up</p>
                                     </div>
                                 </td>
                             </tr>
@@ -186,21 +121,14 @@
             </div>
 
             <!-- Banking Info Tab -->
-            <div id="banking-tab" class="tab-content" style="display: none;">
+            <div id="banking-tab" class="simple-tab-content">
                 <div class="profile-section">
                     <h3>Banking Information</h3>
                     <p class="section-description">This is where payments from users will be deposited</p>
                     
                     <div class="banking-card">
-                        <div class="banking-header">
-                            <h4>Payment Account Details</h4>
-                            <button class="btn btn-outline btn-small" onclick="editBankingInfo()">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                        </div>
-                        
-                        <div class="banking-details" id="banking-details">
+                        <div class="banking-info" id="banking-info-display">
+                            <h4>Current Banking Information</h4>
                             <div class="detail-row">
                                 <span class="detail-label">Bank Name:</span>
                                 <span class="detail-value" id="bank-name-display">-</span>
@@ -221,196 +149,123 @@
                                 <span class="detail-label">Bank Address:</span>
                                 <span class="detail-value" id="bank-address-display">-</span>
                             </div>
+                            <button class="btn btn-outline btn-small" onclick="editBankingInfo()" style="margin-top: 1rem;">
+                                <i class="fas fa-edit"></i>
+                                Edit Banking Info
+                            </button>
                         </div>
-                    </div>
 
-                    <div class="banking-form" id="banking-form" style="display: none;">
-                        <h4>Add Payment Method</h4>
-                        <div class="payment-type-tabs">
-                            <button class="payment-tab-btn active" onclick="switchPaymentType('card')">
-                                <i class="fas fa-credit-card"></i>
-                                Credit/Debit Card
-                            </button>
-                            <button class="payment-tab-btn" onclick="switchPaymentType('bank')">
-                                <i class="fas fa-university"></i>
-                                Bank Account
-                            </button>
-                        </div>
-                        
-                        <!-- Credit Card Form -->
-                        <form id="card-payment-form-owner" class="payment-form">
-                            <div class="form-group">
-                                <label for="card-type-owner">Card Type</label>
-                                <select id="card-type-owner" required>
-                                    <option value="">Select card type...</option>
-                                    <option value="visa">Visa</option>
-                                    <option value="mastercard">Mastercard</option>
-                                    <option value="amex">American Express</option>
-                                    <option value="discover">Discover</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="card-number-owner">Card Number</label>
-                                <input type="text" id="card-number-owner" placeholder="1234 5678 9012 3456" maxlength="19" required>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="card-expiry-owner">Expiry Date</label>
-                                    <input type="text" id="card-expiry-owner" placeholder="MM/YY" maxlength="5" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="card-cvv-owner">CVV</label>
-                                    <input type="text" id="card-cvv-owner" placeholder="123" maxlength="4" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="card-name-owner">Name on Card</label>
-                                <input type="text" id="card-name-owner" placeholder="John Doe" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="card-billing-address-owner">Billing Address</label>
-                                <input type="text" id="card-billing-address-owner" placeholder="123 Main St, City, State 12345" required>
-                            </div>
-                            
-                            <div class="form-group checkbox-group">
-                                <input type="checkbox" id="set-default-card-owner">
-                                <label for="set-default-card-owner">Set as default payment method</label>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="button" class="btn btn-outline" onclick="cancelEditBanking()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-lock"></i>
-                                    Add Card
+                        <div class="banking-form" id="banking-form" style="display: none;">
+                            <h4>Add Payment Method</h4>
+                            <div class="payment-type-tabs">
+                                <button class="payment-tab-btn active" onclick="switchPaymentType('card')">
+                                    <i class="fas fa-credit-card"></i>
+                                    Credit/Debit Card
+                                </button>
+                                <button class="payment-tab-btn" onclick="switchPaymentType('bank')">
+                                    <i class="fas fa-university"></i>
+                                    Bank Account
                                 </button>
                             </div>
-                        </form>
-                        
-                        <!-- Bank Account Form - Using Plaid Link -->
-                        <div id="bank-payment-form-owner" class="payment-form" style="display: none;">
-                            <div class="plaid-link-container">
-                                <div class="security-info">
-                                    <i class="fas fa-shield-alt"></i>
-                                    <h4>Secure Bank Verification</h4>
-                                    <p>We use Plaid to securely connect your bank account. Your bank credentials are never stored on our servers.</p>
+                            
+                            <!-- Credit Card Form -->
+                            <form id="card-payment-form-owner" class="payment-form">
+                                <div class="form-group">
+                                    <label for="card-type-owner">Card Type</label>
+                                    <select id="card-type-owner" required>
+                                        <option value="">Select card type...</option>
+                                        <option value="visa">Visa</option>
+                                        <option value="mastercard">Mastercard</option>
+                                        <option value="amex">American Express</option>
+                                        <option value="discover">Discover</option>
+                                    </select>
                                 </div>
                                 
-                                <div class="plaid-features">
-                                    <div class="feature-item">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>256-bit SSL encryption</span>
+                                <div class="form-group">
+                                    <label for="card-number-owner">Card Number</label>
+                                    <input type="text" id="card-number-owner" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="card-expiry-owner">Expiry Date</label>
+                                        <input type="text" id="card-expiry-owner" placeholder="MM/YY" maxlength="5" required>
                                     </div>
-                                    <div class="feature-item">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Bank-level security</span>
+                                    <div class="form-group">
+                                        <label for="card-cvv-owner">CVV</label>
+                                        <input type="text" id="card-cvv-owner" placeholder="123" maxlength="4" required>
                                     </div>
-                                    <div class="feature-item">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>No account numbers stored</span>
-                                    </div>
-                                    <div class="feature-item">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Read-only access</span>
-                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="card-name-owner">Name on Card</label>
+                                    <input type="text" id="card-name-owner" placeholder="John Doe" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="card-billing-address-owner">Billing Address</label>
+                                    <input type="text" id="card-billing-address-owner" placeholder="123 Main St, City, State 12345" required>
                                 </div>
                                 
                                 <div class="form-group checkbox-group">
-                                    <input type="checkbox" id="set-default-bank-plaid-owner">
-                                    <label for="set-default-bank-plaid-owner">Set as default payment method</label>
+                                    <input type="checkbox" id="set-default-card-owner">
+                                    <label for="set-default-card-owner">Set as default payment method</label>
                                 </div>
                                 
                                 <div class="form-actions">
                                     <button type="button" class="btn btn-outline" onclick="cancelEditBanking()">Cancel</button>
-                                    <button type="button" class="btn btn-primary" id="plaid-link-button-owner" onclick="initiatePlaidBankLinkOwner()">
-                                        <i class="fas fa-university"></i>
-                                        Connect Bank Account
-                                    </button>
-                                </div>
-                                
-                                <div id="plaid-link-status-owner" style="display: none; margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px;">
-                                    <p id="plaid-status-message-owner"></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payments Tab -->
-            <div id="payments-tab" class="tab-content" style="display: none;">
-                <div class="section-header">
-                    <h3>Payment History</h3>
-                    <div class="payment-filters">
-                        <select>
-                            <option>All Payments</option>
-                            <option>This Month</option>
-                            <option>Last 3 Months</option>
-                            <option>This Year</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="payments-list" id="payments-list">
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                        <h4>No payments yet</h4>
-                        <p>Payment history will appear here as users subscribe</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Messages Tab -->
-            <div id="messages-tab" class="tab-content" style="display: none;">
-                <div class="messages-container">
-                    <div class="messages-sidebar">
-                        <div class="messages-header">
-                            <h3>All Users</h3>
-                            <button class="btn btn-primary btn-small" onclick="startNewMessage()">
-                                <i class="fas fa-plus"></i>
-                                New Message
-                            </button>
-                        </div>
-                        
-                        <div class="user-list" id="owner-user-list">
-                            <!-- Users will be loaded here -->
-                        </div>
-                    </div>
-                    
-                    <div class="messages-main">
-                        <div id="no-conversation-selected" class="empty-state">
-                            <div class="empty-icon">
-                                <i class="fas fa-comments"></i>
-                            </div>
-                            <h4>Select a user to message</h4>
-                            <p>Choose a user from the list to start or continue a conversation</p>
-                        </div>
-                        
-                        <div id="conversation-view" style="display: none;">
-                            <div class="conversation-header">
-                                <div class="conversation-user-info">
-                                    <h4 id="conversation-user-name">User Name</h4>
-                                    <span id="conversation-user-type" class="user-type-badge"></span>
-                                </div>
-                            </div>
-                            
-                            <div class="messages-list" id="messages-list">
-                                <!-- Messages will be displayed here -->
-                            </div>
-                            
-                            <div class="message-input-container">
-                                <form id="message-form" class="message-form">
-                                    <textarea id="message-text" placeholder="Type your message..." rows="3" required></textarea>
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane"></i>
-                                        Send
+                                        <i class="fas fa-lock"></i>
+                                        Add Card
                                     </button>
-                                </form>
+                                </div>
+                            </form>
+                            
+                            <!-- Bank Account Form - Using Plaid Link -->
+                            <div id="bank-payment-form-owner" class="payment-form" style="display: none;">
+                                <div class="plaid-link-container">
+                                    <div class="security-info">
+                                        <i class="fas fa-shield-alt"></i>
+                                        <h4>Secure Bank Verification</h4>
+                                        <p>We use Plaid to securely connect your bank account. Your bank credentials are never stored on our servers.</p>
+                                    </div>
+                                    
+                                    <div class="plaid-features">
+                                        <div class="feature-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>256-bit SSL encryption</span>
+                                        </div>
+                                        <div class="feature-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>Bank-level security</span>
+                                        </div>
+                                        <div class="feature-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>No account numbers stored</span>
+                                        </div>
+                                        <div class="feature-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>Read-only access</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group checkbox-group">
+                                        <input type="checkbox" id="set-default-bank-plaid-owner">
+                                        <label for="set-default-bank-plaid-owner">Set as default payment method</label>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button type="button" class="btn btn-outline" onclick="cancelEditBanking()">Cancel</button>
+                                        <button type="button" class="btn btn-primary" id="plaid-link-button-owner" onclick="initiatePlaidBankLinkOwner()">
+                                            <i class="fas fa-university"></i>
+                                            Connect Bank Account
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="plaid-link-status-owner" style="display: none; margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px;">
+                                        <p id="plaid-status-message-owner"></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -418,86 +273,53 @@
             </div>
 
             <!-- Settings Tab -->
-            <div id="settings-tab" class="tab-content" style="display: none;">
+            <div id="settings-tab" class="simple-tab-content">
                 <div class="profile-section">
                     <h3>Owner Profile & Settings</h3>
                     
-                    <!-- Personal Information -->
                     <div class="profile-card">
                         <h4>Personal Information</h4>
-                        <form class="profile-form" id="owner-profile-form">
+                        <div class="profile-form">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="owner-profile-name">Full Name</label>
-                                    <input type="text" id="owner-profile-name" required>
+                                    <label>Name</label>
+                                    <input type="text" id="owner-name-input" placeholder="Your name">
                                 </div>
                                 <div class="form-group">
-                                    <label for="owner-profile-email">Email</label>
-                                    <input type="email" id="owner-profile-email" required>
+                                    <label>Email</label>
+                                    <input type="email" id="owner-email-input" placeholder="your@email.com">
                                 </div>
                             </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="owner-profile-phone">Phone Number</label>
-                                    <input type="tel" id="owner-profile-phone" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="owner-profile-company">Company Name</label>
-                                    <input type="text" id="owner-profile-company" required>
-                                </div>
-                            </div>
-                            
                             <div class="form-group">
-                                <label for="owner-profile-bio">Description</label>
-                                <textarea id="owner-profile-bio" rows="4" placeholder="Tell us about yourself..."></textarea>
+                                <label>Company Name</label>
+                                <input type="text" id="owner-company-input" placeholder="Company name">
                             </div>
-                            
-                            <button type="submit" class="btn btn-primary">
+                            <button class="btn btn-primary" onclick="saveOwnerProfile()">
                                 <i class="fas fa-save"></i>
                                 Save Changes
                             </button>
-                        </form>
-                    </div>
-                    
-                    <!-- Security Settings -->
-                    <div class="profile-card">
-                        <h4>Security</h4>
-                        <form class="profile-form" id="owner-password-form">
-                            <div class="form-group">
-                                <label for="owner-current-password">Current Password</label>
-                                <input type="password" id="owner-current-password">
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="owner-new-password">New Password</label>
-                                    <input type="password" id="owner-new-password">
-                                </div>
-                                <div class="form-group">
-                                    <label for="owner-confirm-password">Confirm New Password</label>
-                                    <input type="password" id="owner-confirm-password">
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-key"></i>
-                                Change Password
-                            </button>
-                        </form>
-                    </div>
-                    
-                    <!-- Account Actions -->
-                    <div class="settings-grid">
-                        <div class="setting-card">
-                            <h4>Export Data</h4>
-                            <p>Download all user data</p>
-                            <button class="btn btn-outline btn-small" onclick="exportData()">Export</button>
                         </div>
-                        <div class="setting-card">
-                            <h4>Logout</h4>
-                            <p>Sign out of owner dashboard</p>
-                            <button class="btn btn-outline btn-small" onclick="logout()">Logout</button>
+                    </div>
+
+                    <div class="profile-card" style="margin-top: 2rem;">
+                        <h4>Account Actions</h4>
+                        <div class="account-actions">
+                            <div class="action-item">
+                                <div class="action-info">
+                                    <h5>Export Data</h5>
+                                    <p>Download all platform data as CSV</p>
+                                </div>
+                                <button class="btn btn-outline btn-small" onclick="exportData()">
+                                    <i class="fas fa-download"></i>
+                                    Export
+                                </button>
+                            </div>
+                            <div class="logout-section">
+                                <button class="btn btn-outline" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Logout
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -507,85 +329,80 @@
 
     <script src="js/plaid-link.js"></script>
     <script>
-        // Make Plaid function globally available
-        if (typeof initiatePlaidBankLinkOwner === 'undefined') {
-            window.initiatePlaidBankLinkOwner = function() {
-                alert('Plaid integration not available. Please use the production site for full functionality.');
-            };
-        } else {
-            window.initiatePlaidBankLinkOwner = initiatePlaidBankLinkOwner;
-        }
-        
-        // Dynamic API URL detection - works across all environments
+        // Dynamic API URL detection
         const API_BASE_URL = (() => {
             const hostname = window.location.hostname;
             const protocol = window.location.protocol;
             
-            // If opened as file://, use production API
             if (protocol === 'file:' || hostname === '') {
                 return 'https://snackreach-production.up.railway.app/api';
             }
             
             if (hostname.includes('railway.app')) {
-                return '/api'; // Same domain on Railway
+                return '/api';
             } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                return 'https://snackreach-production.up.railway.app/api'; // Production Railway backend
+                return 'https://snackreach-production.up.railway.app/api';
             } else {
-                return 'http://localhost:3000/api'; // Local development
+                return 'http://localhost:3000/api';
             }
         })();
         
         console.log('API Base URL:', API_BASE_URL);
 
-        // ULTRA-SIMPLE tab switching - defined in HEADER SCRIPT before everything
-        window.switchTab = function(tabName) {
-            alert('Tab clicked: ' + tabName); // TEMPORARY - to confirm clicks work
-            
+        // SIMPLE tab switching function
+        function showTab(tabName) {
             // Hide all tabs
-            var tabs = document.querySelectorAll('.tab-content');
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].style.display = 'none';
-                tabs[i].classList.remove('active');
-            }
+            document.querySelectorAll('.simple-tab-content').forEach(function(tab) {
+                tab.classList.remove('active');
+                tab.style.display = 'none';
+            });
             
-            // Remove active from buttons
-            var buttons = document.querySelectorAll('.tab-btn');
-            for (var i = 0; i < buttons.length; i++) {
-                buttons[i].classList.remove('active');
-            }
+            // Remove active from all buttons
+            document.querySelectorAll('.simple-tab-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
             
             // Show selected tab
             var tab = document.getElementById(tabName + '-tab');
             if (tab) {
-                tab.style.display = 'block';
                 tab.classList.add('active');
+                tab.style.display = 'block';
             }
             
             // Activate button
-            var btn = document.querySelector('[data-tab="' + tabName + '"]');
-            if (btn) {
-                btn.classList.add('active');
-            }
+            var buttons = document.querySelectorAll('.simple-tab-btn');
+            buttons.forEach(function(btn) {
+                if (btn.onclick && btn.onclick.toString().includes(tabName)) {
+                    btn.classList.add('active');
+                }
+            });
             
-            // Load data
-            if (tabName === 'messages' && window.loadUsersForMessaging) {
-                setTimeout(window.loadUsersForMessaging, 100);
+            // Load data if needed
+            if (tabName === 'accounts') {
+                setTimeout(function() {
+                    if (typeof loadAccounts === 'function') {
+                        loadAccounts();
+                    }
+                }, 100);
             }
-            if (tabName === 'accounts' && window.loadAccounts) {
-                setTimeout(window.loadAccounts, 100);
+            if (tabName === 'banking') {
+                setTimeout(function() {
+                    if (typeof loadBankingInfo === 'function') {
+                        loadBankingInfo();
+                    }
+                }, 100);
             }
-        };
+        }
         
-        // Make it available immediately
-        console.log('switchTab function defined:', typeof window.switchTab);
+        // Make it global
+        window.showTab = showTab;
 
-        // Check if user is owner - session persists until explicit logout
+        // Check authentication
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('snackreach_token');
             const userType = localStorage.getItem('snackreach_user_type');
             const ownerName = localStorage.getItem('snackreach_user_name');
             
-            // Session check - only redirect if truly not logged in
             if (!token || userType !== 'owner') {
                 alert('Access denied. Owner account required.');
                 window.location.href = 'owner-login.html';
@@ -595,343 +412,17 @@
             if (ownerName) {
                 document.getElementById('owner-name').textContent = ownerName;
             }
-
-            // Make functions available globally for onclick handlers
-            // These will be defined below, but we'll expose them here too
             
-            loadBankingInfo();
             loadAccounts();
-            loadStats();
+            loadBankingInfo();
             loadOwnerProfile();
-            
-            // Set up message form
-            const messageForm = document.getElementById('message-form');
-            if (messageForm) {
-                messageForm.addEventListener('submit', sendMessage);
-            }
-            
-            // SIMPLE, DIRECT click handlers - attach to ALL tab buttons immediately
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            console.log('Setting up', tabButtons.length, 'tab buttons');
-            
-            tabButtons.forEach(function(btn) {
-                const tabName = btn.getAttribute('data-tab');
-                if (!tabName) {
-                    console.warn('Button missing data-tab attribute');
-                    return;
-                }
-                
-                // Make absolutely sure it's clickable with inline styles
-                btn.style.cssText = 'cursor: pointer !important; pointer-events: auto !important; user-select: none !important; z-index: 999 !important; position: relative !important;';
-                
-                // Add onclick directly (works even if JS errors)
-                btn.setAttribute('onclick', 'switchTab("' + tabName + '"); return false;');
-                
-                // Also add event listener as backup
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Tab clicked via listener:', tabName);
-                    if (window.switchTab) {
-                        window.switchTab(tabName);
-                    }
-                    return false;
-                }, true);
-                
-                // Also try mousedown
-                btn.addEventListener('mousedown', function(e) {
-                    e.preventDefault();
-                    console.log('Tab mousedown:', tabName);
-                    if (window.switchTab) {
-                        window.switchTab(tabName);
-                    }
-                    return false;
-                });
-                
-                console.log('Configured tab:', tabName);
-            });
-            
-            console.log('✅ All', tabButtons.length, 'tab buttons configured');
-            
-            // Attach click handlers to all buttons with onclick attributes
-            document.querySelectorAll('[onclick]').forEach(element => {
-                const onclick = element.getAttribute('onclick');
-                if (onclick && onclick.includes('showTab') || onclick.includes('loadAccounts') || onclick.includes('loadLoginActivity')) {
-                    // Keep onclick but also add event listener as backup
-                    element.style.cursor = 'pointer';
-                }
-            });
-            
-            console.log('Owner dashboard initialized');
-            console.log('All functions available:', {
-                showTab: typeof window.showTab,
-                loadAccounts: typeof window.loadAccounts,
-                loadLoginActivity: typeof window.loadLoginActivity,
-                editBankingInfo: typeof window.editBankingInfo,
-                exportData: typeof window.exportData,
-                logout: typeof window.logout
-            });
         });
 
-        
-        // Also make loadAccounts and loadLoginActivity globally available
-        window.loadAccounts = loadAccounts;
-        window.loadLoginActivity = loadLoginActivity;
-        
-        let currentSelectedUserId = null;
-        
-        async function loadUsersForMessaging() {
-            const userList = document.getElementById('owner-user-list');
-            userList.innerHTML = '';
-            
-            try {
-                const token = localStorage.getItem('snackreach_token');
-                if (!token) {
-                    userList.innerHTML = '<div class="empty-state-small"><p>Not authenticated</p></div>';
-                    return;
-                }
-                
-                const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    userList.innerHTML = '<div class="empty-state-small"><p>Failed to load users</p></div>';
-                    return;
-                }
-                
-                const accounts = await response.json();
-                
-                // Filter out owner accounts
-                const regularUsers = accounts.filter(acc => acc.userType !== 'owner');
-            
-            if (regularUsers.length === 0) {
-                userList.innerHTML = '<div class="empty-state-small"><p>No users found</p></div>';
-                return;
-            }
-            
-            regularUsers.forEach(user => {
-                const userItem = document.createElement('div');
-                userItem.className = 'user-item';
-                
-                const lastMessage = getLastMessage(user.id);
-                const unreadCount = getUnreadCount(user.id);
-                
-                userItem.innerHTML = `
-                    <div class="user-item-info">
-                        <h5>${user.name || user.companyName || 'Unknown User'}</h5>
-                        <p class="user-item-type">${user.userType === 'startup' ? 'Snack Company' : 'Office Manager'}</p>
-                        ${lastMessage ? `<p class="user-item-preview">${lastMessage.text.substring(0, 50)}${lastMessage.text.length > 50 ? '...' : ''}</p>` : '<p class="user-item-preview">No messages yet</p>'}
-                    </div>
-                    ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
-                `;
-                
-                userItem.addEventListener('click', () => {
-                    selectUserForMessaging(user, userItem);
-                });
-                
-                userList.appendChild(userItem);
-            });
-        }
-        
-        function selectUserForMessaging(user, userItem) {
-            currentSelectedUserId = user.id;
-            
-            // Update UI
-            document.getElementById('no-conversation-selected').style.display = 'none';
-            document.getElementById('conversation-view').style.display = 'block';
-            document.getElementById('conversation-user-name').textContent = user.name || user.companyName || 'Unknown User';
-            
-            const userTypeBadge = document.getElementById('conversation-user-type');
-            userTypeBadge.textContent = user.userType === 'startup' ? 'Snack Company' : 'Office Manager';
-            userTypeBadge.className = 'user-type-badge ' + (user.userType === 'startup' ? 'startup' : 'office');
-            
-            // Load conversation
-            loadConversation(user.id);
-            
-            // Highlight selected user
-            document.querySelectorAll('.user-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            if (userItem) {
-                userItem.classList.add('active');
-            }
-        }
-        
-        function loadConversation(userId) {
-            const messagesList = document.getElementById('messages-list');
-            messagesList.innerHTML = '';
-            
-            // Get messages from localStorage
-            const allMessages = JSON.parse(localStorage.getItem('snackreach_messages') || '[]');
-            const ownerId = 'owner-' + (localStorage.getItem('snackreach_user_name') || 'admin');
-            
-            // Filter messages between owner and this user
-            const conversationMessages = allMessages.filter(msg => 
-                (msg.fromId === ownerId && msg.toId === userId) || 
-                (msg.fromId === userId && msg.toId === ownerId)
-            ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-            
-            if (conversationMessages.length === 0) {
-                messagesList.innerHTML = '<div class="empty-state-small"><p>No messages yet. Start the conversation!</p></div>';
-                return;
-            }
-            
-            conversationMessages.forEach(msg => {
-                const isOwner = msg.fromId === ownerId;
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${isOwner ? 'message-sent' : 'message-received'}`;
-                
-                const date = new Date(msg.timestamp);
-                messageDiv.innerHTML = `
-                    <div class="message-content">
-                        <p>${msg.text}</p>
-                        <span class="message-time">${date.toLocaleString()}</span>
-                    </div>
-                `;
-                
-                messagesList.appendChild(messageDiv);
-            });
-            
-            // Scroll to bottom
-            messagesList.scrollTop = messagesList.scrollHeight;
-            
-            // Mark messages as read
-            markMessagesAsRead(userId);
-        }
-        
-        function sendMessage(e) {
-            e.preventDefault();
-            
-            if (!currentSelectedUserId) {
-                alert('Please select a user to message');
-                return;
-            }
-            
-            const messageText = document.getElementById('message-text').value.trim();
-            if (!messageText) {
-                return;
-            }
-            
-            const ownerId = 'owner-' + (localStorage.getItem('snackreach_user_name') || 'admin');
-            const ownerName = localStorage.getItem('snackreach_user_name') || 'SnackReach Admin';
-            
-            const message = {
-                id: Date.now().toString(),
-                fromId: ownerId,
-                fromName: ownerName,
-                toId: currentSelectedUserId,
-                text: messageText,
-                timestamp: new Date().toISOString(),
-                read: false
-            };
-            
-            // Save to localStorage
-            const allMessages = JSON.parse(localStorage.getItem('snackreach_messages') || '[]');
-            allMessages.push(message);
-            localStorage.setItem('snackreach_messages', JSON.stringify(allMessages));
-            
-            // Try to save to backend
-            const token = localStorage.getItem('snackreach_token');
-            if (token) {
-                fetch(`${API_BASE_URL}/messages`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        toUserId: currentSelectedUserId,
-                        text: messageText
-                    })
-                }).catch(error => {
-                    console.log('Backend not available, saved locally');
-                });
-            }
-            
-            // Clear input
-            document.getElementById('message-text').value = '';
-            
-            // Reload conversation
-            loadConversation(currentSelectedUserId);
-            
-            // Refresh user list to show updated preview
-            loadUsersForMessaging();
-        }
-        
-        function getLastMessage(userId) {
-            const allMessages = JSON.parse(localStorage.getItem('snackreach_messages') || '[]');
-            const ownerId = 'owner-' + (localStorage.getItem('snackreach_user_name') || 'admin');
-            
-            const conversationMessages = allMessages.filter(msg => 
-                (msg.fromId === ownerId && msg.toId === userId) || 
-                (msg.fromId === userId && msg.toId === ownerId)
-            ).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            
-            return conversationMessages.length > 0 ? conversationMessages[0] : null;
-        }
-        
-        function getUnreadCount(userId) {
-            const allMessages = JSON.parse(localStorage.getItem('snackreach_messages') || '[]');
-            const ownerId = 'owner-' + (localStorage.getItem('snackreach_user_name') || 'admin');
-            
-            return allMessages.filter(msg => 
-                msg.fromId === userId && 
-                msg.toId === ownerId && 
-                !msg.read
-            ).length;
-        }
-        
-        function markMessagesAsRead(userId) {
-            const allMessages = JSON.parse(localStorage.getItem('snackreach_messages') || '[]');
-            const ownerId = 'owner-' + (localStorage.getItem('snackreach_user_name') || 'admin');
-            
-            allMessages.forEach(msg => {
-                if (msg.fromId === userId && msg.toId === ownerId && !msg.read) {
-                    msg.read = true;
-                }
-            });
-            
-            localStorage.setItem('snackreach_messages', JSON.stringify(allMessages));
-        }
-        
-        function startNewMessage() {
-            // For now, just show the user list
-            // Could add a modal to search/select user in the future
-            loadUsersForMessaging();
-        }
-
-        function loadBankingInfo() {
-            const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
-            
-            if (ownerData.bankingInfo) {
-                document.getElementById('bank-name-display').textContent = ownerData.bankingInfo.bankName || '-';
-                document.getElementById('account-name-display').textContent = ownerData.bankingInfo.accountName || '-';
-                document.getElementById('account-number-display').textContent = ownerData.bankingInfo.accountNumber ? '****' + ownerData.bankingInfo.accountNumber.slice(-4) : '-';
-                document.getElementById('routing-number-display').textContent = ownerData.bankingInfo.routingNumber ? '****' + ownerData.bankingInfo.routingNumber.slice(-4) : '-';
-                
-                const address = [
-                    ownerData.bankingInfo.address,
-                    ownerData.bankingInfo.city,
-                    ownerData.bankingInfo.state,
-                    ownerData.bankingInfo.zip
-                ].filter(Boolean).join(', ');
-                
-                document.getElementById('bank-address-display').textContent = address || '-';
-            }
-        }
-
+        // Load accounts
         async function loadAccounts() {
-            // PRIORITIZE backend - load accounts from centralized backend database
-            console.log('=== Loading Accounts from Centralized Backend ===');
-            
             try {
                 const token = localStorage.getItem('snackreach_token');
                 if (!token) {
-                    console.error('No authentication token found');
                     displayAccounts([]);
                     return;
                 }
@@ -945,176 +436,29 @@
                 
                 if (response.ok) {
                     const accounts = await response.json();
-                    console.log('Loaded accounts from centralized backend:', accounts.length);
                     displayAccounts(accounts);
                 } else {
-                    console.error('Failed to load accounts from backend');
                     displayAccounts([]);
                 }
             } catch (error) {
-                console.error('Error loading accounts from backend:', error);
+                console.error('Error loading accounts:', error);
                 displayAccounts([]);
             }
         }
-
-        async function loadLoginActivity() {
-            console.log('=== Loading Login Activity ===');
+        
+        function displayAccounts(accounts) {
+            const tbody = document.getElementById('accounts-table-body');
             
-            try {
-                const token = localStorage.getItem('snackreach_token');
-                if (!token) {
-                    console.error('No authentication token found');
-                    displayLoginActivity([]);
-                    return;
-                }
-                
-                const response = await fetch(`${API_BASE_URL}/admin/login-activity?limit=100`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const activity = await response.json();
-                    console.log('Loaded login activity:', activity.length);
-                    displayLoginActivity(activity);
-                } else {
-                    console.error('Failed to load login activity from backend');
-                    displayLoginActivity([]);
-                }
-            } catch (error) {
-                console.error('Error loading login activity from backend:', error);
-                displayLoginActivity([]);
-            }
-        }
-
-        function displayLoginActivity(activity) {
-            const tbody = document.getElementById('login-activity-table-body');
-            
-            if (activity.length === 0) {
+            if (accounts.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" style="text-align: center; padding: 2rem;">
                             <div class="empty-state">
                                 <div class="empty-icon">
-                                    <i class="fas fa-sign-in-alt"></i>
-                                </div>
-                                <h4>No login activity yet</h4>
-                                <p>Login activity will appear here once users log in</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = activity.map(item => {
-                const date = new Date(item.timestamp);
-                const userAgent = item.userAgent || 'unknown';
-                const shortUserAgent = userAgent.length > 50 ? userAgent.substring(0, 50) + '...' : userAgent;
-                
-                return `
-                    <tr>
-                        <td>${item.name || '-'}</td>
-                        <td>${item.email || '-'}</td>
-                        <td><span class="status-badge ${item.userType}">${item.userType === 'startup' ? 'Snack Company' : item.userType === 'office' ? 'Office Manager' : 'Owner'}</span></td>
-                        <td>${date.toLocaleString()}</td>
-                        <td>${item.ipAddress || '-'}</td>
-                        <td title="${userAgent}">${shortUserAgent}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function getAllAccountsFromStorage() {
-            const accounts = [];
-            
-            // Get owner accounts
-            const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
-            if (ownerData.id) {
-                accounts.push({
-                    id: ownerData.id,
-                    name: ownerData.name,
-                    email: ownerData.email,
-                    companyName: ownerData.companyName,
-                    userType: 'owner',
-                    createdAt: ownerData.createdAt
-                });
-            }
-            
-            // Get regular user accounts from localStorage
-            const regularUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
-            console.log('Raw regularUsers from localStorage:', regularUsers);
-            console.log('Regular users count:', regularUsers.length);
-            
-            regularUsers.forEach((user, index) => {
-                console.log(`Adding user ${index + 1}:`, user.email, user.name, user.userType);
-                accounts.push({
-                    id: user.id || `user-${index}-${Date.now()}`,
-                    name: user.name,
-                    email: user.email,
-                    companyName: user.companyName,
-                    userType: user.userType,
-                    password: user.password || 'N/A', // Include password if available
-                    createdAt: user.createdAt
-                });
-            });
-            
-            console.log('Total accounts after adding regular users:', accounts.length);
-            console.log('All accounts:', accounts);
-            
-            return accounts;
-        }
-
-        function displayAccounts(accounts) {
-            const tbody = document.getElementById('accounts-table-body');
-            
-            console.log('Displaying accounts:', accounts);
-            console.log('Accounts count:', accounts.length);
-            
-            if (accounts.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 2rem;">
-                            <div class="empty-state">
-                                <div class="empty-icon">
                                     <i class="fas fa-users"></i>
                                 </div>
                                 <h4>No accounts yet</h4>
-                                <p>User accounts will appear here once they sign up</p>
-                                <button onclick="loadAccounts()" class="btn btn-primary" style="margin-top: 1rem;">
-                                    <i class="fas fa-sync-alt"></i>
-                                    Refresh
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            // Filter out owner accounts from display (but keep all other accounts)
-            const displayableAccounts = accounts.filter(acc => acc.userType !== 'owner');
-            
-            console.log('Displayable accounts (after filtering owners):', displayableAccounts.length);
-            console.log('Displayable accounts details:', displayableAccounts);
-            
-            if (displayableAccounts.length === 0 && accounts.length > 0) {
-                // Only owner accounts found
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 2rem;">
-                            <div class="empty-state">
-                                <div class="empty-icon">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                                <h4>No user accounts found</h4>
-                                <p>Found ${accounts.length} account(s) in the database, but none are regular users (only owner accounts).</p>
-                                <button onclick="loadAccounts()" class="btn btn-primary" style="margin-top: 1rem;">
-                                    <i class="fas fa-sync-alt"></i>
-                                    Refresh
-                                </button>
+                                <p>Accounts will appear here once users sign up</p>
                             </div>
                         </td>
                     </tr>
@@ -1122,418 +466,122 @@
                 return;
             }
             
-            // Ensure we show ALL accounts - no deduplication
-            console.log('Rendering', displayableAccounts.length, 'accounts to table');
-            
-            tbody.innerHTML = displayableAccounts.map((account, index) => {
-                console.log(`Rendering account ${index + 1}:`, account.email, account.name);
-                const password = account.password || 'N/A';
-                const isPasswordVisible = password !== 'N/A' && !password.startsWith('$2'); // Not hashed
-                return `
+            tbody.innerHTML = accounts.map(account => `
                 <tr>
-                    <td>${account.name || '-'}</td>
-                    <td>${account.email || '-'}</td>
-                    <td>${account.companyName || '-'}</td>
-                    <td><span class="status-badge ${account.userType}">${account.userType === 'startup' ? 'Snack Company' : 'Office Manager'}</span></td>
-                    <td>
-                        ${isPasswordVisible 
-                            ? `<span class="password-display" style="font-family: monospace; color: #dc2626; font-weight: 600;">${password}</span>` 
-                            : '<span style="color: #94a3b8;">' + (password === 'N/A' ? 'N/A' : 'Hashed (cannot view)') + '</span>'}
-                    </td>
-                    <td><span class="status-badge active">Active</span></td>
-                    <td>${account.createdAt ? new Date(account.createdAt).toLocaleDateString() : '-'}</td>
-                    <td>
-                        <button class="btn btn-outline btn-small">
-                            <i class="fas fa-eye"></i>
-                            View
-                        </button>
-                    </td>
+                    <td>${account.name || account.companyName || 'N/A'}</td>
+                    <td>${account.email || 'N/A'}</td>
+                    <td>${account.userType || 'N/A'}</td>
+                    <td>${account.companyName || 'N/A'}</td>
+                    <td>${account.createdAt ? new Date(account.createdAt).toLocaleDateString() : 'N/A'}</td>
+                    <td>${account.password ? account.password : 'Hashed (cannot view)'}</td>
                 </tr>
-            `;
-            }).join('');
-            
-            console.log('Table rendered with', displayableAccounts.length, 'rows');
+            `).join('');
         }
+        
+        window.loadAccounts = loadAccounts;
 
-        async function loadStats() {
-            try {
-                const token = localStorage.getItem('snackreach_token');
-                if (!token) {
-                    return;
-                }
-                
-                const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const accounts = await response.json();
-                    const startups = accounts.filter(a => a.userType === 'startup');
-                    const offices = accounts.filter(a => a.userType === 'office');
-                    
-                    document.getElementById('total-users').textContent = accounts.length;
-                    document.getElementById('total-startups').textContent = startups.length;
-                    document.getElementById('total-offices').textContent = offices.length;
-                }
-            } catch (error) {
-                console.error('Error loading stats:', error);
+        // Banking functions
+        async function loadBankingInfo() {
+            // Load banking info logic here
+            const bankName = localStorage.getItem('owner_bank_name');
+            const accountName = localStorage.getItem('owner_account_name');
+            const accountNumber = localStorage.getItem('owner_account_number');
+            const routingNumber = localStorage.getItem('owner_routing_number');
+            const bankAddress = localStorage.getItem('owner_bank_address');
+            
+            if (bankName || accountName) {
+                document.getElementById('bank-name-display').textContent = bankName || '-';
+                document.getElementById('account-name-display').textContent = accountName || '-';
+                document.getElementById('account-number-display').textContent = accountNumber ? '****' + accountNumber.slice(-4) : '-';
+                document.getElementById('routing-number-display').textContent = routingNumber || '-';
+                document.getElementById('bank-address-display').textContent = bankAddress || '-';
             }
         }
-
-        // Make functions globally available
-        window.editBankingInfo = function() {
-            const bankingDetails = document.getElementById('banking-details');
-            const bankingForm = document.getElementById('banking-form');
-            if (bankingDetails) bankingDetails.style.display = 'none';
-            if (bankingForm) bankingForm.style.display = 'block';
-            switchPaymentType('card');
-        };
-
-        window.cancelEditBanking = function() {
-            const bankingDetails = document.getElementById('banking-details');
-            const bankingForm = document.getElementById('banking-form');
-            if (bankingDetails) bankingDetails.style.display = 'block';
-            if (bankingForm) bankingForm.style.display = 'none';
-            // Reset forms
+        
+        function editBankingInfo() {
+            document.getElementById('banking-info-display').style.display = 'none';
+            document.getElementById('banking-form').style.display = 'block';
+        }
+        
+        function cancelEditBanking() {
+            document.getElementById('banking-info-display').style.display = 'block';
+            document.getElementById('banking-form').style.display = 'none';
+        }
+        
+        function switchPaymentType(type) {
             const cardForm = document.getElementById('card-payment-form-owner');
             const bankForm = document.getElementById('bank-payment-form-owner');
-            if (cardForm) cardForm.reset();
-            if (bankForm) bankForm.reset();
-        };
-
-        window.switchPaymentType = function(type) {
-            const cardForm = document.getElementById('card-payment-form-owner');
-            const bankForm = document.getElementById('bank-payment-form-owner');
-            const cardTab = document.querySelectorAll('.payment-tab-btn')[0];
-            const bankTab = document.querySelectorAll('.payment-tab-btn')[1];
+            const tabs = document.querySelectorAll('.payment-tab-btn');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
             
             if (type === 'card') {
                 cardForm.style.display = 'block';
                 bankForm.style.display = 'none';
-                cardTab.classList.add('active');
-                bankTab.classList.remove('active');
+                tabs[0].classList.add('active');
             } else {
                 cardForm.style.display = 'none';
                 bankForm.style.display = 'block';
-                cardTab.classList.remove('active');
-                bankTab.classList.add('active');
+                tabs[1].classList.add('active');
             }
         }
+        
+        window.editBankingInfo = editBankingInfo;
+        window.cancelEditBanking = cancelEditBanking;
+        window.switchPaymentType = switchPaymentType;
+        window.loadBankingInfo = loadBankingInfo;
 
-        // Handle "Other" bank selection (with safety check)
-        const bankNameSelect = document.getElementById('bank-name-owner');
-        if (bankNameSelect) {
-            bankNameSelect.addEventListener('change', function() {
-                const otherInput = document.getElementById('other-bank-input-owner');
-                if (this.value === 'other') {
-                    if (otherInput) otherInput.style.display = 'block';
-                    const otherBankName = document.getElementById('other-bank-name-owner');
-                    if (otherBankName) otherBankName.required = true;
-                } else {
-                    if (otherInput) otherInput.style.display = 'none';
-                    const otherBankName = document.getElementById('other-bank-name-owner');
-                    if (otherBankName) otherBankName.required = false;
-                }
-            });
-        }
-
-        // Format card number with spaces
-        document.getElementById('card-number-owner').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\s/g, '');
-            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
-            if (formattedValue.length <= 19) {
-                e.target.value = formattedValue;
-            }
-        });
-
-        // Card form submission
-        document.getElementById('card-payment-form-owner').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
-            
-            if (!ownerData.paymentMethods) {
-                ownerData.paymentMethods = [];
-            }
-            
-            const cardData = {
-                id: Date.now().toString(),
-                type: 'card',
-                cardType: document.getElementById('card-type-owner').value,
-                last4: document.getElementById('card-number-owner').value.slice(-4),
-                expiry: document.getElementById('card-expiry-owner').value,
-                name: document.getElementById('card-name-owner').value,
-                isDefault: document.getElementById('set-default-card-owner').checked || !ownerData.paymentMethods.length
+        // Plaid integration
+        if (typeof initiatePlaidBankLinkOwner === 'undefined') {
+            window.initiatePlaidBankLinkOwner = function() {
+                alert('Plaid integration not available. Please use the production site for full functionality.');
             };
-            
-            // If setting as default, unset others
-            if (cardData.isDefault) {
-                ownerData.paymentMethods.forEach(pm => pm.isDefault = false);
-            }
-            
-            ownerData.paymentMethods.push(cardData);
-            localStorage.setItem('snackreach_owner_data', JSON.stringify(ownerData));
-            
-            alert('Credit card added successfully!');
-            cancelEditBanking();
-            loadBankingInfo();
-        });
-
-        // Bank form submission
-        document.getElementById('bank-payment-form-owner').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
-            
-            if (!ownerData.paymentMethods) {
-                ownerData.paymentMethods = [];
-            }
-            
-            const bankName = document.getElementById('bank-name-owner').value === 'other' 
-                ? document.getElementById('other-bank-name-owner').value 
-                : document.getElementById('bank-name-owner').value;
-            
-            const bankData = {
-                id: Date.now().toString(),
-                type: 'bank',
-                bankName: bankName,
-                accountType: document.getElementById('account-type-owner').value,
-                last4: document.getElementById('account-number-owner').value.slice(-4),
-                accountHolder: document.getElementById('account-holder-name-owner').value,
-                isDefault: document.getElementById('set-default-bank-owner').checked || !ownerData.paymentMethods.length
-            };
-            
-            // If setting as default, unset others
-            if (bankData.isDefault) {
-                ownerData.paymentMethods.forEach(pm => pm.isDefault = false);
-            }
-            
-            ownerData.paymentMethods.push(bankData);
-            localStorage.setItem('snackreach_owner_data', JSON.stringify(ownerData));
-            
-            alert('Bank account linked successfully!');
-            cancelEditBanking();
-            loadBankingInfo();
-        });
-
-        // Removed addTestAccount - accounts must be created through the centralized signup system
-
-        function loadOwnerProfile() {
-            const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
-            const storedName = localStorage.getItem('snackreach_user_name');
-            const storedCompany = localStorage.getItem('snackreach_company_name');
-            
-            document.getElementById('owner-profile-name').value = ownerData.name || storedName || '';
-            document.getElementById('owner-profile-email').value = ownerData.email || '';
-            document.getElementById('owner-profile-phone').value = ownerData.phone || '';
-            document.getElementById('owner-profile-company').value = ownerData.companyName || storedCompany || '';
-            document.getElementById('owner-profile-bio').value = ownerData.bio || '';
+        } else {
+            window.initiatePlaidBankLinkOwner = initiatePlaidBankLinkOwner;
         }
 
-        // Save owner profile
-        document.getElementById('owner-profile-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Owner profile
+        async function loadOwnerProfile() {
+            const name = localStorage.getItem('snackreach_user_name');
+            const email = localStorage.getItem('snackreach_user_email');
+            const company = localStorage.getItem('snackreach_company_name');
             
-            const name = document.getElementById('owner-profile-name').value;
-            const email = document.getElementById('owner-profile-email').value;
-            const phone = document.getElementById('owner-profile-phone').value;
-            const company = document.getElementById('owner-profile-company').value;
-            const bio = document.getElementById('owner-profile-bio').value;
+            if (name) document.getElementById('owner-name-input').value = name;
+            if (email) document.getElementById('owner-email-input').value = email;
+            if (company) document.getElementById('owner-company-input').value = company;
+        }
+        
+        function saveOwnerProfile() {
+            const name = document.getElementById('owner-name-input').value;
+            const email = document.getElementById('owner-email-input').value;
+            const company = document.getElementById('owner-company-input').value;
             
-            const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
-            
-            ownerData.name = name;
-            ownerData.email = email;
-            ownerData.phone = phone;
-            ownerData.companyName = company;
-            ownerData.bio = bio;
-            
-            localStorage.setItem('snackreach_owner_data', JSON.stringify(ownerData));
             localStorage.setItem('snackreach_user_name', name);
+            localStorage.setItem('snackreach_user_email', email);
             localStorage.setItem('snackreach_company_name', company);
             
-            // Update navbar
-            document.getElementById('owner-name').textContent = name;
+            document.getElementById('owner-name').textContent = name || 'Owner';
             
-            // Try to save to backend
-            try {
-                await fetch(`${API_BASE_URL}/profile`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('snackreach_token')}`
-                    },
-                    body: JSON.stringify({ name, email, phone, companyName: company })
-                });
-            } catch (error) {
-                console.log('Backend not available, saved locally');
-            }
-            
-            alert('Profile updated successfully!');
-        });
+            alert('Profile saved!');
+        }
+        
+        window.loadOwnerProfile = loadOwnerProfile;
+        window.saveOwnerProfile = saveOwnerProfile;
 
-        // Change password
-        document.getElementById('owner-password-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const newPassword = document.getElementById('owner-new-password').value;
-            const confirmPassword = document.getElementById('owner-confirm-password').value;
-            
-            if (newPassword !== confirmPassword) {
-                alert('Passwords do not match!');
-                return;
-            }
-            
-            if (newPassword.length < 6) {
-                alert('Password must be at least 6 characters long!');
-                return;
-            }
-            
-            const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
-            ownerData.password = newPassword; // In real app, this would be hashed
-            localStorage.setItem('snackreach_owner_data', JSON.stringify(ownerData));
-            
-            document.getElementById('owner-password-form').reset();
-            alert('Password changed successfully!');
-        });
-
-        window.exportData = async function() {
-            try {
-                const token = localStorage.getItem('snackreach_token');
-                if (!token) {
-                    alert('Not authenticated');
-                    return;
-                }
-                
-                const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    alert('Failed to load data for export');
-                    return;
-                }
-                
-                const accounts = await response.json();
-                const dataStr = JSON.stringify(accounts, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `snackreach-data-${new Date().toISOString().split('T')[0]}.json`;
-                link.click();
-            } catch (error) {
-                console.error('Export error:', error);
-                alert('Failed to export data');
-            }
-        };
-
-        window.logout = function() {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('snackreach_token');
-                localStorage.removeItem('snackreach_user_type');
-                localStorage.removeItem('snackreach_user_name');
-                localStorage.removeItem('snackreach_company_name');
-                window.location.href = 'owner-login.html';
-            }
-        };
+        // Export and logout
+        function exportData() {
+            alert('Export functionality coming soon!');
+        }
+        
+        function logout() {
+            localStorage.removeItem('snackreach_token');
+            localStorage.removeItem('snackreach_user_type');
+            localStorage.removeItem('snackreach_user_name');
+            window.location.href = 'owner-login.html';
+        }
+        
+        window.exportData = exportData;
+        window.logout = logout;
     </script>
-    <style>
-        .accounts-table-container {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        .accounts-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .accounts-table thead {
-            background: #f8fafc;
-        }
-        .accounts-table th {
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-            color: #1e293b;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        .accounts-table td {
-            padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .accounts-table tbody tr:hover {
-            background: #f8fafc;
-        }
-        .account-filters {
-            display: flex;
-            gap: 1rem;
-        }
-        .account-filters select,
-        .account-filters input {
-            padding: 8px 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-        }
-        .banking-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        .banking-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        .banking-details {
-            display: grid;
-            gap: 1rem;
-        }
-        .detail-row {
-            display: flex;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .detail-label {
-            font-weight: 600;
-            color: #64748b;
-            min-width: 150px;
-        }
-        .detail-value {
-            color: #1e293b;
-        }
-        .banking-form {
-            background: #f8fafc;
-            padding: 2rem;
-            border-radius: 16px;
-            margin-top: 2rem;
-        }
-        .section-description {
-            color: #64748b;
-            margin-bottom: 2rem;
-        }
-        .status-badge.owner {
-            background: rgba(139, 92, 246, 0.1);
-            color: #8b5cf6;
-        }
-        .status-badge.startup {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
-        }
-        .status-badge.office {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-        }
-    </style>
 </body>
 </html>
-
