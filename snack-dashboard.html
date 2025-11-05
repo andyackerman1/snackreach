@@ -20,7 +20,7 @@
                 <a href="index.html" class="nav-link">Back to Home</a>
                 <div class="user-info">
                     <span class="user-name" id="user-name">Crunchy Greens</span>
-                    <span class="subscription-badge">Premium</span>
+                    <span class="subscription-badge">Free</span>
                 </div>
             </div>
         </div>
@@ -321,28 +321,6 @@
                         </div>
                     </div>
                     
-                    <!-- Subscription Management -->
-                    <div class="profile-card">
-                        <h4>Subscription Management</h4>
-                        <div class="subscription-info-card">
-                            <div class="subscription-details">
-                                <div class="subscription-plan">
-                                    <h5>Premium Plan</h5>
-                                    <p>$2.00/month</p>
-                                </div>
-                                <div class="subscription-status">
-                                    <span class="status-badge active">Active</span>
-                                    <p>Next billing: January 15, 2025</p>
-                                </div>
-                            </div>
-                            <div class="subscription-actions">
-                                <button class="btn btn-outline btn-small" onclick="showCancelModal()">
-                                    <i class="fas fa-times"></i>
-                                    Cancel Subscription
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                     
                     <!-- Account Actions -->
                     <div class="profile-card">
@@ -395,33 +373,6 @@
         </div>
     </section>
 
-    <!-- Cancel Subscription Modal -->
-    <div id="cancel-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Cancel Subscription</h2>
-                <span class="close" onclick="closeModal('cancel-modal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to cancel your subscription? You'll lose access to all premium features.</p>
-                <div class="cancellation-options">
-                    <h4>Why are you canceling?</h4>
-                    <select id="cancel-reason">
-                        <option value="">Select a reason...</option>
-                        <option value="too-expensive">Too expensive</option>
-                        <option value="not-using">Not using the service</option>
-                        <option value="found-alternative">Found a better alternative</option>
-                        <option value="technical-issues">Technical issues</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn btn-outline" onclick="closeModal('cancel-modal')">Keep Subscription</button>
-                    <button class="btn btn-primary" onclick="confirmCancellation()" style="background: #dc2626; border-color: #dc2626;">Cancel Subscription</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Add Payment Method Modal -->
     <div id="add-payment-modal" class="modal">
@@ -597,9 +548,6 @@
             document.getElementById(modalId).style.display = 'none';
         }
         
-        function showCancelModal() {
-            document.getElementById('cancel-modal').style.display = 'block';
-        }
         
         function showAddPaymentModal() {
             document.getElementById('add-payment-modal').style.display = 'block';

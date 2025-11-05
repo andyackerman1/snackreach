@@ -29,10 +29,6 @@
                 <div class="signup-header">
                     <h1>Join SnackReach</h1>
                     <p>Choose your role to get started</p>
-                    <div class="subscription-info">
-                        <i class="fas fa-crown"></i>
-                        <span>Premium access for just $2/month</span>
-                    </div>
                 </div>
                 
                 <div class="user-type-selection">
@@ -103,37 +99,6 @@
                         <input type="password" id="signup-confirm" required>
                     </div>
                     
-                    <div class="payment-section">
-                        <h4>Payment Information</h4>
-                        <p class="payment-note">$2/month subscription required to access SnackReach</p>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="card-number">Card Number</label>
-                                <input type="text" id="card-number" placeholder="1234 5678 9012 3456" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="card-cvv">CVV</label>
-                                <input type="text" id="card-cvv" placeholder="123" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="card-expiry">Expiry Date</label>
-                                <input type="text" id="card-expiry" placeholder="MM/YY" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="card-name">Name on Card</label>
-                                <input type="text" id="card-name" placeholder="John Doe" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="billing-address">Billing Address</label>
-                            <input type="text" id="billing-address" placeholder="123 Main St, City, State 12345" required>
-                        </div>
-                    </div>
                     
                     <div class="terms-section">
                         <div class="terms-checkbox">
@@ -213,8 +178,8 @@
                         <li>Protecting their account credentials and personal information</li>
                     </ul>
                     
-                    <h3>6. Subscription and Payments</h3>
-                    <p>The $2/month subscription fee provides access to the SnackReach platform. This fee is non-refundable and does not guarantee any transactions, connections, or business outcomes. Subscription fees are billed monthly and will continue until cancelled by the user.</p>
+                    <h3>6. Platform Access</h3>
+                    <p>SnackReach provides free access to the platform to connect snack startups with office spaces. We may introduce subscription plans in the future, but current access is free.</p>
                     
                     <h3>7. Privacy Policy</h3>
                     <p>We collect and store information you provide during registration, including name, email, phone number, company information, and payment details. This information is used to:</p>
@@ -357,11 +322,6 @@
             const phone = document.getElementById('signup-phone').value;
             const password = document.getElementById('signup-password').value;
             const confirm = document.getElementById('signup-confirm').value;
-            const cardNumber = document.getElementById('card-number').value;
-            const cardCVV = document.getElementById('card-cvv').value;
-            const cardExpiry = document.getElementById('card-expiry').value;
-            const cardName = document.getElementById('card-name').value;
-            const billingAddress = document.getElementById('billing-address').value;
             const acceptTerms = document.getElementById('accept-terms').checked;
             
             // Check if terms are accepted
@@ -381,21 +341,6 @@
                 return;
             }
             
-            // Validate credit card information
-            if (!cardNumber || !cardCVV || !cardExpiry || !cardName || !billingAddress) {
-                alert('Please fill in all payment information!');
-                return;
-            }
-            
-            if (cardNumber.length < 16) {
-                alert('Please enter a valid card number!');
-                return;
-            }
-            
-            if (cardCVV.length < 3) {
-                alert('Please enter a valid CVV!');
-                return;
-            }
 
             // Try to save to backend
             try {
@@ -411,14 +356,7 @@
                         password,
                         companyName: company,
                         phone,
-                        userType: selectedUserType === 'startup' ? 'startup' : 'office',
-                        cardInfo: {
-                            number: cardNumber,
-                            cvv: cardCVV,
-                            expiry: cardExpiry,
-                            name: cardName,
-                            address: billingAddress
-                        }
+                        userType: selectedUserType === 'startup' ? 'startup' : 'office'
                     })
                 });
 
@@ -455,19 +393,6 @@
                     companyName: company,
                     phone,
                     userType: selectedUserType === 'startup' ? 'startup' : 'office',
-                    cardInfo: {
-                        number: cardNumber,
-                        cvv: cardCVV,
-                        expiry: cardExpiry,
-                        name: cardName,
-                        address: billingAddress
-                    },
-                    subscription: {
-                        status: 'active',
-                        plan: 'premium',
-                        price: 2.00,
-                        billingCycle: 'monthly'
-                    },
                     createdAt: new Date().toISOString()
                 };
                 
