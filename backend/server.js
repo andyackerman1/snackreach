@@ -555,16 +555,24 @@ app.post('/api/admin/login', async (req, res) => {
 // Get all accounts (admin only)
 app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
     try {
+        console.log('Admin accounts request received');
+        console.log('User ID:', req.userId);
+        console.log('User Type:', req.userType);
+        
         // Check if user is admin
         if (req.userType !== 'admin') {
+            console.error('Access denied - user is not admin. Type:', req.userType);
             return res.status(403).json({ error: 'Admin access required' });
         }
 
         const db = await readDB();
-        console.log('Admin requesting all accounts. Total users:', db.users.length);
+        console.log('✅ Database loaded successfully');
+        console.log('✅ Admin requesting all accounts. Total users in database:', db.users ? db.users.length : 0);
+        console.log('✅ Database path:', DB_PATH);
+        console.log('✅ Environment:', process.env.NODE_ENV || 'development');
 
         // Return all accounts with safe data (no passwords)
-        const accounts = db.users.map(u => ({
+        const accounts = (db.users || []).map(u => ({
             id: u.id,
             name: u.name,
             email: u.email,
@@ -576,10 +584,14 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
             lastLogin: u.lastLogin || null
         }));
 
-        console.log('Returning', accounts.length, 'accounts to admin');
+        console.log('✅ Returning', accounts.length, 'accounts to admin');
+        console.log('✅ Sample account:', accounts.length > 0 ? accounts[0] : 'No accounts');
+        
         res.json(accounts);
     } catch (error) {
-        console.error('Get all accounts error:', error);
+        console.error('❌ Get all accounts error:', error);
+        console.error('   Error message:', error.message);
+        console.error('   Error stack:', error.stack);
         res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });

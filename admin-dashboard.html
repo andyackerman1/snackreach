@@ -449,6 +449,9 @@
             errorDiv.style.display = 'none';
 
             try {
+                console.log('Loading accounts from:', `${API_BASE_URL}/admin/all-accounts`);
+                console.log('Using token:', token.substring(0, 20) + '...');
+                
                 const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -456,13 +459,27 @@
                     },
                 });
 
+                console.log('Accounts response status:', response.status);
+                console.log('Accounts response ok:', response.ok);
+
                 if (response.status === 401 || response.status === 403) {
+                    console.error('Authentication failed, redirecting to login');
                     localStorage.removeItem('admin_token');
                     showLogin();
                     return;
                 }
 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error loading accounts:', errorText);
+                    errorDiv.textContent = `Failed to load accounts: ${response.status} ${errorText}`;
+                    errorDiv.style.display = 'block';
+                    container.innerHTML = '';
+                    return;
+                }
+
                 const accounts = await response.json();
+                console.log('Accounts received:', accounts ? accounts.length : 0);
 
                 if (!accounts || accounts.length === 0) {
                     container.innerHTML = `
