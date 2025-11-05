@@ -8,19 +8,33 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 // Stripe and Plaid setup
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+// Initialize Stripe with error handling
+let stripe = null;
+try {
+    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+} catch (error) {
+    console.warn('⚠️  Stripe initialization warning:', error.message);
+    // Stripe will be null, but endpoints will check before using it
+}
 const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
 
-const plaidConfig = new Configuration({
-    basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
-    baseOptions: {
-        headers: {
-            'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID || '',
-            'PLAID-SECRET': process.env.PLAID_SECRET || '',
+// Plaid configuration - handle missing env vars gracefully
+let plaidClient = null;
+try {
+    const plaidConfig = new Configuration({
+        basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
+        baseOptions: {
+            headers: {
+                'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID || '',
+                'PLAID-SECRET': process.env.PLAID_SECRET || '',
+            },
         },
-    },
-});
-const plaidClient = new PlaidApi(plaidConfig);
+    });
+    plaidClient = new PlaidApi(plaidConfig);
+} catch (error) {
+    console.warn('⚠️  Plaid configuration warning:', error.message);
+    // Plaid will be null, but endpoints will check before using it
+}
 
 const app = express();
 const PORT = process.env.PORT || 8080; // Railway uses PORT env var
@@ -450,6 +464,10 @@ app.get('/api/stripe-key', (req, res) => {
 // Create Stripe payment method (credit card)
 app.post('/api/payment-methods/card', authenticateToken, async (req, res) => {
     try {
+        if (!stripe) {
+            return res.status(503).json({ error: 'Stripe not configured. Please set STRIPE_SECRET_KEY environment variable.' });
+        }
+        
         const { cardNumber, expiryMonth, expiryYear, cvv, name } = req.body;
         
         // Create payment method in Stripe
@@ -499,6 +517,10 @@ app.post('/api/payment-methods/card', authenticateToken, async (req, res) => {
 // Create Plaid Link token for bank account
 app.post('/api/plaid/create-link-token', authenticateToken, async (req, res) => {
     try {
+        if (!plaidClient) {
+            return res.status(503).json({ error: 'Plaid not configured. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.' });
+        }
+        
         const request = {
             user: {
                 client_user_id: req.userId,
@@ -513,13 +535,17 @@ app.post('/api/plaid/create-link-token', authenticateToken, async (req, res) => 
         res.json({ link_token: response.data.link_token });
     } catch (error) {
         console.error('Plaid link token error:', error);
-        res.status(500).json({ error: 'Failed to create link token' });
+        res.status(500).json({ error: error.message || 'Failed to create link token' });
     }
 });
 
 // Exchange Plaid public token and create Stripe ACH payment method
 app.post('/api/plaid/exchange-token', authenticateToken, async (req, res) => {
     try {
+        if (!plaidClient) {
+            return res.status(503).json({ error: 'Plaid not configured. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.' });
+        }
+        
         const { public_token, account_id } = req.body;
         
         if (!public_token || !account_id) {
@@ -631,6 +657,10 @@ app.post('/api/plaid/exchange-token', authenticateToken, async (req, res) => {
 // Process subscription payment
 app.post('/api/payments/subscribe', authenticateToken, async (req, res) => {
     try {
+        if (!stripe) {
+            return res.status(503).json({ error: 'Stripe not configured. Please set STRIPE_SECRET_KEY environment variable.' });
+        }
+        
         const db = await readDB();
         const user = db.users.find(u => u.id === req.userId);
         
@@ -684,6 +714,10 @@ app.post('/api/payments/subscribe', authenticateToken, async (req, res) => {
 // Setup owner Stripe Connect account
 app.post('/api/owner/setup-stripe', authenticateToken, async (req, res) => {
     try {
+        if (!stripe) {
+            return res.status(503).json({ error: 'Stripe not configured. Please set STRIPE_SECRET_KEY environment variable.' });
+        }
+        
         const db = await readDB();
         const user = db.users.find(u => u.id === req.userId);
         
@@ -728,6 +762,10 @@ app.post('/api/owner/setup-stripe', authenticateToken, async (req, res) => {
 // Get owner's Stripe account status
 app.get('/api/owner/stripe-status', authenticateToken, async (req, res) => {
     try {
+        if (!stripe) {
+            return res.status(503).json({ error: 'Stripe not configured. Please set STRIPE_SECRET_KEY environment variable.' });
+        }
+        
         const db = await readDB();
         const user = db.users.find(u => u.id === req.userId);
         
