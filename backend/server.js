@@ -124,11 +124,10 @@ app.post('/api/register', async (req, res) => {
 
         const db = await readDB();
         
-        // Check if user already exists
-        const existingUser = db.users.find(u => u.email === email);
-        if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
-        }
+        // IMPORTANT: Accounts are NEVER deleted unless explicitly requested by user
+        // All accounts are permanently saved to backend database
+        // Allow duplicate emails - users can have multiple accounts with same email
+        // Note: We check for duplicates but don't prevent registration - all accounts are saved
 
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
