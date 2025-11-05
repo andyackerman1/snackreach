@@ -370,6 +370,28 @@
                         localStorage.setItem('snackreach_company_name', data.user.companyName);
                     }
                     
+                    // ALWAYS save to localStorage as well (for owner dashboard visibility)
+                    const userData = {
+                        id: data.user.id || Date.now().toString(),
+                        name: data.user.name || name,
+                        email: data.user.email || email,
+                        password: password, // In real app, this would be hashed
+                        companyName: data.user.companyName || company,
+                        phone: data.user.phone || phone,
+                        userType: data.user.userType || (selectedUserType === 'startup' ? 'startup' : 'office'),
+                        createdAt: data.user.createdAt || new Date().toISOString()
+                    };
+                    
+                    const existingUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
+                    // Check if user already exists (by email)
+                    const existingIndex = existingUsers.findIndex(u => u.email === userData.email);
+                    if (existingIndex >= 0) {
+                        existingUsers[existingIndex] = userData; // Update existing
+                    } else {
+                        existingUsers.push(userData); // Add new
+                    }
+                    localStorage.setItem('snackreach_users', JSON.stringify(existingUsers));
+                    
                     alert(`Welcome to SnackReach, ${name}!\n\nYour account has been created and saved successfully!`);
                     
                     // Redirect to appropriate dashboard
