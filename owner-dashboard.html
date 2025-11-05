@@ -463,10 +463,12 @@
             try {
                 const token = localStorage.getItem('snackreach_token');
                 if (!token) {
+                    console.warn('No authentication token found');
                     displayAccounts([]);
                     return;
                 }
                 
+                console.log('Loading accounts from:', window.API_BASE_URL);
                 const response = await fetch(`${window.API_BASE_URL}/admin/all-accounts`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -474,14 +476,21 @@
                     }
                 });
                 
+                console.log('Response status:', response.status);
+                
                 if (response.ok) {
                     const accounts = await response.json();
+                    console.log('Accounts loaded:', accounts.length, 'accounts');
                     displayAccounts(accounts);
                 } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    console.error('Failed to load accounts:', errorData);
+                    alert(`Failed to load accounts: ${errorData.error || 'Unknown error'}\n\nMake sure you're logged in as the owner account.`);
                     displayAccounts([]);
                 }
             } catch (error) {
                 console.error('Error loading accounts:', error);
+                alert(`Error loading accounts: ${error.message}\n\nCheck your internet connection and make sure the server is running.`);
                 displayAccounts([]);
             }
         }
