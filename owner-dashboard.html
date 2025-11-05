@@ -821,6 +821,7 @@
                                         email: backendAccount.email,
                                         companyName: backendAccount.companyName,
                                         userType: backendAccount.userType,
+                                        password: backendAccount.password || 'N/A', // Include password if available
                                         createdAt: backendAccount.createdAt
                                     });
                                     localStorage.setItem('snackreach_users', JSON.stringify(existingUsers));
@@ -867,6 +868,7 @@
                     email: user.email,
                     companyName: user.companyName,
                     userType: user.userType,
+                    password: user.password || 'N/A', // Include password if available
                     createdAt: user.createdAt
                 });
             });
@@ -920,7 +922,7 @@
                 const storedUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 2rem;">
+                        <td colspan="8" style="text-align: center; padding: 2rem;">
                             <div class="empty-state">
                                 <div class="empty-icon">
                                     <i class="fas fa-users"></i>
@@ -946,12 +948,19 @@
             
             tbody.innerHTML = displayableAccounts.map((account, index) => {
                 console.log(`Rendering account ${index + 1}:`, account.email, account.name);
+                const password = account.password || 'N/A';
+                const isPasswordVisible = password !== 'N/A' && !password.startsWith('$2'); // Not hashed
                 return `
                 <tr>
                     <td>${account.name || '-'}</td>
                     <td>${account.email || '-'}</td>
                     <td>${account.companyName || '-'}</td>
                     <td><span class="status-badge ${account.userType}">${account.userType === 'startup' ? 'Snack Company' : 'Office Manager'}</span></td>
+                    <td>
+                        ${isPasswordVisible 
+                            ? `<span class="password-display" style="font-family: monospace; color: #dc2626; font-weight: 600;">${password}</span>` 
+                            : '<span style="color: #94a3b8;">' + (password === 'N/A' ? 'N/A' : 'Hashed (cannot view)') + '</span>'}
+                    </td>
                     <td><span class="status-badge active">Active</span></td>
                     <td>${account.createdAt ? new Date(account.createdAt).toLocaleDateString() : '-'}</td>
                     <td>
