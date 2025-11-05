@@ -12,8 +12,8 @@
 
 ## Default Admin Credentials
 
-**Email**: `admin@snackreach.com`  
-**Password**: `SnackReach2024!`
+**Email**: `snackreach1@gmail.com`  
+**Password**: `Greylock21`
 
 ## Change Admin Credentials (Security)
 

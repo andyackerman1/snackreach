@@ -518,8 +518,8 @@ app.post('/api/admin/login', async (req, res) => {
         const { email, password } = req.body;
 
         // Simple admin credentials - CHANGE THESE IN PRODUCTION!
-        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@snackreach.com';
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'SnackReach2024!';
+        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'snackreach1@gmail.com';
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Greylock21';
 
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password required' });
