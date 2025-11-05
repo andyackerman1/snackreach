@@ -1010,13 +1010,15 @@
             event.target.classList.add('active');
         }
         
-        // Logout function
+        // Logout function - only clears session on explicit logout
         function logout() {
-            localStorage.removeItem('snackify_user_type');
-            localStorage.removeItem('snackify_user_name');
-            localStorage.removeItem('snackify_company_name');
-            localStorage.removeItem('snackify_login_time');
-            window.location.href = 'index.html';
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('snackreach_token');
+                localStorage.removeItem('snackreach_user_type');
+                localStorage.removeItem('snackreach_user_name');
+                localStorage.removeItem('snackreach_company_name');
+                window.location.href = 'index.html';
+            }
         }
         
         // Show cancel subscription modal

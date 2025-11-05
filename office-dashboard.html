@@ -523,11 +523,14 @@
                 document.getElementById('user-name').textContent = companyName;
             }
             
-            // Check if user is logged in
+            // Check if user is logged in - but don't redirect if already on dashboard
+            // Session persists - user stays logged in until explicit logout
+            const token = localStorage.getItem('snackreach_token');
             const userType = localStorage.getItem('snackreach_user_type');
-            if (!userType || userType !== 'office') {
+            if (!token || !userType || userType !== 'office') {
+                // Only redirect if truly not logged in
                 alert('Please log in to access the office manager dashboard.');
-                window.location.href = 'signup.html';
+                window.location.href = 'login.html';
                 return;
             }
             
@@ -799,13 +802,15 @@
             }
         }
         
-        // Logout function
+        // Logout function - only clears session on explicit logout
         function logout() {
-            localStorage.removeItem('snackreach_user_type');
-            localStorage.removeItem('snackreach_user_name');
-            localStorage.removeItem('snackreach_company_name');
-            localStorage.removeItem('snackreach_token');
-            window.location.href = 'index.html';
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('snackreach_token');
+                localStorage.removeItem('snackreach_user_type');
+                localStorage.removeItem('snackreach_user_name');
+                localStorage.removeItem('snackreach_company_name');
+                window.location.href = 'index.html';
+            }
         }
         
         // Show cancel subscription modal

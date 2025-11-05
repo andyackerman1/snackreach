@@ -157,10 +157,11 @@ app.post('/api/register', async (req, res) => {
         await writeDB(db);
 
         // Generate JWT token
+        // Generate JWT token with very long expiration (essentially permanent)
         const token = jwt.sign(
             { userId: newUser.id, email: newUser.email, userType: newUser.userType },
             JWT_SECRET,
-            { expiresIn: '30d' }
+            { expiresIn: '3650d' } // 10 years - essentially permanent session
         );
 
         res.json({
@@ -201,10 +202,11 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        // Generate JWT token with very long expiration (essentially permanent)
         const token = jwt.sign(
             { userId: user.id, email: user.email, userType: user.userType },
             JWT_SECRET,
-            { expiresIn: '30d' }
+            { expiresIn: '3650d' } // 10 years - essentially permanent session
         );
 
         res.json({
@@ -258,10 +260,11 @@ app.post('/api/register-owner', async (req, res) => {
         db.users.push(newOwner);
         await writeDB(db);
 
+        // Generate JWT token with very long expiration (essentially permanent)
         const token = jwt.sign(
             { userId: newOwner.id, email: newOwner.email, userType: 'owner' },
             JWT_SECRET,
-            { expiresIn: '30d' }
+            { expiresIn: '3650d' } // 10 years - essentially permanent session
         );
 
         res.json({
@@ -309,7 +312,8 @@ app.post('/api/login-owner', async (req, res) => {
                 db.users.push(adminUser);
                 await writeDB(db);
             }
-            const token = jwt.sign({ userId: adminUser.id, email: adminUser.email, userType: 'owner' }, JWT_SECRET, { expiresIn: '30d' });
+            // Generate JWT token with very long expiration (essentially permanent)
+            const token = jwt.sign({ userId: adminUser.id, email: adminUser.email, userType: 'owner' }, JWT_SECRET, { expiresIn: '3650d' }); // 10 years
             return res.json({ message: 'Login successful', token, user: { id: adminUser.id, name: adminUser.name, email: adminUser.email, companyName: adminUser.companyName, userType: 'owner' } });
         }
 
@@ -325,10 +329,11 @@ app.post('/api/login-owner', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        // Generate JWT token with very long expiration (essentially permanent)
         const token = jwt.sign(
             { userId: user.id, email: user.email, userType: 'owner' },
             JWT_SECRET,
-            { expiresIn: '30d' }
+            { expiresIn: '3650d' } // 10 years - essentially permanent session
         );
 
         res.json({

@@ -73,13 +73,14 @@
 
     <script src="js/api.js"></script>
     <script>
-        // Check if already logged in
+        // Check if already logged in - if so, redirect to dashboard
+        // Sessions persist until explicit logout
         function checkLoginStatus() {
             const token = localStorage.getItem('snackreach_token');
             const userType = localStorage.getItem('snackreach_user_type');
             
             if (token && userType) {
-                // Redirect based on user type
+                // User is already logged in - redirect to their dashboard
                 if (userType === 'owner') {
                     window.location.href = 'owner-dashboard.html';
                 } else if (userType === 'startup') {
