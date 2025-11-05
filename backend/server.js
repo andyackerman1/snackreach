@@ -548,7 +548,6 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
     }
 });
 
-// Get login activity (owner only)
 // Update owner profile
 app.post('/api/admin/update-profile', authenticateToken, async (req, res) => {
     try {
