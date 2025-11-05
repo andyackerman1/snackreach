@@ -5,9 +5,8 @@ const API_BASE_URL = (() => {
     const hostname = window.location.hostname;
     const isProduction = hostname !== 'localhost' && hostname !== '127.0.0.1';
     
-    // TODO: Replace with your actual backend URL after deployment
-    // Example: 'https://snackreach-backend.onrender.com/api'
-    const PRODUCTION_API_URL = 'https://your-backend-url.onrender.com/api';
+    // Railway backend URL
+    const PRODUCTION_API_URL = 'https://snackreach-production.up.railway.app/api';
     
     return isProduction ? PRODUCTION_API_URL : 'http://localhost:3000/api';
 })();
