@@ -29,7 +29,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'snackreach_secret_key_2024';
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public'));
+
+// Serve static files from root (frontend HTML/CSS/JS)
+app.use(express.static(path.join(__dirname, '..')));
+
+// Serve API routes
+app.use('/api', (req, res, next) => {
+    next();
+});
 
 // Database file path
 const DB_PATH = path.join(__dirname, 'data', 'database.json');
@@ -90,6 +97,17 @@ async function writeDB(data) {
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'SnackReach API is running' });
+});
+
+// Serve index.html for all non-API routes (frontend routing)
+app.get('*', (req, res, next) => {
+    // Don't serve HTML for API routes
+    if (req.path.startsWith('/api')) {
+        return next();
+    }
+    
+    // Serve index.html for all other routes
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // User registration

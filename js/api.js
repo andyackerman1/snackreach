@@ -5,7 +5,13 @@ const API_BASE_URL = (() => {
     const hostname = window.location.hostname;
     const isProduction = hostname !== 'localhost' && hostname !== '127.0.0.1';
     
-    // Railway backend URL
+    // Railway backend URL (same domain for frontend and backend)
+    // If we're on Railway domain, use same domain for API
+    if (hostname.includes('railway.app')) {
+        return '/api';
+    }
+    
+    // Otherwise use Railway backend URL
     const PRODUCTION_API_URL = 'https://snackreach-production.up.railway.app/api';
     
     return isProduction ? PRODUCTION_API_URL : 'http://localhost:3000/api';
