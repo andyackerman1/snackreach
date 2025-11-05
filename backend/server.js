@@ -10,28 +10,50 @@ require('dotenv').config();
 // Stripe and Plaid setup
 // Initialize Stripe with error handling
 let stripe = null;
+let stripeConfigured = false;
 try {
-    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (stripeKey && stripeKey !== 'sk_test_placeholder' && stripeKey.startsWith('sk_')) {
+        stripe = require('stripe')(stripeKey);
+        stripeConfigured = true;
+        console.log('✅ Stripe initialized successfully');
+    } else {
+        console.warn('⚠️  Stripe not configured. Set STRIPE_SECRET_KEY in .env');
+    }
 } catch (error) {
-    console.warn('⚠️  Stripe initialization warning:', error.message);
+    console.warn('⚠️  Stripe initialization error:', error.message);
+    console.warn('   Make sure the "stripe" package is installed: npm install stripe');
     // Stripe will be null, but endpoints will check before using it
 }
+
 // Plaid configuration - handle missing package gracefully
 let plaidClient = null;
+let plaidConfigured = false;
 try {
     const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
-    const plaidConfig = new Configuration({
-        basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
-        baseOptions: {
-            headers: {
-                'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID || '',
-                'PLAID-SECRET': process.env.PLAID_SECRET || '',
+    const plaidClientId = process.env.PLAID_CLIENT_ID;
+    const plaidSecret = process.env.PLAID_SECRET;
+    
+    if (plaidClientId && plaidSecret && plaidClientId !== 'your_plaid_client_id_here' && plaidSecret !== 'your_plaid_secret_key_here') {
+        const plaidEnv = process.env.PLAID_ENV || 'sandbox';
+        const plaidConfig = new Configuration({
+            basePath: PlaidEnvironments[plaidEnv],
+            baseOptions: {
+                headers: {
+                    'PLAID-CLIENT-ID': plaidClientId,
+                    'PLAID-SECRET': plaidSecret,
+                },
             },
-        },
-    });
-    plaidClient = new PlaidApi(plaidConfig);
+        });
+        plaidClient = new PlaidApi(plaidConfig);
+        plaidConfigured = true;
+        console.log(`✅ Plaid initialized successfully (${plaidEnv} environment)`);
+    } else {
+        console.warn('⚠️  Plaid not configured. Set PLAID_CLIENT_ID and PLAID_SECRET in .env');
+    }
 } catch (error) {
-    console.warn('⚠️  Plaid configuration warning:', error.message);
+    console.warn('⚠️  Plaid initialization error:', error.message);
+    console.warn('   Make sure the "plaid" package is installed: npm install plaid');
     // Plaid will be null, but endpoints will check before using it
 }
 
@@ -659,7 +681,11 @@ app.get('/api/admin/login-activity', authenticateToken, async (req, res) => {
 
 // Get Stripe publishable key
 app.get('/api/stripe-key', (req, res) => {
-    res.json({ publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder' });
+    const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder';
+    res.json({ 
+        publishableKey: publishableKey,
+        configured: stripeConfigured && publishableKey !== 'pk_test_placeholder'
+    });
 });
 
 // Create Stripe payment method (credit card)
@@ -1035,11 +1061,15 @@ async function startServer() {
             if (process.env.NODE_ENV !== 'production') {
                 console.log(`   Local API: http://localhost:${PORT}/api`);
             }
-            if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_placeholder') {
+            // Configuration status
+            if (!stripeConfigured) {
                 console.log(`⚠️  WARNING: Stripe not configured. Set STRIPE_SECRET_KEY in .env`);
+                console.log(`   Get your keys at: https://dashboard.stripe.com/apikeys`);
             }
-            if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
+            if (!plaidConfigured) {
                 console.log(`⚠️  WARNING: Plaid not configured. Set PLAID_CLIENT_ID and PLAID_SECRET in .env`);
+                console.log(`   Get your keys at: https://dashboard.plaid.com/developers/keys`);
+                console.log(`   See PLAID-STRIPE-SETUP.md for detailed instructions`);
             }
         });
         
