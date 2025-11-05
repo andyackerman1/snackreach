@@ -132,16 +132,28 @@ async function initDatabase() {
 async function readDB() {
     try {
         const data = await fs.readFile(DB_PATH, 'utf8');
-        return JSON.parse(data);
+        const db = JSON.parse(data);
+        // Ensure all required arrays exist
+        if (!db.users) db.users = [];
+        if (!db.snackCompanies) db.snackCompanies = [];
+        if (!db.offices) db.offices = [];
+        if (!db.products) db.products = [];
+        if (!db.orders) db.orders = [];
+        if (!db.messages) db.messages = [];
+        if (!db.loginActivity) db.loginActivity = [];
+        return db;
     } catch (error) {
         console.error('Error reading database:', error);
+        console.error('Database path:', DB_PATH);
+        // Return empty database structure
         return {
             users: [],
             snackCompanies: [],
             offices: [],
             products: [],
             orders: [],
-            messages: []
+            messages: [],
+            loginActivity: []
         };
     }
 }
@@ -149,9 +161,17 @@ async function readDB() {
 // Write database
 async function writeDB(data) {
     try {
+        // Ensure data directory exists
+        const dataDir = path.join(__dirname, 'data');
+        await fs.mkdir(dataDir, { recursive: true });
+        
+        // Write to database file
         await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
+        console.log('Database written successfully to:', DB_PATH);
+        console.log('Total users in database:', data.users ? data.users.length : 0);
     } catch (error) {
         console.error('Error writing database:', error);
+        console.error('Database path:', DB_PATH);
         throw error;
     }
 }
@@ -166,11 +186,15 @@ app.post('/api/register', async (req, res) => {
     try {
         const { name, email, password, companyName, phone, userType, cardInfo } = req.body;
 
+        console.log('Registration request received:', { name, email, companyName, userType });
+
         if (!name || !email || !password || !companyName) {
+            console.error('Registration failed: Missing required fields');
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
         const db = await readDB();
+        console.log('Current database users count:', db.users.length);
         
         // IMPORTANT: Accounts are NEVER deleted unless explicitly requested by user
         // All accounts are permanently saved to backend database
@@ -201,7 +225,14 @@ app.post('/api/register', async (req, res) => {
         };
 
         db.users.push(newUser);
+        console.log('Adding new user to database:', newUser.email, newUser.userType);
+        
         await writeDB(db);
+        
+        // Verify user was saved
+        const verifyDb = await readDB();
+        console.log('Database after save - users count:', verifyDb.users.length);
+        console.log('New user ID:', newUser.id, 'Email:', newUser.email);
 
         // Generate JWT token
         // Generate JWT token with very long expiration (essentially permanent)
@@ -211,6 +242,7 @@ app.post('/api/register', async (req, res) => {
             { expiresIn: '3650d' } // 10 years - essentially permanent session
         );
 
+        console.log('User registered successfully:', newUser.email);
         res.json({
             message: 'User registered successfully',
             token,
@@ -224,7 +256,8 @@ app.post('/api/register', async (req, res) => {
         });
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });
 

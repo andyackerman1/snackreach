@@ -551,9 +551,18 @@
                 document.getElementById('owner-name').textContent = ownerName;
             }
             
+            // Load accounts immediately on page load
             loadAccounts();
             loadBankingInfo();
             loadOwnerProfile();
+            
+            // Also reload accounts every 30 seconds to catch new signups
+            setInterval(() => {
+                if (document.getElementById('tab-accounts').style.display !== 'none') {
+                    console.log('Auto-refreshing accounts...');
+                    loadAccounts();
+                }
+            }, 30000); // 30 seconds
         });
 
         // Load accounts
