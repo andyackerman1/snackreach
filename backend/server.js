@@ -23,7 +23,7 @@ const plaidConfig = new Configuration({
 const plaidClient = new PlaidApi(plaidConfig);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080; // Railway uses PORT env var
 const JWT_SECRET = process.env.JWT_SECRET || 'snackreach_secret_key_2024';
 
 // Middleware
@@ -769,20 +769,29 @@ app.get('*', (req, res) => {
 
 // Start server
 async function startServer() {
-    await initDatabase();
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 SnackReach API server running on port ${PORT}`);
-        console.log(`📡 API endpoints available at /api`);
-        if (process.env.NODE_ENV !== 'production') {
-            console.log(`   Local: http://localhost:${PORT}/api`);
-        }
-        if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_placeholder') {
-            console.log(`⚠️  WARNING: Stripe not configured. Set STRIPE_SECRET_KEY in .env`);
-        }
-        if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
-            console.log(`⚠️  WARNING: Plaid not configured. Set PLAID_CLIENT_ID and PLAID_SECRET in .env`);
-        }
-    });
+    try {
+        await initDatabase();
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`🚀 SnackReach API server running on port ${PORT}`);
+            console.log(`📡 API endpoints available at /api`);
+            console.log(`🌐 Frontend files served from: ${path.join(__dirname, '..')}`);
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`   Local: http://localhost:${PORT}/api`);
+            }
+            if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_placeholder') {
+                console.log(`⚠️  WARNING: Stripe not configured. Set STRIPE_SECRET_KEY in .env`);
+            }
+            if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
+                console.log(`⚠️  WARNING: Plaid not configured. Set PLAID_CLIENT_ID and PLAID_SECRET in .env`);
+            }
+        });
+    } catch (error) {
+        console.error('❌ Failed to start server:', error);
+        process.exit(1);
+    }
 }
 
-startServer();
+startServer().catch(error => {
+    console.error('❌ Fatal error starting server:', error);
+    process.exit(1);
+});
