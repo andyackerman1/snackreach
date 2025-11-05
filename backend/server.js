@@ -458,22 +458,6 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
 });
 
 // ==================== REAL PAYMENT ENDPOINTS ====================
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ error: 'Access token required' });
-    }
-
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ error: 'Invalid or expired token' });
-        }
-        req.userId = user.userId;
-        req.userType = user.userType;
-        next();
-    });
-}
 
 // Get user profile
 app.get('/api/profile', authenticateToken, async (req, res) => {
@@ -810,7 +794,6 @@ app.post('/api/payments/subscribe', authenticateToken, async (req, res) => {
     }
 });
 
-// Setup owner Stripe Connect account
 // Serve index.html for all non-API routes (frontend routing)
 // This MUST be last, after all API routes
 app.get('*', (req, res) => {
