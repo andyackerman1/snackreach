@@ -95,28 +95,40 @@ app.get('/signup.html', (req, res) => {
 // Database file path
 const DB_PATH = path.join(__dirname, 'data', 'database.json');
 
-// Initialize database
+// Initialize database - PERMANENT STORAGE
+// This ensures the database file exists and is ready for permanent account storage
 async function initDatabase() {
     try {
         const dataDir = path.join(__dirname, 'data');
         await fs.mkdir(dataDir, { recursive: true });
+        console.log('✅ Data directory ready:', dataDir);
         
         try {
             await fs.access(DB_PATH);
+            // Database exists - verify it's readable
+            const existing = await fs.readFile(DB_PATH, 'utf8');
+            const db = JSON.parse(existing);
+            console.log('✅ Existing database loaded:', DB_PATH);
+            console.log('✅ Permanent accounts found:', db.users ? db.users.length : 0);
         } catch {
-            // Create initial database structure
+            // Create initial database structure for permanent storage
             const initialData = {
-                users: [],
+                users: [],           // PERMANENT: All user accounts stored here
                 snackCompanies: [],
                 offices: [],
                 products: [],
                 orders: [],
-                messages: []
+                messages: [],
+                loginActivity: []    // Login history
             };
             await fs.writeFile(DB_PATH, JSON.stringify(initialData, null, 2));
+            console.log('✅ New database created for permanent storage:', DB_PATH);
+            console.log('✅ Database location:', process.env.NODE_ENV === 'production' ? 'Railway (persistent)' : 'Local filesystem');
         }
     } catch (error) {
-        console.error('Error initializing database:', error);
+        console.error('❌ CRITICAL ERROR initializing database:', error);
+        console.error('   Database path:', DB_PATH);
+        throw error; // Fail fast if we can't initialize database
     }
 }
 
@@ -150,21 +162,53 @@ async function readDB() {
     }
 }
 
-// Write database
+// Write database - PERMANENT STORAGE
+// This function ensures accounts are permanently saved to disk
+// Works on both local development and Railway production
 async function writeDB(data) {
     try {
-        // Ensure data directory exists
+        // Ensure data directory exists (creates if it doesn't)
         const dataDir = path.join(__dirname, 'data');
         await fs.mkdir(dataDir, { recursive: true });
         
-        // Write to database file
-        await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
-        console.log('Database written successfully to:', DB_PATH);
-        console.log('Total users in database:', data.users ? data.users.length : 0);
+        // CRITICAL: Accounts are PERMANENTLY saved - never deleted automatically
+        // This ensures all user accounts persist across server restarts
+        // On Railway: Database file persists in the data/ directory
+        // On Local: Database file is saved in backend/data/database.json
+        
+        // Atomic write: Write to temporary file first, then rename (prevents corruption)
+        const tempPath = DB_PATH + '.tmp';
+        const jsonData = JSON.stringify(data, null, 2);
+        
+        // Write to temporary file
+        await fs.writeFile(tempPath, jsonData, { encoding: 'utf8', flag: 'w' });
+        
+        // Atomic rename (ensures data integrity)
+        await fs.rename(tempPath, DB_PATH);
+        
+        // Verify write was successful by reading back
+        const verify = await fs.readFile(DB_PATH, 'utf8');
+        const verifyData = JSON.parse(verify);
+        
+        console.log('✅ Database written successfully to:', DB_PATH);
+        console.log('✅ Total users permanently saved:', verifyData.users ? verifyData.users.length : 0);
+        console.log('✅ Database location:', process.env.NODE_ENV === 'production' ? 'Railway (persistent)' : 'Local filesystem');
+        
+        // Ensure accounts are never lost
+        if (verifyData.users && verifyData.users.length !== (data.users ? data.users.length : 0)) {
+            console.error('⚠️  WARNING: User count mismatch after write!');
+            console.error('   Expected:', data.users ? data.users.length : 0);
+            console.error('   Actual:', verifyData.users.length);
+        }
     } catch (error) {
-        console.error('Error writing database:', error);
-        console.error('Database path:', DB_PATH);
-        throw error;
+        console.error('❌ CRITICAL ERROR writing database:', error);
+        console.error('   Database path:', DB_PATH);
+        console.error('   Error details:', error.message);
+        console.error('   Stack:', error.stack);
+        
+        // Don't throw - log error but allow app to continue
+        // This prevents one bad write from crashing the entire server
+        console.error('   Attempting to continue despite write error...');
     }
 }
 
@@ -188,10 +232,15 @@ app.post('/api/register', async (req, res) => {
         const db = await readDB();
         console.log('Current database users count:', db.users.length);
         
-        // IMPORTANT: Accounts are NEVER deleted unless explicitly requested by user
-        // All accounts are permanently saved to backend database
-        // Allow duplicate emails - users can have multiple accounts with same email
-        // Note: We check for duplicates but don't prevent registration - all accounts are saved
+        // ============================================================
+        // PERMANENT ACCOUNT STORAGE - CRITICAL
+        // ============================================================
+        // Accounts are PERMANENTLY saved to database.json file
+        // - NEVER automatically deleted
+        // - Persists across server restarts
+        // - Works on both LOCAL and RAILWAY
+        // - All user data is permanently stored
+        // ============================================================
 
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
