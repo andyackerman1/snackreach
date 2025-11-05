@@ -6,6 +6,7 @@ const fsSync = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 // Stripe and Plaid setup
@@ -25,6 +26,57 @@ try {
     console.warn('⚠️  Stripe initialization error:', error.message);
     console.warn('   Make sure the "stripe" package is installed: npm install stripe');
     // Stripe will be null, but endpoints will check before using it
+}
+
+// Email configuration
+let emailTransporter = null;
+let emailConfigured = false;
+try {
+    const emailService = process.env.EMAIL_SERVICE || 'gmail'; // 'gmail', 'sendgrid', 'smtp'
+    const emailUser = process.env.EMAIL_USER;
+    const emailPassword = process.env.EMAIL_PASSWORD;
+    const emailFrom = process.env.EMAIL_FROM || emailUser || 'noreply@snackreach.com';
+    
+    if (emailUser && emailPassword) {
+        if (emailService === 'sendgrid') {
+            // SendGrid uses API key, not password
+            emailTransporter = nodemailer.createTransport({
+                service: 'SendGrid',
+                auth: {
+                    user: 'apikey',
+                    pass: emailPassword // This would be the SendGrid API key
+                }
+            });
+        } else if (emailService === 'gmail') {
+            emailTransporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: emailUser,
+                    pass: emailPassword
+                }
+            });
+        } else {
+            // Generic SMTP
+            emailTransporter = nodemailer.createTransport({
+                host: process.env.SMTP_HOST || 'smtp.gmail.com',
+                port: parseInt(process.env.SMTP_PORT || '587'),
+                secure: process.env.SMTP_SECURE === 'true',
+                auth: {
+                    user: emailUser,
+                    pass: emailPassword
+                }
+            });
+        }
+        
+        emailConfigured = true;
+        console.log('✅ Email service configured successfully');
+    } else {
+        console.warn('⚠️  Email not configured. Set EMAIL_USER and EMAIL_PASSWORD in .env to send welcome emails');
+    }
+} catch (error) {
+    console.warn('⚠️  Email initialization error:', error.message);
+    console.warn('   Make sure the "nodemailer" package is installed: npm install nodemailer');
+    emailConfigured = false;
 }
 
 // Plaid configuration - handle missing package gracefully
@@ -170,6 +222,146 @@ async function readDB() {
             loginActivity: [],
             passwordResetTokens: []
         };
+    }
+}
+
+// Send welcome email to new users
+async function sendWelcomeEmail(user) {
+    if (!emailConfigured || !emailTransporter) {
+        console.log('⚠️  Email not configured, skipping welcome email for:', user.email);
+        return;
+    }
+
+    try {
+        const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@snackreach.com';
+        const baseUrl = process.env.BASE_URL || 'https://snackreach-production.up.railway.app';
+        
+        const mailOptions = {
+            from: emailFrom,
+            to: user.email,
+            subject: 'Welcome to SnackReach! 🎉',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body {
+                            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 600px;
+                            margin: 0 auto;
+                            padding: 20px;
+                        }
+                        .header {
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 30px;
+                            text-align: center;
+                            border-radius: 8px 8px 0 0;
+                        }
+                        .header h1 {
+                            margin: 0;
+                            font-size: 28px;
+                        }
+                        .content {
+                            background: #ffffff;
+                            padding: 30px;
+                            border: 1px solid #e5e7eb;
+                            border-top: none;
+                            border-radius: 0 0 8px 8px;
+                        }
+                        .button {
+                            display: inline-block;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 14px 28px;
+                            text-decoration: none;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            margin: 20px 0;
+                        }
+                        .footer {
+                            text-align: center;
+                            color: #6b7280;
+                            font-size: 14px;
+                            margin-top: 30px;
+                            padding-top: 20px;
+                            border-top: 1px solid #e5e7eb;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Welcome to SnackReach!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Hi ${user.name || user.companyName},</p>
+                        
+                        <p>Thank you for joining SnackReach! We're excited to have you on board.</p>
+                        
+                        <p>Your account has been successfully created:</p>
+                        <ul>
+                            <li><strong>Name:</strong> ${user.name}</li>
+                            <li><strong>Company:</strong> ${user.companyName}</li>
+                            <li><strong>Email:</strong> ${user.email}</li>
+                            <li><strong>Account Type:</strong> ${user.userType === 'startup' ? 'Food Startup' : user.userType === 'office' ? 'Office Manager' : user.userType}</li>
+                        </ul>
+                        
+                        <p>You can now:</p>
+                        <ul>
+                            <li>Browse our marketplace of delicious snacks</li>
+                            <li>Connect with food startups and office spaces</li>
+                            <li>Manage your orders and subscriptions</li>
+                            <li>Access your dashboard to get started</li>
+                        </ul>
+                        
+                        <div style="text-align: center;">
+                            <a href="${baseUrl}/login.html" class="button">Access Your Dashboard</a>
+                        </div>
+                        
+                        <p>If you have any questions, feel free to reach out to our support team.</p>
+                        
+                        <p>Welcome aboard!</p>
+                        <p><strong>The SnackReach Team</strong></p>
+                    </div>
+                    <div class="footer">
+                        <p>This is an automated message. Please do not reply to this email.</p>
+                        <p>&copy; ${new Date().getFullYear()} SnackReach. All rights reserved.</p>
+                    </div>
+                </body>
+                </html>
+            `,
+            text: `
+                Welcome to SnackReach!
+                
+                Hi ${user.name || user.companyName},
+                
+                Thank you for joining SnackReach! We're excited to have you on board.
+                
+                Your account has been successfully created:
+                - Name: ${user.name}
+                - Company: ${user.companyName}
+                - Email: ${user.email}
+                - Account Type: ${user.userType === 'startup' ? 'Food Startup' : user.userType === 'office' ? 'Office Manager' : user.userType}
+                
+                You can now browse our marketplace, connect with food startups and office spaces, and manage your orders and subscriptions.
+                
+                Access your dashboard: ${baseUrl}/login.html
+                
+                If you have any questions, feel free to reach out to our support team.
+                
+                Welcome aboard!
+                The SnackReach Team
+            `
+        };
+
+        await emailTransporter.sendMail(mailOptions);
+        console.log('✅ Welcome email sent successfully to:', user.email);
+    } catch (error) {
+        console.error('❌ Error sending welcome email:', error);
+        throw error;
     }
 }
 
@@ -322,6 +514,13 @@ app.post('/api/register', async (req, res) => {
         );
 
         console.log('User registered successfully:', newUser.email);
+        
+        // Send welcome email (async, don't wait for it)
+        sendWelcomeEmail(newUser).catch(err => {
+            console.error('Failed to send welcome email:', err.message);
+            // Don't fail registration if email fails
+        });
+        
         res.json({
             message: 'User registered successfully',
             token,
