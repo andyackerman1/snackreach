@@ -1,0 +1,31 @@
+📋 SNACKREACH DEPLOYMENT CHECKLIST
+
+✅ STEP 1: Deploy Frontend (Netlify)
+   [ ] Sign up at netlify.com
+   [ ] Drag all files (except backend folder) onto Netlify
+   [ ] Copy your Netlify URL: _____________________
+
+✅ STEP 2: Deploy Backend (Render)
+   [ ] Sign up at render.com
+   [ ] Create new Web Service
+   [ ] Connect GitHub or upload backend folder
+   [ ] Set Root Directory: "backend"
+   [ ] Build Command: "npm install"
+   [ ] Start Command: "node server.js"
+   [ ] Copy your Render URL: _____________________
+
+✅ STEP 3: Connect Frontend to Backend
+   [ ] Open js/api.js
+   [ ] Update line 10 with your Render URL
+   [ ] Re-deploy to Netlify
+
+✅ STEP 4: Test
+   [ ] Visit your Netlify site
+   [ ] Test signup
+   [ ] Test login
+   [ ] Check browser console (F12) for errors
+
+🎉 YOUR SITE IS NOW PUBLIC!
+
+Need help? Check QUICK-DEPLOY.md for detailed instructions.
+

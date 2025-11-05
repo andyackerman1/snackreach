@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join SnackReach - Startup Snacks at Office-Friendly Prices</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-utensils"></i>
+                <span>SnackReach</span>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Back to Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Signup Section -->
+    <section class="signup-section">
+        <div class="container">
+            <div class="signup-container">
+                <div class="signup-header">
+                    <h1>Join SnackReach</h1>
+                    <p>Choose your role to get started</p>
+                    <div class="subscription-info">
+                        <i class="fas fa-crown"></i>
+                        <span>Premium access for just $2/month</span>
+                    </div>
+                </div>
+                
+                <div class="user-type-selection">
+                    <div class="user-type-card" onclick="selectUserType('startup')" id="startup-card">
+                        <div class="user-type-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3>Food Startup</h3>
+                        <p>I'm a startup snack company looking to build brand awareness through discounted office deals</p>
+                        <ul class="benefits-list">
+                            <li><i class="fas fa-check"></i> Reach office workers directly</li>
+                            <li><i class="fas fa-check"></i> Build brand awareness</li>
+                            <li><i class="fas fa-check"></i> Get feedback from real customers</li>
+                            <li><i class="fas fa-check"></i> Create long-term partnerships</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="user-type-card" onclick="selectUserType('office')" id="office-card">
+                        <div class="user-type-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h3>Office Manager</h3>
+                        <p>I manage an office and want to discover discounted snacks from innovative startups</p>
+                        <ul class="benefits-list">
+                            <li><i class="fas fa-check"></i> Access to startup discounts</li>
+                            <li><i class="fas fa-check"></i> Discover new brands first</li>
+                            <li><i class="fas fa-check"></i> Support emerging companies</li>
+                            <li><i class="fas fa-check"></i> Custom office deals</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <form id="signup-form" class="signup-form" style="display: none;">
+                    <div class="form-header">
+                        <h2 id="form-title">Create Your Account</h2>
+                        <p id="form-subtitle">Fill in your details to get started</p>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="signup-name">Full Name</label>
+                            <input type="text" id="signup-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-email">Email</label>
+                            <input type="email" id="signup-email" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="signup-company">Company Name</label>
+                            <input type="text" id="signup-company" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-phone">Phone Number</label>
+                            <input type="tel" id="signup-phone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signup-confirm">Confirm Password</label>
+                        <input type="password" id="signup-confirm" required>
+                    </div>
+                    
+                    <div class="payment-section">
+                        <h4>Payment Information</h4>
+                        <p class="payment-note">$2/month subscription required to access SnackReach</p>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="card-number">Card Number</label>
+                                <input type="text" id="card-number" placeholder="1234 5678 9012 3456" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="card-cvv">CVV</label>
+                                <input type="text" id="card-cvv" placeholder="123" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="card-expiry">Expiry Date</label>
+                                <input type="text" id="card-expiry" placeholder="MM/YY" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="card-name">Name on Card</label>
+                                <input type="text" id="card-name" placeholder="John Doe" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="billing-address">Billing Address</label>
+                            <input type="text" id="billing-address" placeholder="123 Main St, City, State 12345" required>
+                        </div>
+                    </div>
+                    
+                    <div class="terms-section">
+                        <div class="terms-checkbox">
+                            <input type="checkbox" id="accept-terms" required>
+                            <label for="accept-terms">
+                                I agree to the <a href="#" onclick="showTermsModal(); return false;">Terms of Service and Privacy Policy</a>
+                            </label>
+                        </div>
+                        <p class="terms-note">
+                            By creating an account, you acknowledge that you have read and understand our terms, including important disclaimers about shipping, product safety, and liability.
+                        </p>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-large btn-full">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                    
+                    <p class="login-link">
+                        Already have an account? <a href="#" onclick="showLogin()">Login here</a>
+                    </p>
+                    <div class="bypass-login">
+                        <button class="btn btn-outline btn-small" onclick="bypassLogin()">
+                            <i class="fas fa-key"></i>
+                            Quick Demo Access
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Terms and Conditions Modal -->
+    <div id="terms-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Terms of Service and Privacy Policy</h2>
+                <span class="close" onclick="closeTermsModal()">&times;</span>
+            </div>
+            <div class="modal-body terms-content">
+                <div class="terms-section-content">
+                    <h3>1. Platform Overview</h3>
+                    <p>SnackReach is a marketplace platform that connects food startup companies with office spaces. We facilitate introductions and provide a platform for communication, but we do not participate in transactions, shipping, or product fulfillment.</p>
+                    
+                    <h3>2. Shipping and Fulfillment</h3>
+                    <p><strong>SnackReach is not responsible for shipping, delivery, or fulfillment of any products.</strong> All shipping arrangements, costs, and logistics are the sole responsibility of the snack companies and office managers. We do not guarantee delivery times, shipping methods, or product availability. Users are responsible for coordinating directly with each other regarding shipping arrangements.</p>
+                    
+                    <h3>3. Product Safety and Quality</h3>
+                    <p><strong>SnackReach is not responsible for the safety, quality, or condition of any products listed on the platform.</strong> We do not inspect, test, or verify the safety, ingredients, or quality of any products. Users are responsible for:</p>
+                    <ul>
+                        <li>Verifying product ingredients and allergen information</li>
+                        <li>Ensuring products meet applicable food safety standards</li>
+                        <li>Conducting their own quality checks and due diligence</li>
+                        <li>Complying with all applicable food safety regulations</li>
+                    </ul>
+                    <p>Snack companies are solely responsible for ensuring their products comply with all applicable laws, regulations, and safety standards.</p>
+                    
+                    <h3>4. Liability Disclaimer</h3>
+                    <p><strong>To the fullest extent permitted by law, SnackReach disclaims all liability for:</strong></p>
+                    <ul>
+                        <li>Any injuries, illnesses, or health issues arising from product consumption</li>
+                        <li>Product defects, contamination, or spoilage</li>
+                        <li>Shipping delays, damages, or lost packages</li>
+                        <li>Financial losses from transactions between users</li>
+                        <li>Misrepresentation of products by snack companies</li>
+                        <li>Any disputes between snack companies and office managers</li>
+                    </ul>
+                    <p>Users agree to hold SnackReach harmless from any claims, damages, or losses arising from their use of the platform or any products obtained through the platform.</p>
+                    
+                    <h3>5. User Responsibilities</h3>
+                    <p>Users are responsible for:</p>
+                    <ul>
+                        <li>Accurately representing their products, companies, and services</li>
+                        <li>Complying with all applicable laws and regulations</li>
+                        <li>Maintaining appropriate insurance coverage</li>
+                        <li>Resolving disputes directly with other users</li>
+                        <li>Protecting their account credentials and personal information</li>
+                    </ul>
+                    
+                    <h3>6. Subscription and Payments</h3>
+                    <p>The $2/month subscription fee provides access to the SnackReach platform. This fee is non-refundable and does not guarantee any transactions, connections, or business outcomes. Subscription fees are billed monthly and will continue until cancelled by the user.</p>
+                    
+                    <h3>7. Privacy Policy</h3>
+                    <p>We collect and store information you provide during registration, including name, email, phone number, company information, and payment details. This information is used to:</p>
+                    <ul>
+                        <li>Provide platform services and facilitate connections</li>
+                        <li>Process subscription payments</li>
+                        <li>Communicate with users about platform updates</li>
+                        <li>Improve our services</li>
+                    </ul>
+                    <p>We do not sell your personal information to third parties. We may share information with other users on the platform to facilitate connections, as explicitly displayed on the platform.</p>
+                    
+                    <h3>8. Account Termination</h3>
+                    <p>SnackReach reserves the right to suspend or terminate accounts that violate these terms, engage in fraudulent activity, or misuse the platform. Users may cancel their subscription at any time through their account settings.</p>
+                    
+                    <h3>9. Dispute Resolution</h3>
+                    <p>Any disputes between users must be resolved directly between the parties involved. SnackReach is not a party to any transactions and will not mediate disputes. Users agree not to involve SnackReach in any legal proceedings arising from transactions or interactions on the platform.</p>
+                    
+                    <h3>10. Changes to Terms</h3>
+                    <p>SnackReach reserves the right to modify these terms at any time. Users will be notified of significant changes via email or platform notification. Continued use of the platform after changes constitutes acceptance of the new terms.</p>
+                    
+                    <h3>11. Contact Information</h3>
+                    <p>For questions about these terms, please contact us through the platform or at the contact information provided in your account dashboard.</p>
+                    
+                    <div class="terms-acceptance">
+                        <p><strong>By checking the box and creating an account, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and Privacy Policy.</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="acceptTermsAndClose()">I Understand and Accept</button>
+                <button class="btn btn-outline" onclick="closeTermsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedUserType = '';
+        
+        // Check login status when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+        });
+        
+        function selectUserType(type) {
+            selectedUserType = type;
+            
+            // Update card selections
+            document.querySelectorAll('.user-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById(type + '-card').classList.add('selected');
+            
+            // Show form
+            document.getElementById('signup-form').style.display = 'block';
+            
+            // Update form title based on selection
+            const formTitle = document.getElementById('form-title');
+            const formSubtitle = document.getElementById('form-subtitle');
+            
+            if (type === 'startup') {
+                formTitle.textContent = 'Join as a Food Startup';
+                formSubtitle.textContent = 'Start building brand awareness in offices';
+            } else {
+                formTitle.textContent = 'Join as an Office Manager';
+                formSubtitle.textContent = 'Start discovering discounted startup snacks';
+            }
+            
+            // Scroll to form
+            document.getElementById('signup-form').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Check if user is already logged in
+        function checkLoginStatus() {
+            const userType = localStorage.getItem('snackreach_user_type');
+            const userName = localStorage.getItem('snackreach_user_name');
+            
+            if (userType && userName) {
+                // User is already logged in, redirect to appropriate dashboard
+                if (userType === 'startup') {
+                    window.location.href = 'snack-dashboard.html';
+                } else if (userType === 'office') {
+                    window.location.href = 'office-dashboard.html';
+                }
+            }
+        }
+        
+        // Store login information
+        function storeLoginInfo(userType, userName, companyName) {
+            localStorage.setItem('snackreach_user_type', userType);
+            localStorage.setItem('snackreach_user_name', userName);
+            localStorage.setItem('snackreach_company_name', companyName);
+            localStorage.setItem('snackreach_login_time', new Date().toISOString());
+        }
+        
+        function showLogin() {
+            alert('Login functionality coming soon! For now, you can create your account here.');
+        }
+        
+        function bypassLogin() {
+            const userType = prompt('Choose your demo role:\n1. Snack Company\n2. Office Manager\n\nEnter 1 or 2:');
+            if (userType === '1') {
+                // Store demo login info
+                storeLoginInfo('startup', 'Demo Startup', 'Crunchy Greens');
+                window.location.href = 'snack-dashboard.html';
+            } else if (userType === '2') {
+                // Store demo login info
+                storeLoginInfo('office', 'Demo Office Manager', 'TechStart Inc.');
+                window.location.href = 'office-dashboard.html';
+            }
+        }
+        
+        function showTermsModal() {
+            document.getElementById('terms-modal').style.display = 'block';
+        }
+        
+        function closeTermsModal() {
+            document.getElementById('terms-modal').style.display = 'none';
+        }
+        
+        function acceptTermsAndClose() {
+            document.getElementById('accept-terms').checked = true;
+            closeTermsModal();
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('terms-modal');
+            if (event.target == modal) {
+                closeTermsModal();
+            }
+        }
+        
+        // Form submission
+        document.getElementById('signup-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const company = document.getElementById('signup-company').value;
+            const phone = document.getElementById('signup-phone').value;
+            const password = document.getElementById('signup-password').value;
+            const confirm = document.getElementById('signup-confirm').value;
+            const cardNumber = document.getElementById('card-number').value;
+            const cardCVV = document.getElementById('card-cvv').value;
+            const cardExpiry = document.getElementById('card-expiry').value;
+            const cardName = document.getElementById('card-name').value;
+            const billingAddress = document.getElementById('billing-address').value;
+            const acceptTerms = document.getElementById('accept-terms').checked;
+            
+            // Check if terms are accepted
+            if (!acceptTerms) {
+                alert('Please read and accept the Terms of Service and Privacy Policy to continue.');
+                showTermsModal();
+                return;
+            }
+            
+            if (password !== confirm) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long!');
+                return;
+            }
+            
+            // Validate credit card information
+            if (!cardNumber || !cardCVV || !cardExpiry || !cardName || !billingAddress) {
+                alert('Please fill in all payment information!');
+                return;
+            }
+            
+            if (cardNumber.length < 16) {
+                alert('Please enter a valid card number!');
+                return;
+            }
+            
+            if (cardCVV.length < 3) {
+                alert('Please enter a valid CVV!');
+                return;
+            }
+
+            // Try to save to backend
+            try {
+                const API_BASE_URL = 'http://localhost:3000/api';
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                        companyName: company,
+                        phone,
+                        userType: selectedUserType === 'startup' ? 'startup' : 'office',
+                        cardInfo: {
+                            number: cardNumber,
+                            cvv: cardCVV,
+                            expiry: cardExpiry,
+                            name: cardName,
+                            address: billingAddress
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store login information
+                    if (data.token) {
+                        localStorage.setItem('snackreach_token', data.token);
+                        localStorage.setItem('snackreach_user_type', data.user.userType);
+                        localStorage.setItem('snackreach_user_name', data.user.name);
+                        localStorage.setItem('snackreach_company_name', data.user.companyName);
+                    }
+                    
+                    alert(`Welcome to SnackReach, ${name}!\n\nYour account has been created and saved successfully!`);
+                    
+                    // Redirect to appropriate dashboard
+                    if (selectedUserType === 'startup') {
+                        window.location.href = 'snack-dashboard.html';
+                    } else {
+                        window.location.href = 'office-dashboard.html';
+                    }
+                } else {
+                    throw new Error(data.error || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('Backend registration error:', error);
+                // Fallback: Save to localStorage if backend unavailable
+                const userData = {
+                    id: Date.now().toString(),
+                    name,
+                    email,
+                    password, // In real app, this would be hashed
+                    companyName: company,
+                    phone,
+                    userType: selectedUserType === 'startup' ? 'startup' : 'office',
+                    cardInfo: {
+                        number: cardNumber,
+                        cvv: cardCVV,
+                        expiry: cardExpiry,
+                        name: cardName,
+                        address: billingAddress
+                    },
+                    subscription: {
+                        status: 'active',
+                        plan: 'premium',
+                        price: 2.00,
+                        billingCycle: 'monthly'
+                    },
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Save to localStorage
+                const existingUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
+                existingUsers.push(userData);
+                localStorage.setItem('snackreach_users', JSON.stringify(existingUsers));
+                
+                // Store login information
+                storeLoginInfo(selectedUserType === 'startup' ? 'startup' : 'office', name, company);
+                
+                alert(`Welcome to SnackReach, ${name}!\n\nYour account has been created!\n\n(Note: Saved locally - backend not available)`);
+                
+                // Redirect to appropriate dashboard
+                if (selectedUserType === 'startup') {
+                    window.location.href = 'snack-dashboard.html';
+                } else {
+                    window.location.href = 'office-dashboard.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

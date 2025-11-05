@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Login - SnackReach</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-utensils"></i>
+                <span>SnackReach</span>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Back to Home</a>
+                <a href="owner-signup.html" class="nav-link">Owner Signup</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Section -->
+    <section class="signup-section">
+        <div class="container">
+            <div class="signup-container">
+                <div class="signup-header">
+                    <h1>Owner Login</h1>
+                    <p>Platform administrator access</p>
+                    <div class="subscription-info">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Admin Access Only</span>
+                    </div>
+                </div>
+                
+                <form id="owner-login-form" class="signup-form">
+                    <div class="form-header">
+                        <h2>Login to Owner Dashboard</h2>
+                        <p>Enter your credentials to access the admin panel</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="login-email">Username / Email</label>
+                        <input type="text" id="login-email" placeholder="Enter username or email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-large btn-full">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login
+                    </button>
+                    
+                    <p class="login-link">
+                        Don't have an owner account? <a href="owner-signup.html">Sign up here</a>
+                    </p>
+                    
+                    <div class="bypass-login">
+                        <button type="button" class="btn btn-outline btn-small" onclick="bypassOwnerLogin()">
+                            <i class="fas fa-key"></i>
+                            Quick Demo Access
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        document.getElementById('owner-login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            console.log('Login attempt:', { email, passwordLength: password.length });
+            
+            // Special admin credentials (case-insensitive for username/email)
+            const normalizedEmail = email.toLowerCase();
+            if ((normalizedEmail === 'andy' || normalizedEmail === 'andy@snackreach.com') && password === 'BoJackson421') {
+                console.log('Admin credentials matched');
+                
+                // Set up admin account
+                localStorage.setItem('snackreach_user_type', 'owner');
+                localStorage.setItem('snackreach_user_name', 'Andy');
+                localStorage.setItem('snackreach_company_name', 'SnackReach Admin');
+                
+                // Create or update owner data
+                const existingOwnerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
+                const adminData = {
+                    id: 'admin-andy',
+                    name: 'Andy',
+                    email: 'andy@snackreach.com',
+                    companyName: 'SnackReach Admin',
+                    userType: 'owner',
+                    isAdmin: true,
+                    createdAt: new Date().toISOString(),
+                    bankingInfo: existingOwnerData.bankingInfo || {}
+                };
+                
+                localStorage.setItem('snackreach_owner_data', JSON.stringify(adminData));
+                
+                console.log('Admin login successful, redirecting to owner dashboard...');
+                alert('Login successful! Welcome, Andy.');
+                window.location.href = 'owner-dashboard.html';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/login-owner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store login info
+                    if (data.token) {
+                        localStorage.setItem('snackreach_token', data.token);
+                        localStorage.setItem('snackreach_user_type', 'owner');
+                        localStorage.setItem('snackreach_user_name', data.user.name);
+                        localStorage.setItem('snackreach_company_name', data.user.companyName);
+                    }
+                    
+                    window.location.href = 'owner-dashboard.html';
+                } else {
+                    alert('Error: ' + (data.error || 'Invalid credentials'));
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // Check if owner data exists in localStorage
+                const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
+                
+                // Also check if using admin credentials but backend failed
+                const normalizedEmail = email.toLowerCase();
+                if ((normalizedEmail === 'andy' || normalizedEmail === 'andy@snackreach.com') && password === 'BoJackson421') {
+                    localStorage.setItem('snackreach_user_type', 'owner');
+                    localStorage.setItem('snackreach_user_name', 'Andy');
+                    localStorage.setItem('snackreach_company_name', 'SnackReach Admin');
+                    
+                    const adminData = {
+                        id: 'admin-andy',
+                        name: 'Andy',
+                        email: 'andy@snackreach.com',
+                        companyName: 'SnackReach Admin',
+                        userType: 'owner',
+                        isAdmin: true,
+                        createdAt: new Date().toISOString(),
+                        bankingInfo: ownerData.bankingInfo || {}
+                    };
+                    localStorage.setItem('snackreach_owner_data', JSON.stringify(adminData));
+                    
+                    alert('Login successful! Welcome, Andy. (Backend not available, using local storage)');
+                    window.location.href = 'owner-dashboard.html';
+                    return;
+                }
+                
+                if (ownerData.email === email || ownerData.email === email.toLowerCase()) {
+                    // Simple password check (in real app, this would be hashed)
+                    if (password === 'demo123' || ownerData.password === password) {
+                        localStorage.setItem('snackreach_user_type', 'owner');
+                        localStorage.setItem('snackreach_user_name', ownerData.name);
+                        localStorage.setItem('snackreach_company_name', ownerData.companyName);
+                        alert('Login successful! (Using local storage - backend not available)');
+                        window.location.href = 'owner-dashboard.html';
+                    } else {
+                        alert('Invalid password. Please try again.');
+                    }
+                } else {
+                    alert('Owner account not found. Please sign up first, use "Quick Demo Access", or use admin credentials:\n\nUsername: andy\nPassword: BoJackson421');
+                }
+            }
+        });
+
+        function bypassOwnerLogin() {
+            // Create demo owner account
+            const demoOwner = {
+                id: 'owner-demo',
+                name: 'Demo Owner',
+                email: 'owner@snackreach.com',
+                password: 'demo123',
+                companyName: 'SnackReach Admin',
+                userType: 'owner',
+                bankingInfo: {
+                    bankName: 'Demo Bank',
+                    accountName: 'SnackReach Admin',
+                    accountNumber: '****1234',
+                    routingNumber: '****5678'
+                }
+            };
+            
+            localStorage.setItem('snackreach_owner_data', JSON.stringify(demoOwner));
+            localStorage.setItem('snackreach_user_type', 'owner');
+            localStorage.setItem('snackreach_user_name', demoOwner.name);
+            localStorage.setItem('snackreach_company_name', demoOwner.companyName);
+            
+            alert('Demo owner account created! Email: owner@snackreach.com, Password: demo123');
+            window.location.href = 'owner-dashboard.html';
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnackReach - Office Manager Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-utensils"></i>
+                <span>SnackReach</span>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Back to Home</a>
+                <div class="user-info">
+                    <span class="user-name" id="user-name">TechStart Inc.</span>
+                    <span class="subscription-badge">Premium</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <section class="dashboard-section">
+        <div class="container">
+            <div class="dashboard-header">
+                <h1>Office Manager Dashboard</h1>
+                <p>Discover discounted startup snacks and manage your office preferences</p>
+            </div>
+
+            <!-- Dashboard Tabs -->
+            <div class="dashboard-tabs">
+                <button class="tab-btn active" onclick="showTab('discover')">
+                    <i class="fas fa-search"></i>
+                    Discover Snacks
+                </button>
+                <button class="tab-btn" onclick="showTab('preferences')">
+                    <i class="fas fa-sliders-h"></i>
+                    Preferences
+                </button>
+                <button class="tab-btn" onclick="showTab('orders')">
+                    <i class="fas fa-shopping-cart"></i>
+                    Orders
+                </button>
+                <button class="tab-btn" onclick="showTab('messages')">
+                    <i class="fas fa-comments"></i>
+                    Messages
+                    <span class="message-limit">3/5 today</span>
+                </button>
+                <button class="tab-btn" onclick="showTab('account')">
+                    <i class="fas fa-cog"></i>
+                    Account
+                </button>
+            </div>
+
+            <!-- Discover Tab -->
+            <div id="discover-tab" class="tab-content active">
+                <div class="discover-header">
+                    <h3>Popular Startup Brands</h3>
+                    <div class="discover-filters">
+                        <div class="filter-group">
+                            <label>Category</label>
+                            <select id="category-filter">
+                                <option value="">All Categories</option>
+                                <option value="snacks">Snacks</option>
+                                <option value="beverages">Beverages</option>
+                                <option value="healthy">Healthy</option>
+                                <option value="desserts">Desserts</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Price Range</label>
+                            <select id="price-filter">
+                                <option value="">Any Price</option>
+                                <option value="under-20">Under $20</option>
+                                <option value="20-50">$20 - $50</option>
+                                <option value="over-50">Over $50</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Search</label>
+                            <input type="text" id="search-input" placeholder="Search products...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h4>No products available yet</h4>
+                    <p>Startup snack products will appear here once snack companies join SnackReach and list their discounted products. Use the filters above to search when products become available.</p>
+                </div>
+            </div>
+
+            <!-- Preferences Tab -->
+            <div id="preferences-tab" class="tab-content">
+                <div class="section-header">
+                    <h3>Office Preferences</h3>
+                    <p>Customize what types of snacks your office is interested in</p>
+                </div>
+                
+                <div class="preferences-grid">
+                    <div class="preference-section">
+                        <h4>Snack Categories</h4>
+                        <div class="preference-toggles">
+                            <label class="toggle-item">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Chips & Crunchy</span>
+                            </label>
+                            <label class="toggle-item">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Cookies & Sweet</span>
+                            </label>
+                            <label class="toggle-item">
+                                <input type="checkbox">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Salty Snacks</span>
+                            </label>
+                            <label class="toggle-item">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Healthy Options</span>
+                            </label>
+                            <label class="toggle-item">
+                                <input type="checkbox">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Energy Bars</span>
+                            </label>
+                            <label class="toggle-item">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Beverages</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="preference-section">
+                        <h4>Dietary Preferences</h4>
+                        <div class="preference-toggles">
+                            <label class="toggle-item">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Organic</span>
+                            </label>
+                            <label class="toggle-item">
+                                <input type="checkbox">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Vegan</span>
+                            </label>
+                            <label class="toggle-item">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Gluten-Free</span>
+                            </label>
+                            <label class="toggle-item">
+                                <input type="checkbox">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Low Sugar</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="preference-section">
+                        <h4>Price Preferences</h4>
+                        <div class="price-range">
+                            <label>Budget per month:</label>
+                            <select>
+                                <option>Under $200</option>
+                                <option>$200 - $500</option>
+                                <option>$500 - $1000</option>
+                                <option>Over $1000</option>
+                            </select>
+                        </div>
+                        <div class="price-range">
+                            <label>Price sensitivity:</label>
+                            <select>
+                                <option>Very price sensitive</option>
+                                <option>Moderately price sensitive</option>
+                                <option>Quality over price</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="preference-section">
+                        <h4>Office Details</h4>
+                        <div class="office-details">
+                            <div class="detail-item">
+                                <label>Number of employees:</label>
+                                <input type="number" value="50" min="1">
+                            </div>
+                            <div class="detail-item">
+                                <label>Snack frequency:</label>
+                                <select>
+                                    <option>Daily</option>
+                                    <option>Weekly</option>
+                                    <option>Monthly</option>
+                                </select>
+                            </div>
+                            <div class="detail-item">
+                                <label>Special requirements:</label>
+                                <textarea placeholder="Any specific dietary needs or preferences..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="preferences-actions">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Preferences
+                    </button>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div id="orders-tab" class="tab-content">
+                <div class="section-header">
+                    <h3>Order History</h3>
+                    <div class="order-filters">
+                        <select>
+                            <option>All Orders</option>
+                            <option>This Month</option>
+                            <option>Last 3 Months</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h4>No orders yet</h4>
+                    <p>Your order history will appear here once you start placing orders with snack companies.</p>
+                </div>
+            </div>
+
+            <!-- Messages Tab -->
+            <div id="messages-tab" class="tab-content">
+                <div class="section-header">
+                    <h3>Messages</h3>
+                    <div class="message-limit-info">
+                        <span class="limit-text">0/5 messages received today</span>
+                        <div class="limit-bar">
+                            <div class="limit-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h4>No messages yet</h4>
+                    <p>Messages from snack companies will appear here once they start reaching out to you about their products.</p>
+                </div>
+            </div>
+
+            <!-- Account Tab -->
+            <div id="account-tab" class="tab-content">
+                <div class="profile-section">
+                    <h3>Profile & Account Settings</h3>
+                    
+                    <!-- Personal Information -->
+                    <div class="profile-card">
+                        <h4>Personal Information</h4>
+                        <form class="profile-form" id="office-profile-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="profile-name">Full Name</label>
+                                    <input type="text" id="profile-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="profile-email">Email</label>
+                                    <input type="email" id="profile-email" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="profile-phone">Phone Number</label>
+                                    <input type="tel" id="profile-phone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="profile-company">Company Name</label>
+                                    <input type="text" id="profile-company" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="profile-bio">Office Description</label>
+                                <textarea id="profile-bio" rows="4" placeholder="Tell us about your office..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Password Change -->
+                    <div class="profile-card">
+                        <h4>Change Password</h4>
+                        <form class="profile-form" id="office-password-form">
+                            <div class="form-group">
+                                <label for="office-current-password">Current Password</label>
+                                <input type="password" id="office-current-password">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="office-new-password">New Password</label>
+                                    <input type="password" id="office-new-password">
+                                </div>
+                                <div class="form-group">
+                                    <label for="office-confirm-password">Confirm New Password</label>
+                                    <input type="password" id="office-confirm-password">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-key"></i>
+                                Change Password
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Payment Methods -->
+                    <div class="profile-card">
+                        <div class="section-header-with-action">
+                            <h4>Payment Methods</h4>
+                            <button class="btn btn-primary btn-small" onclick="showAddPaymentModal()">
+                                <i class="fas fa-plus"></i>
+                                Add Payment Method
+                            </button>
+                        </div>
+                        <div id="payment-methods-list" class="payment-methods-list">
+                            <!-- Payment methods will be loaded here -->
+                        </div>
+                        <div id="no-payment-methods" class="empty-state-small" style="display: none;">
+                            <p>No payment methods added yet. Add one to get started.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Subscription Management -->
+                    <div class="profile-card">
+                        <h4>Subscription Management</h4>
+                        <div class="subscription-info-card">
+                            <div class="subscription-details">
+                                <div class="subscription-plan">
+                                    <h5>Premium Plan</h5>
+                                    <p>$2.00/month</p>
+                                </div>
+                                <div class="subscription-status">
+                                    <span class="status-badge active">Active</span>
+                                    <p>Next billing: January 15, 2025</p>
+                                </div>
+                            </div>
+                            <div class="subscription-actions">
+                                <button class="btn btn-outline btn-small" onclick="showCancelModal()">
+                                    <i class="fas fa-times"></i>
+                                    Cancel Subscription
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Actions -->
+                    <div class="profile-card">
+                        <h4>Account Actions</h4>
+                        <div class="account-actions">
+                            <div class="action-item">
+                                <div class="action-info">
+                                    <h5>Change Password</h5>
+                                    <p>Update your account password</p>
+                                </div>
+                                <button class="btn btn-outline btn-small">
+                                    <i class="fas fa-key"></i>
+                                    Change Password
+                                </button>
+                            </div>
+                            
+                            <div class="action-item">
+                                <div class="action-info">
+                                    <h5>Download Data</h5>
+                                    <p>Export your account data</p>
+                                </div>
+                                <button class="btn btn-outline btn-small">
+                                    <i class="fas fa-download"></i>
+                                    Download
+                                </button>
+                            </div>
+                            
+                            <div class="action-item">
+                                <div class="action-info">
+                                    <h5>Delete Account</h5>
+                                    <p>Permanently delete your account</p>
+                                </div>
+                                <button class="btn btn-outline btn-small" style="color: #dc2626; border-color: #dc2626;">
+                                    <i class="fas fa-trash"></i>
+                                    Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Logout Section -->
+                    <div class="logout-section">
+                        <button class="btn btn-primary btn-large" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Log Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cancel Subscription Modal -->
+    <div id="cancel-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Cancel Subscription</h2>
+                <span class="close" onclick="closeModal('cancel-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel your subscription? You'll lose access to all premium features.</p>
+                <div class="cancellation-options">
+                    <h4>Why are you canceling?</h4>
+                    <select id="cancel-reason">
+                        <option value="">Select a reason...</option>
+                        <option value="too-expensive">Too expensive</option>
+                        <option value="not-using">Not using the service</option>
+                        <option value="found-alternative">Found a better alternative</option>
+                        <option value="technical-issues">Technical issues</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-outline" onclick="closeModal('cancel-modal')">Keep Subscription</button>
+                    <button class="btn btn-primary" onclick="confirmCancellation()" style="background: #dc2626; border-color: #dc2626;">Cancel Subscription</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load user information from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const userName = localStorage.getItem('snackreach_user_name');
+            const companyName = localStorage.getItem('snackreach_company_name');
+            
+            if (userName && companyName) {
+                document.getElementById('user-name').textContent = companyName;
+            }
+            
+            // Check if user is logged in
+            const userType = localStorage.getItem('snackreach_user_type');
+            if (!userType || userType !== 'office') {
+                alert('Please log in to access the office manager dashboard.');
+                window.location.href = 'signup.html';
+                return;
+            }
+            
+            loadOfficeProfile();
+        });
+        
+        function loadOfficeProfile() {
+            const API_BASE_URL = 'http://localhost:3000/api';
+            
+            // Try to load from backend
+            const token = localStorage.getItem('snackreach_token');
+            if (token) {
+                fetch(`${API_BASE_URL}/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.name) {
+                        document.getElementById('profile-name').value = data.name || '';
+                        document.getElementById('profile-email').value = data.email || '';
+                        document.getElementById('profile-phone').value = data.phone || '';
+                        document.getElementById('profile-company').value = data.companyName || '';
+                    }
+                })
+                .catch(error => {
+                    console.log('Backend not available, loading from localStorage');
+                    loadFromLocalStorage();
+                });
+            } else {
+                loadFromLocalStorage();
+            }
+        }
+        
+        function loadFromLocalStorage() {
+            const userName = localStorage.getItem('snackreach_user_name');
+            const companyName = localStorage.getItem('snackreach_company_name');
+            
+            // Get user data from localStorage
+            const users = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
+            const currentUser = users.find(u => u.companyName === companyName) || {};
+            
+            document.getElementById('profile-name').value = userName || currentUser.name || '';
+            document.getElementById('profile-email').value = currentUser.email || '';
+            document.getElementById('profile-phone').value = currentUser.phone || '';
+            document.getElementById('profile-company').value = companyName || currentUser.companyName || '';
+            document.getElementById('profile-bio').value = currentUser.bio || '';
+        }
+        
+        // Save office profile
+        document.getElementById('office-profile-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('profile-name').value;
+            const email = document.getElementById('profile-email').value;
+            const phone = document.getElementById('profile-phone').value;
+            const company = document.getElementById('profile-company').value;
+            const bio = document.getElementById('profile-bio').value;
+            
+            // Update localStorage
+            localStorage.setItem('snackreach_user_name', name);
+            localStorage.setItem('snackreach_company_name', company);
+            document.getElementById('user-name').textContent = company;
+            
+            // Update user data in localStorage
+            const users = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
+            const currentCompany = localStorage.getItem('snackreach_company_name');
+            const userIndex = users.findIndex(u => u.companyName === currentCompany || u.email === email);
+            
+            if (userIndex !== -1) {
+                users[userIndex].name = name;
+                users[userIndex].email = email;
+                users[userIndex].phone = phone;
+                users[userIndex].companyName = company;
+                users[userIndex].bio = bio;
+                localStorage.setItem('snackreach_users', JSON.stringify(users));
+            } else {
+                // Create new user entry
+                const newUser = {
+                    id: Date.now().toString(),
+                    name,
+                    email,
+                    phone,
+                    companyName: company,
+                    bio,
+                    userType: 'office',
+                    createdAt: new Date().toISOString()
+                };
+                users.push(newUser);
+                localStorage.setItem('snackreach_users', JSON.stringify(users));
+            }
+            
+            // Try to save to backend
+            const token = localStorage.getItem('snackreach_token');
+            if (token) {
+                try {
+                    await fetch(`http://localhost:3000/api/profile`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ name, email, phone, companyName: company })
+                    });
+                } catch (error) {
+                    console.log('Backend not available, saved locally');
+                }
+            }
+            
+            alert('Profile updated successfully!');
+        });
+        
+        // Change password
+        document.getElementById('office-password-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('office-new-password').value;
+            const confirmPassword = document.getElementById('office-confirm-password').value;
+            
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                alert('Password must be at least 6 characters long!');
+                return;
+            }
+            
+            // Update password in localStorage
+            const users = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
+            const companyName = localStorage.getItem('snackreach_company_name');
+            const userIndex = users.findIndex(u => u.companyName === companyName);
+            
+            if (userIndex !== -1) {
+                users[userIndex].password = newPassword; // In real app, this would be hashed
+                localStorage.setItem('snackreach_users', JSON.stringify(users));
+            }
+            
+            document.getElementById('office-password-form').reset();
+            alert('Password changed successfully!');
+        });
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('snackify_user_type');
+            localStorage.removeItem('snackify_user_name');
+            localStorage.removeItem('snackify_company_name');
+            localStorage.removeItem('snackify_login_time');
+            window.location.href = 'index.html';
+        }
+        
+        // Show cancel subscription modal
+        function showCancelModal() {
+            document.getElementById('cancel-modal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Confirm subscription cancellation
+        function confirmCancellation() {
+            const reason = document.getElementById('cancel-reason').value;
+            if (!reason) {
+                alert('Please select a reason for canceling.');
+                return;
+            }
+            
+            alert('Your subscription has been canceled. You can reactivate it anytime from your profile.');
+            closeModal('cancel-modal');
+        }
+        
+        // Profile form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileForm = document.querySelector('.profile-form');
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('Profile updated successfully!');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
