@@ -92,6 +92,10 @@ app.get('/signup.html', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'signup.html'));
 });
 
+app.get('/admin-dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'admin-dashboard.html'));
+});
+
 // Database file path
 const DB_PATH = path.join(__dirname, 'data', 'database.json');
 
@@ -503,6 +507,80 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Update profile error:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// ==================== ADMIN ENDPOINTS ====================
+
+// Admin login (simple password-based auth)
+app.post('/api/admin/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Simple admin credentials - CHANGE THESE IN PRODUCTION!
+        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@snackreach.com';
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'SnackReach2024!';
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password required' });
+        }
+
+        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+            // Generate admin token
+            const token = jwt.sign(
+                { userId: 'admin', email: ADMIN_EMAIL, userType: 'admin' },
+                JWT_SECRET,
+                { expiresIn: '3650d' } // 10 years - permanent admin session
+            );
+
+            console.log('✅ Admin login successful');
+            return res.json({
+                message: 'Admin login successful',
+                token,
+                user: {
+                    id: 'admin',
+                    email: ADMIN_EMAIL,
+                    userType: 'admin'
+                }
+            });
+        }
+
+        return res.status(401).json({ error: 'Invalid admin credentials' });
+    } catch (error) {
+        console.error('Admin login error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get all accounts (admin only)
+app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.userType !== 'admin') {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        const db = await readDB();
+        console.log('Admin requesting all accounts. Total users:', db.users.length);
+
+        // Return all accounts with safe data (no passwords)
+        const accounts = db.users.map(u => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            companyName: u.companyName,
+            userType: u.userType,
+            phone: u.phone || '',
+            createdAt: u.createdAt,
+            subscription: u.subscription,
+            lastLogin: u.lastLogin || null
+        }));
+
+        console.log('Returning', accounts.length, 'accounts to admin');
+        res.json(accounts);
+    } catch (error) {
+        console.error('Get all accounts error:', error);
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });
 

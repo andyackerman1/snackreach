@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SnackReach</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: #1e293b;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card h3 {
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card .value {
+            color: #1e293b;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .accounts-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-header h2 {
+            color: #1e293b;
+            font-size: 1.5rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+        
+        .accounts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .accounts-table th {
+            background: #f8fafc;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .accounts-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            color: #1e293b;
+        }
+        
+        .accounts-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-startup {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-office {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .login-container h1 {
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .login-btn:hover {
+            background: #5568d3;
+        }
+        
+        .no-accounts {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+        
+        .no-accounts i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen (shown if not authenticated) -->
+    <div id="login-screen" class="login-container" style="display: none;">
+        <h1><i class="fas fa-shield-alt"></i> Admin Login</h1>
+        <div id="login-error" class="error" style="display: none;"></div>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="admin-email">Email</label>
+                <input type="text" id="admin-email" placeholder="Enter admin email" required>
+            </div>
+            <div class="form-group">
+                <label for="admin-password">Password</label>
+                <input type="password" id="admin-password" placeholder="Enter admin password" required>
+            </div>
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </form>
+    </div>
+
+    <!-- Dashboard (shown if authenticated) -->
+    <div id="dashboard" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+                <p>Manage and view all SnackReach accounts</p>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Total Accounts</h3>
+                    <div class="value" id="total-accounts">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Food Startups</h3>
+                    <div class="value" id="startup-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Office Managers</h3>
+                    <div class="value" id="office-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Today</h3>
+                    <div class="value" id="active-today">0</div>
+                </div>
+            </div>
+
+            <div class="accounts-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-users"></i> All Accounts</h2>
+                    <div>
+                        <button class="btn btn-secondary" onclick="refreshAccounts()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="btn btn-secondary" onclick="logout()" style="margin-left: 0.5rem;">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+                <div id="error-message" class="error" style="display: none;"></div>
+                <div id="accounts-container">
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Loading accounts...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dynamic API URL detection
+        const API_BASE_URL = (() => {
+            const hostname = window.location.hostname;
+            if (hostname.includes('railway.app')) {
+                return '/api'; // Same domain on Railway
+            } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                return 'https://snackreach-production.up.railway.app/api'; // Production Railway backend
+            } else {
+                return 'http://localhost:3000/api'; // Local development
+            }
+        })();
+
+        // Check if already logged in
+        function checkAuth() {
+            const token = localStorage.getItem('admin_token');
+            if (token) {
+                showDashboard();
+                loadAccounts();
+            } else {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_token');
+            showLogin();
+        }
+
+        // Handle login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    localStorage.setItem('admin_token', data.token);
+                    showDashboard();
+                    loadAccounts();
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        // Load all accounts
+        async function loadAccounts() {
+            const container = document.getElementById('accounts-container');
+            const errorDiv = document.getElementById('error-message');
+            const token = localStorage.getItem('admin_token');
+            
+            if (!token) {
+                showLogin();
+                return;
+            }
+
+            container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Loading accounts...</p></div>';
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('admin_token');
+                    showLogin();
+                    return;
+                }
+
+                const accounts = await response.json();
+
+                if (!accounts || accounts.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-accounts">
+                            <i class="fas fa-users"></i>
+                            <p>No accounts found</p>
+                        </div>
+                    `;
+                    updateStats(accounts);
+                    return;
+                }
+
+                // Update stats
+                updateStats(accounts);
+
+                // Display accounts table
+                const tableHTML = `
+                    <table class="accounts-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Company</th>
+                                <th>Type</th>
+                                <th>Phone</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${accounts.map(account => `
+                                <tr>
+                                    <td>${account.id}</td>
+                                    <td>${account.name || 'N/A'}</td>
+                                    <td>${account.email}</td>
+                                    <td>${account.companyName || 'N/A'}</td>
+                                    <td><span class="badge badge-${account.userType === 'startup' ? 'startup' : 'office'}">${account.userType === 'startup' ? 'Food Startup' : 'Office Manager'}</span></td>
+                                    <td>${account.phone || 'N/A'}</td>
+                                    <td>${new Date(account.createdAt).toLocaleDateString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                errorDiv.textContent = 'Failed to load accounts. Please try again.';
+                errorDiv.style.display = 'block';
+                container.innerHTML = '';
+            }
+        }
+
+        function updateStats(accounts) {
+            const total = accounts ? accounts.length : 0;
+            const startups = accounts ? accounts.filter(a => a.userType === 'startup').length : 0;
+            const offices = accounts ? accounts.filter(a => a.userType === 'office').length : 0;
+            
+            // Count active today (logged in today)
+            const today = new Date().toDateString();
+            const activeToday = accounts ? accounts.filter(a => {
+                if (a.lastLogin) {
+                    const lastLogin = new Date(a.lastLogin).toDateString();
+                    return lastLogin === today;
+                }
+                return false;
+            }).length : 0;
+
+            document.getElementById('total-accounts').textContent = total;
+            document.getElementById('startup-count').textContent = startups;
+            document.getElementById('office-count').textContent = offices;
+            document.getElementById('active-today').textContent = activeToday;
+        }
+
+        function refreshAccounts() {
+            loadAccounts();
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            if (document.getElementById('dashboard').style.display !== 'none') {
+                loadAccounts();
+            }
+        }, 30000);
+
+        // Initialize on page load
+        checkAuth();
+    </script>
+</body>
+</html>
+
