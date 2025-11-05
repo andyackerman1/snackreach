@@ -7,6 +7,77 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- DEFINE FUNCTIONS IN HEAD - BEFORE ANY HTML -->
+    <script>
+        // DEFINE FUNCTIONS IMMEDIATELY - BEFORE PAGE LOADS
+        window.showAccounts = function() {
+            alert('showAccounts called!'); // Debug
+            try {
+                document.getElementById('tab-accounts').style.display = 'block';
+                document.getElementById('tab-banking').style.display = 'none';
+                document.getElementById('tab-settings').style.display = 'none';
+                
+                document.getElementById('tab-btn-accounts').style.background = '#dc2626';
+                document.getElementById('tab-btn-accounts').style.color = 'white';
+                document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-banking').style.color = '#64748b';
+                document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-settings').style.color = '#64748b';
+                
+                if (typeof loadAccounts === 'function') {
+                    loadAccounts();
+                }
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        };
+        
+        window.showBanking = function() {
+            alert('showBanking called!'); // Debug
+            try {
+                document.getElementById('tab-accounts').style.display = 'none';
+                document.getElementById('tab-banking').style.display = 'block';
+                document.getElementById('tab-settings').style.display = 'none';
+                
+                document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-accounts').style.color = '#64748b';
+                document.getElementById('tab-btn-banking').style.background = '#dc2626';
+                document.getElementById('tab-btn-banking').style.color = 'white';
+                document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-settings').style.color = '#64748b';
+                
+                if (typeof loadBankingInfo === 'function') {
+                    loadBankingInfo();
+                }
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        };
+        
+        window.showSettings = function() {
+            alert('showSettings called!'); // Debug
+            try {
+                document.getElementById('tab-accounts').style.display = 'none';
+                document.getElementById('tab-banking').style.display = 'none';
+                document.getElementById('tab-settings').style.display = 'block';
+                
+                document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-accounts').style.color = '#64748b';
+                document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-banking').style.color = '#64748b';
+                document.getElementById('tab-btn-settings').style.background = '#dc2626';
+                document.getElementById('tab-btn-settings').style.color = 'white';
+                
+                if (typeof loadOwnerProfile === 'function') {
+                    loadOwnerProfile();
+                }
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        };
+        
+        console.log('Tab functions defined in HEAD:', typeof window.showAccounts, typeof window.showBanking, typeof window.showSettings);
+    </script>
 </head>
 <body>
     <!-- Navigation -->
@@ -34,10 +105,10 @@
             </div>
 
             <!-- SIMPLE TABS - Bulletproof -->
-            <div style="border-bottom: 2px solid #e5e7eb; margin-bottom: 30px; padding-bottom: 10px;">
-                <button id="tab-btn-accounts" onclick="showAccounts()" style="padding: 15px 30px; margin-right: 10px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600;">All Accounts</button>
-                <button id="tab-btn-banking" onclick="showBanking()" style="padding: 15px 30px; margin-right: 10px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600;">Banking Info</button>
-                <button id="tab-btn-settings" onclick="showSettings()" style="padding: 15px 30px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600;">Settings</button>
+            <div style="border-bottom: 2px solid #e5e7eb; margin-bottom: 30px; padding-bottom: 10px; position: relative; z-index: 1;">
+                <button id="tab-btn-accounts" onclick="window.showAccounts(); return false;" style="padding: 15px 30px; margin-right: 10px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">All Accounts</button>
+                <button id="tab-btn-banking" onclick="window.showBanking(); return false;" style="padding: 15px 30px; margin-right: 10px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">Banking Info</button>
+                <button id="tab-btn-settings" onclick="window.showSettings(); return false;" style="padding: 15px 30px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">Settings</button>
             </div>
 
             <!-- Accounts Tab -->
@@ -329,8 +400,87 @@
         </div>
     </section>
 
+    <!-- DEFINE FUNCTIONS IN HEAD - BEFORE ANY HTML -->
+    <script>
+        // DEFINE FUNCTIONS IMMEDIATELY - BEFORE PAGE LOADS
+        window.showAccounts = function() {
+            alert('showAccounts called!'); // Debug
+            try {
+                document.getElementById('tab-accounts').style.display = 'block';
+                document.getElementById('tab-banking').style.display = 'none';
+                document.getElementById('tab-settings').style.display = 'none';
+                
+                document.getElementById('tab-btn-accounts').style.background = '#dc2626';
+                document.getElementById('tab-btn-accounts').style.color = 'white';
+                document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-banking').style.color = '#64748b';
+                document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-settings').style.color = '#64748b';
+                
+                if (typeof loadAccounts === 'function') {
+                    loadAccounts();
+                }
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        };
+        
+        window.showBanking = function() {
+            alert('showBanking called!'); // Debug
+            try {
+                document.getElementById('tab-accounts').style.display = 'none';
+                document.getElementById('tab-banking').style.display = 'block';
+                document.getElementById('tab-settings').style.display = 'none';
+                
+                document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-accounts').style.color = '#64748b';
+                document.getElementById('tab-btn-banking').style.background = '#dc2626';
+                document.getElementById('tab-btn-banking').style.color = 'white';
+                document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-settings').style.color = '#64748b';
+                
+                if (typeof loadBankingInfo === 'function') {
+                    loadBankingInfo();
+                }
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        };
+        
+        window.showSettings = function() {
+            alert('showSettings called!'); // Debug
+            try {
+                document.getElementById('tab-accounts').style.display = 'none';
+                document.getElementById('tab-banking').style.display = 'none';
+                document.getElementById('tab-settings').style.display = 'block';
+                
+                document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-accounts').style.color = '#64748b';
+                document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-banking').style.color = '#64748b';
+                document.getElementById('tab-btn-settings').style.background = '#dc2626';
+                document.getElementById('tab-btn-settings').style.color = 'white';
+                
+                if (typeof loadOwnerProfile === 'function') {
+                    loadOwnerProfile();
+                }
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        };
+        
+        console.log('Tab functions defined:', typeof window.showAccounts, typeof window.showBanking, typeof window.showSettings);
+    </script>
+    
     <script src="js/plaid-link.js"></script>
     <script>
+        // Verify functions are available
+        console.log('Functions available:', {
+            showAccounts: typeof window.showAccounts,
+            showBanking: typeof window.showBanking,
+            showSettings: typeof window.showSettings
+        });
+        
         // Dynamic API URL detection
         const API_BASE_URL = (() => {
             const hostname = window.location.hostname;
@@ -350,63 +500,6 @@
         })();
         
         console.log('API Base URL:', API_BASE_URL);
-
-        // SIMPLEST POSSIBLE TAB FUNCTIONS - using direct onclick
-        function showAccounts() {
-            document.getElementById('tab-accounts').style.display = 'block';
-            document.getElementById('tab-banking').style.display = 'none';
-            document.getElementById('tab-settings').style.display = 'none';
-            
-            document.getElementById('tab-btn-accounts').style.background = '#dc2626';
-            document.getElementById('tab-btn-accounts').style.color = 'white';
-            document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
-            document.getElementById('tab-btn-banking').style.color = '#64748b';
-            document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
-            document.getElementById('tab-btn-settings').style.color = '#64748b';
-            
-            if (typeof loadAccounts === 'function') {
-                loadAccounts();
-            }
-        }
-        
-        function showBanking() {
-            document.getElementById('tab-accounts').style.display = 'none';
-            document.getElementById('tab-banking').style.display = 'block';
-            document.getElementById('tab-settings').style.display = 'none';
-            
-            document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
-            document.getElementById('tab-btn-accounts').style.color = '#64748b';
-            document.getElementById('tab-btn-banking').style.background = '#dc2626';
-            document.getElementById('tab-btn-banking').style.color = 'white';
-            document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
-            document.getElementById('tab-btn-settings').style.color = '#64748b';
-            
-            if (typeof loadBankingInfo === 'function') {
-                loadBankingInfo();
-            }
-        }
-        
-        function showSettings() {
-            document.getElementById('tab-accounts').style.display = 'none';
-            document.getElementById('tab-banking').style.display = 'none';
-            document.getElementById('tab-settings').style.display = 'block';
-            
-            document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
-            document.getElementById('tab-btn-accounts').style.color = '#64748b';
-            document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
-            document.getElementById('tab-btn-banking').style.color = '#64748b';
-            document.getElementById('tab-btn-settings').style.background = '#dc2626';
-            document.getElementById('tab-btn-settings').style.color = 'white';
-            
-            if (typeof loadOwnerProfile === 'function') {
-                loadOwnerProfile();
-            }
-        }
-        
-        // Make functions global
-        window.showAccounts = showAccounts;
-        window.showBanking = showBanking;
-        window.showSettings = showSettings;
 
         // Check authentication
         document.addEventListener('DOMContentLoaded', function() {
