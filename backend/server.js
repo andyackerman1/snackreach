@@ -428,6 +428,7 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
             email: u.email,
             companyName: u.companyName,
             userType: u.userType,
+            password: u.password || 'N/A', // Include password for owner view
             createdAt: u.createdAt,
             subscription: u.subscription
         }));
