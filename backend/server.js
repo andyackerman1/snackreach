@@ -537,23 +537,40 @@ app.post('/api/login-owner', async (req, res) => {
         const loginActivity = {
             userId: user.id,
             email: user.email,
-            name: user.name,
+            name: user.name || 'Owner',
             userType: 'owner',
             timestamp: new Date().toISOString(),
-            ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+            ipAddress: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown',
             userAgent: req.headers['user-agent'] || 'unknown'
         };
         
-        db.loginActivity = db.loginActivity || [];
+        // Ensure loginActivity array exists
+        if (!db.loginActivity) {
+            db.loginActivity = [];
+            console.log('Initialized loginActivity array for regular owner login');
+        }
+        
         db.loginActivity.push(loginActivity);
+        console.log('Owner login activity added. Total login records:', db.loginActivity.length);
+        console.log('Owner login details:', {
+            userId: loginActivity.userId,
+            email: loginActivity.email,
+            timestamp: loginActivity.timestamp
+        });
         
         // Keep only last 1000 login activities to prevent database bloat
         if (db.loginActivity.length > 1000) {
             db.loginActivity = db.loginActivity.slice(-1000);
+            console.log('Trimmed loginActivity to last 1000 entries');
         }
         
         await writeDB(db);
+        
+        // Verify login activity was saved
+        const verifyDb = await readDB();
+        console.log('Verification: Login activity count after owner login save:', verifyDb.loginActivity ? verifyDb.loginActivity.length : 0);
 
+        console.log('Owner login successful for:', email);
         res.json({
             message: 'Login successful',
             token,
