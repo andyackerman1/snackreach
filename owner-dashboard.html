@@ -35,31 +35,27 @@
 
             <!-- Dashboard Tabs -->
             <div class="dashboard-tabs">
-                <button class="tab-btn active" data-tab="overview" type="button" onclick="showTab('overview'); return false;">
+                <button class="tab-btn active" data-tab="overview" type="button">
                     <i class="fas fa-chart-line"></i>
                     Overview
                 </button>
-                <button class="tab-btn" data-tab="accounts" type="button" onclick="showTab('accounts'); return false;">
+                <button class="tab-btn" data-tab="accounts" type="button">
                     <i class="fas fa-users"></i>
                     All Accounts
                 </button>
-                <button class="tab-btn" data-tab="banking" type="button" onclick="showTab('banking'); return false;">
+                <button class="tab-btn" data-tab="banking" type="button">
                     <i class="fas fa-university"></i>
                     Banking Info
                 </button>
-                <button class="tab-btn" data-tab="login-activity" type="button" onclick="showTab('login-activity'); return false;">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Login Activity
-                </button>
-                <button class="tab-btn" data-tab="payments" type="button" onclick="showTab('payments'); return false;">
+                <button class="tab-btn" data-tab="payments" type="button">
                     <i class="fas fa-dollar-sign"></i>
                     Payments
                 </button>
-                <button class="tab-btn" data-tab="messages" type="button" onclick="showTab('messages'); return false;">
+                <button class="tab-btn" data-tab="messages" type="button">
                     <i class="fas fa-envelope"></i>
                     Messages
                 </button>
-                <button class="tab-btn" data-tab="settings" type="button" onclick="showTab('settings'); return false;">
+                <button class="tab-btn" data-tab="settings" type="button">
                     <i class="fas fa-cog"></i>
                     Settings
                 </button>
@@ -332,52 +328,6 @@
                 </div>
             </div>
 
-            <!-- Login Activity Tab -->
-            <div id="login-activity-tab" class="tab-content">
-                <div class="section-header">
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div>
-                            <h3>Login Activity</h3>
-                            <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">
-                                Track all user login activity across all environments (local and production)
-                            </p>
-                        </div>
-                        <button class="btn btn-primary" onclick="loadLoginActivity()" style="margin-left: 1rem;">
-                            <i class="fas fa-sync-alt"></i>
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="accounts-table-container">
-                    <table class="accounts-table">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Email</th>
-                                <th>Type</th>
-                                <th>Timestamp</th>
-                                <th>IP Address</th>
-                                <th>User Agent</th>
-                            </tr>
-                        </thead>
-                        <tbody id="login-activity-table-body">
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 2rem;">
-                                    <div class="empty-state">
-                                        <div class="empty-icon">
-                                            <i class="fas fa-sign-in-alt"></i>
-                                        </div>
-                                        <h4>No login activity yet</h4>
-                                        <p>Login activity will appear here once users log in</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <!-- Payments Tab -->
             <div id="payments-tab" class="tab-content">
                 <div class="section-header">
@@ -575,83 +525,51 @@
         
         console.log('API Base URL:', API_BASE_URL);
 
-        // Define showTab function IMMEDIATELY and make it global BEFORE anything else
-        window.showTab = function(tabName) {
-            try {
-                console.log('showTab called with:', tabName);
-                
-                // Remove active class from all tabs and content
-                const allTabs = document.querySelectorAll('.tab-content');
-                const allButtons = document.querySelectorAll('.tab-btn');
-                
-                allTabs.forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                allButtons.forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                // Add active class to selected tab and content
-                const tabContent = document.getElementById(tabName + '-tab');
-                if (tabContent) {
-                    tabContent.classList.add('active');
-                    console.log('✅ Activated tab content:', tabName);
-                } else {
-                    console.error('❌ Tab content not found:', tabName + '-tab');
-                    // Try to find it by alternative naming
-                    const altTab = document.querySelector(`[id*="${tabName}"]`);
-                    if (altTab) {
-                        altTab.classList.add('active');
-                        console.log('✅ Found alternative tab:', altTab.id);
-                    }
-                }
-                
-                // Add active class to clicked button - try multiple methods
-                let clickedBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
-                if (!clickedBtn) {
-                    clickedBtn = document.querySelector(`button[data-tab="${tabName}"]`);
-                }
-                if (!clickedBtn) {
-                    // Fallback: find by onclick attribute
-                    allButtons.forEach(btn => {
-                        const onclick = btn.getAttribute('onclick') || '';
-                        if (onclick.includes(`'${tabName}'`) || onclick.includes(`"${tabName}"`)) {
-                            clickedBtn = btn;
-                        }
-                    });
-                }
-                
-                if (clickedBtn) {
-                    clickedBtn.classList.add('active');
-                    console.log('✅ Activated button for tab:', tabName);
-                } else {
-                    console.warn('⚠️ Could not find button for tab:', tabName);
-                }
-                
-                // Load users when messages tab is opened
-                if (tabName === 'messages') {
-                    setTimeout(() => {
-                        if (typeof loadUsersForMessaging === 'function') {
-                            loadUsersForMessaging();
-                        }
-                    }, 100);
-                }
-                
-                // Load login activity when tab is opened
-                if (tabName === 'login-activity') {
-                    setTimeout(() => {
-                        if (typeof loadLoginActivity === 'function') {
-                            loadLoginActivity();
-                        }
-                    }, 100);
-                }
-                
-                return false; // Prevent any default behavior
-            } catch (error) {
-                console.error('Error in showTab:', error);
-                alert('Error switching tabs. Please refresh the page.');
+        // SIMPLE, DIRECT tab switching function - defined FIRST and SIMPLE
+        window.switchTab = function(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            // Hide all tab content
+            const allTabs = document.querySelectorAll('.tab-content');
+            allTabs.forEach(function(tab) {
+                tab.style.display = 'none';
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from all buttons
+            const allButtons = document.querySelectorAll('.tab-btn');
+            allButtons.forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            const tabElement = document.getElementById(tabName + '-tab');
+            if (tabElement) {
+                tabElement.style.display = 'block';
+                tabElement.classList.add('active');
+                console.log('✅ Tab shown:', tabName);
+            } else {
+                console.error('❌ Tab not found:', tabName + '-tab');
+            }
+            
+            // Activate button
+            const btn = document.querySelector('.tab-btn[data-tab="' + tabName + '"]');
+            if (btn) {
+                btn.classList.add('active');
+                console.log('✅ Button activated');
+            }
+            
+            // Load data if needed
+            if (tabName === 'messages' && typeof loadUsersForMessaging === 'function') {
+                setTimeout(loadUsersForMessaging, 50);
+            }
+            if (tabName === 'accounts' && typeof loadAccounts === 'function') {
+                setTimeout(loadAccounts, 50);
             }
         };
+        
+        // Alias
+        window.showTab = window.switchTab;
 
         // Check if user is owner - session persists until explicit logout
         document.addEventListener('DOMContentLoaded', function() {
@@ -677,7 +595,6 @@
             loadAccounts();
             loadStats();
             loadOwnerProfile();
-            loadLoginActivity(); // Load login activity on page load
             
             // Set up message form
             const messageForm = document.getElementById('message-form');
@@ -685,42 +602,48 @@
                 messageForm.addEventListener('submit', sendMessage);
             }
             
-            // Attach click handlers to tab buttons - MULTIPLE methods for reliability
-            document.querySelectorAll('.tab-btn').forEach(btn => {
+            // SIMPLE, DIRECT click handlers - attach to ALL tab buttons immediately
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            console.log('Setting up', tabButtons.length, 'tab buttons');
+            
+            tabButtons.forEach(function(btn) {
                 const tabName = btn.getAttribute('data-tab');
-                if (tabName) {
-                    // Method 1: addEventListener (backup to onclick)
-                    btn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('Tab button clicked via addEventListener:', tabName);
-                        if (window.showTab) {
-                            window.showTab(tabName);
-                        }
-                        return false;
-                    }, true); // Use capture phase
-                    
-                    // Method 2: Also add mouseup as backup
-                    btn.addEventListener('mousedown', function(e) {
-                        e.preventDefault();
-                        console.log('Tab button mousedown:', tabName);
-                        if (window.showTab) {
-                            window.showTab(tabName);
-                        }
-                        return false;
-                    });
-                    
-                    // Ensure button is clickable
-                    btn.style.cursor = 'pointer';
-                    btn.style.pointerEvents = 'auto';
-                    btn.style.userSelect = 'none';
-                    btn.setAttribute('tabindex', '0'); // Make it focusable
+                if (!tabName) {
+                    console.warn('Button missing data-tab attribute');
+                    return;
                 }
+                
+                // Make absolutely sure it's clickable with inline styles
+                btn.style.cssText = 'cursor: pointer !important; pointer-events: auto !important; user-select: none !important; z-index: 999 !important; position: relative !important;';
+                
+                // Add onclick directly (works even if JS errors)
+                btn.setAttribute('onclick', 'switchTab("' + tabName + '"); return false;');
+                
+                // Also add event listener as backup
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Tab clicked via listener:', tabName);
+                    if (window.switchTab) {
+                        window.switchTab(tabName);
+                    }
+                    return false;
+                }, true);
+                
+                // Also try mousedown
+                btn.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    console.log('Tab mousedown:', tabName);
+                    if (window.switchTab) {
+                        window.switchTab(tabName);
+                    }
+                    return false;
+                });
+                
+                console.log('Configured tab:', tabName);
             });
             
-            // Log all tabs found
-            console.log('Found tab buttons:', document.querySelectorAll('.tab-btn').length);
-            console.log('Found tab content:', document.querySelectorAll('.tab-content').length);
+            console.log('✅ All', tabButtons.length, 'tab buttons configured');
             
             // Attach click handlers to all buttons with onclick attributes
             document.querySelectorAll('[onclick]').forEach(element => {
