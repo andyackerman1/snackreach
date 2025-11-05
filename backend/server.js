@@ -97,6 +97,10 @@ app.get('/admin-dashboard.html', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'admin-dashboard.html'));
 });
 
+app.get('/reset-password.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'reset-password.html'));
+});
+
 // Database file path
 const DB_PATH = path.join(__dirname, 'data', 'database.json');
 
@@ -150,6 +154,7 @@ async function readDB() {
         if (!db.orders) db.orders = [];
         if (!db.messages) db.messages = [];
         if (!db.loginActivity) db.loginActivity = [];
+        if (!db.passwordResetTokens) db.passwordResetTokens = [];
         return db;
     } catch (error) {
         console.error('Error reading database:', error);
@@ -162,7 +167,8 @@ async function readDB() {
             products: [],
             orders: [],
             messages: [],
-            loginActivity: []
+            loginActivity: [],
+            passwordResetTokens: []
         };
     }
 }
@@ -621,6 +627,166 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
         console.error('   Error message:', error.message);
         console.error('   Error stack:', error.stack);
         res.status(500).json({ error: 'Internal server error: ' + error.message });
+    }
+});
+
+// ==================== PASSWORD RESET ENDPOINTS ====================
+
+// Forgot Password - Generate reset token and send email (for now, return link)
+app.post('/api/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        console.log('Forgot password request received for email:', email);
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        const db = await readDB();
+        const user = db.users.find(u => u.email === email.toLowerCase().trim());
+
+        if (!user) {
+            // Don't reveal if email exists - security best practice
+            console.log('Password reset requested for non-existent email:', email);
+            return res.json({ 
+                message: 'If an account exists with that email, a password reset link has been sent.' 
+            });
+        }
+
+        console.log('User found for password reset:', user.email);
+
+        // Generate reset token (valid for 1 hour)
+        const resetToken = jwt.sign(
+            { userId: user.id, email: user.email, type: 'password-reset' },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        // Store reset token in database
+        if (!db.passwordResetTokens) db.passwordResetTokens = [];
+        
+        // Remove any existing tokens for this user
+        db.passwordResetTokens = db.passwordResetTokens.filter(t => t.userId !== user.id);
+        
+        // Add new token
+        db.passwordResetTokens.push({
+            userId: user.id,
+            token: resetToken,
+            email: user.email,
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 hour from now
+        });
+
+        await writeDB(db);
+        console.log('Password reset token generated and saved for:', user.email);
+
+        // In production, you would send an email here with the reset link
+        // For now, we'll return the link in the response (for development/testing)
+        // In production, remove this and use an email service like SendGrid, Nodemailer, etc.
+        
+        // Determine base URL for reset link
+        const baseUrl = req.headers.origin || 
+                       (req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000');
+        
+        const resetLink = `${baseUrl}/reset-password.html?token=${resetToken}`;
+
+        console.log('Password reset link generated:', resetLink);
+
+        // TODO: Send email with reset link
+        // For now, return the link in development mode
+        const isDevelopment = process.env.NODE_ENV !== 'production' || !process.env.RAILWAY_ENVIRONMENT;
+        
+        if (isDevelopment) {
+            // In development, return the link so user can use it
+            return res.json({ 
+                message: `Password reset link generated. Click here to reset: ${resetLink}`,
+                resetLink: resetLink // Include for development
+            });
+        } else {
+            // In production, say email was sent (even though we're not sending it yet)
+            // TODO: Implement actual email sending
+            return res.json({ 
+                message: 'If an account exists with that email, a password reset link has been sent. Please check your email.' 
+            });
+        }
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Reset Password - Verify token and update password
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { token, password } = req.body;
+
+        console.log('Reset password request received');
+
+        if (!token || !password) {
+            return res.status(400).json({ error: 'Token and password are required' });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+        }
+
+        // Verify token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+            
+            if (decoded.type !== 'password-reset') {
+                return res.status(400).json({ error: 'Invalid reset token' });
+            }
+        } catch (error) {
+            console.error('Token verification failed:', error.message);
+            return res.status(400).json({ error: 'Invalid or expired reset token. Please request a new password reset link.' });
+        }
+
+        // Check if token exists in database
+        const db = await readDB();
+        const tokenRecord = db.passwordResetTokens?.find(t => t.token === token && t.userId === decoded.userId);
+
+        if (!tokenRecord) {
+            return res.status(400).json({ error: 'Invalid or expired reset token. Please request a new password reset link.' });
+        }
+
+        // Check if token has expired
+        if (new Date(tokenRecord.expiresAt) < new Date()) {
+            // Remove expired token
+            db.passwordResetTokens = db.passwordResetTokens.filter(t => t.token !== token);
+            await writeDB(db);
+            return res.status(400).json({ error: 'Reset token has expired. Please request a new password reset link.' });
+        }
+
+        // Find user
+        const user = db.users.find(u => u.id === decoded.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        console.log('Resetting password for user:', user.email);
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Update user password
+        user.password = hashedPassword;
+        user.passwordUpdatedAt = new Date().toISOString();
+
+        // Remove used token
+        db.passwordResetTokens = db.passwordResetTokens.filter(t => t.token !== token);
+
+        await writeDB(db);
+        console.log('Password reset successfully for:', user.email);
+
+        res.json({ message: 'Password reset successfully. You can now login with your new password.' });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
