@@ -549,6 +549,88 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
 });
 
 // Get login activity (owner only)
+// Update owner profile
+app.post('/api/admin/update-profile', authenticateToken, async (req, res) => {
+    try {
+        const db = await readDB();
+        const user = db.users.find(u => u.id === req.userId);
+        
+        if (!user || user.userType !== 'owner') {
+            return res.status(403).json({ error: 'Owner access required' });
+        }
+        
+        const { name, email, companyName, username, phone } = req.body;
+        
+        // Update user fields
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (companyName) user.companyName = companyName;
+        if (username) user.username = username;
+        if (phone) user.phone = phone;
+        
+        await writeDB(db);
+        
+        res.json({
+            success: true,
+            message: 'Profile updated successfully',
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                companyName: user.companyName,
+                username: user.username,
+                phone: user.phone
+            }
+        });
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Change owner password
+app.post('/api/admin/change-password', authenticateToken, async (req, res) => {
+    try {
+        const db = await readDB();
+        const user = db.users.find(u => u.id === req.userId);
+        
+        if (!user || user.userType !== 'owner') {
+            return res.status(403).json({ error: 'Owner access required' });
+        }
+        
+        const { currentPassword, newPassword } = req.body;
+        
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current password and new password required' });
+        }
+        
+        // Verify current password
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: 'Invalid current password' });
+        }
+        
+        // Validate new password
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+        }
+        
+        // Hash and update password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        
+        await writeDB(db);
+        
+        res.json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/api/admin/login-activity', authenticateToken, async (req, res) => {
     try {
         const db = await readDB();
