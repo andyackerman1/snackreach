@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="js/plaid-link.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -544,7 +543,17 @@
         </div>
     </section>
 
+    <script src="js/plaid-link.js"></script>
     <script>
+        // Make Plaid function globally available
+        if (typeof initiatePlaidBankLinkOwner === 'undefined') {
+            window.initiatePlaidBankLinkOwner = function() {
+                alert('Plaid integration not available. Please use the production site for full functionality.');
+            };
+        } else {
+            window.initiatePlaidBankLinkOwner = initiatePlaidBankLinkOwner;
+        }
+        
         // Dynamic API URL detection - works across all environments
         const API_BASE_URL = (() => {
             const hostname = window.location.hostname;
