@@ -1025,6 +1025,176 @@ app.get('/api/email-status', (req, res) => {
     });
 });
 
+// ==================== MESSAGING ENDPOINTS ====================
+
+// Get list of offices (for startups to message)
+app.get('/api/offices', authenticateToken, async (req, res) => {
+    try {
+        if (req.userType !== 'startup') {
+            return res.status(403).json({ error: 'Only startups can view offices' });
+        }
+
+        const db = await readDB();
+        // Get all office users
+        const offices = db.users
+            .filter(u => u.userType === 'office')
+            .map(u => ({
+                id: u.id,
+                name: u.name,
+                companyName: u.companyName,
+                email: u.email,
+                phone: u.phone || '',
+                createdAt: u.createdAt
+            }));
+
+        console.log('Returning', offices.length, 'offices for startup:', req.userId);
+        res.json(offices);
+    } catch (error) {
+        console.error('Get offices error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get list of startups (for offices to view)
+app.get('/api/startups', authenticateToken, async (req, res) => {
+    try {
+        if (req.userType !== 'office') {
+            return res.status(403).json({ error: 'Only offices can view startups' });
+        }
+
+        const db = await readDB();
+        // Get all startup users
+        const startups = db.users
+            .filter(u => u.userType === 'startup')
+            .map(u => ({
+                id: u.id,
+                name: u.name,
+                companyName: u.companyName,
+                email: u.email,
+                phone: u.phone || '',
+                createdAt: u.createdAt
+            }));
+
+        console.log('Returning', startups.length, 'startups for office:', req.userId);
+        res.json(startups);
+    } catch (error) {
+        console.error('Get startups error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Send a message
+app.post('/api/messages', authenticateToken, async (req, res) => {
+    try {
+        const { toUserId, subject, message } = req.body;
+
+        if (!toUserId || !subject || !message) {
+            return res.status(400).json({ error: 'toUserId, subject, and message are required' });
+        }
+
+        const db = await readDB();
+        
+        // Verify recipient exists
+        const recipient = db.users.find(u => u.id === toUserId);
+        if (!recipient) {
+            return res.status(404).json({ error: 'Recipient not found' });
+        }
+
+        // Verify sender and recipient are different types (startup can message office, office can message startup)
+        const sender = db.users.find(u => u.id === req.userId);
+        if (!sender) {
+            return res.status(404).json({ error: 'Sender not found' });
+        }
+
+        // Check if startup is messaging office or office is messaging startup
+        const isValidMessage = 
+            (sender.userType === 'startup' && recipient.userType === 'office') ||
+            (sender.userType === 'office' && recipient.userType === 'startup');
+
+        if (!isValidMessage) {
+            return res.status(403).json({ error: 'You can only message different user types (startup ↔ office)' });
+        }
+
+        // Create message
+        const newMessage = {
+            id: Date.now().toString(),
+            fromUserId: req.userId,
+            fromUserName: sender.name || sender.companyName,
+            fromUserEmail: sender.email,
+            fromUserType: sender.userType,
+            toUserId: toUserId,
+            toUserName: recipient.name || recipient.companyName,
+            toUserEmail: recipient.email,
+            toUserType: recipient.userType,
+            subject: subject,
+            message: message,
+            timestamp: new Date().toISOString(),
+            read: false
+        };
+
+        if (!db.messages) db.messages = [];
+        db.messages.push(newMessage);
+
+        await writeDB(db);
+        console.log('Message sent from', sender.userType, req.userId, 'to', recipient.userType, toUserId);
+
+        res.json({ 
+            message: 'Message sent successfully',
+            messageId: newMessage.id 
+        });
+    } catch (error) {
+        console.error('Send message error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get messages for current user (both sent and received)
+app.get('/api/messages', authenticateToken, async (req, res) => {
+    try {
+        const db = await readDB();
+        
+        // Get all messages where user is sender or recipient
+        const userMessages = (db.messages || []).filter(m => 
+            m.fromUserId === req.userId || m.toUserId === req.userId
+        );
+
+        // Sort by timestamp (newest first)
+        userMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        console.log('Returning', userMessages.length, 'messages for user:', req.userId);
+        res.json(userMessages);
+    } catch (error) {
+        console.error('Get messages error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Mark message as read
+app.put('/api/messages/:messageId/read', authenticateToken, async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const db = await readDB();
+
+        const message = db.messages.find(m => m.id === messageId);
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        // Only recipient can mark as read
+        if (message.toUserId !== req.userId) {
+            return res.status(403).json({ error: 'You can only mark your received messages as read' });
+        }
+
+        message.read = true;
+        await writeDB(db);
+
+        res.json({ message: 'Message marked as read' });
+    } catch (error) {
+        console.error('Mark message read error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // ==================== REAL PAYMENT ENDPOINTS ====================
 
 // Get Stripe publishable key
