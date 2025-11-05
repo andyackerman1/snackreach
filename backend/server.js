@@ -227,11 +227,38 @@ app.post('/api/register', async (req, res) => {
         db.users.push(newUser);
         console.log('Adding new user to database:', newUser.email, newUser.userType);
         
+        // Track registration as a login activity (since they're automatically logged in)
+        const loginActivity = {
+            userId: newUser.id,
+            email: newUser.email,
+            name: newUser.name || newUser.companyName || 'Unknown',
+            userType: newUser.userType,
+            timestamp: new Date().toISOString(),
+            ipAddress: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown',
+            userAgent: req.headers['user-agent'] || 'unknown',
+            isRegistration: true
+        };
+        
+        // Ensure loginActivity array exists
+        if (!db.loginActivity) {
+            db.loginActivity = [];
+            console.log('Initialized loginActivity array during registration');
+        }
+        
+        db.loginActivity.push(loginActivity);
+        console.log('Registration login activity added. Total login records:', db.loginActivity.length);
+        
+        // Keep only last 1000 login activities to prevent database bloat
+        if (db.loginActivity.length > 1000) {
+            db.loginActivity = db.loginActivity.slice(-1000);
+        }
+        
         await writeDB(db);
         
-        // Verify user was saved
+        // Verify user and login activity were saved
         const verifyDb = await readDB();
         console.log('Database after save - users count:', verifyDb.users.length);
+        console.log('Login activity count:', verifyDb.loginActivity ? verifyDb.loginActivity.length : 0);
         console.log('New user ID:', newUser.id, 'Email:', newUser.email);
 
         // Generate JWT token
@@ -266,21 +293,32 @@ app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        console.log('Login attempt received for email:', email);
+
         if (!email || !password) {
+            console.error('Login failed: Missing email or password');
             return res.status(400).json({ error: 'Email and password required' });
         }
 
         const db = await readDB();
+        console.log('Database loaded, total users:', db.users.length);
+        
         const user = db.users.find(u => u.email === email);
 
         if (!user) {
+            console.error('Login failed: User not found for email:', email);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        console.log('User found:', user.email, user.userType);
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
+            console.error('Login failed: Invalid password for email:', email);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
+
+        console.log('Password validated successfully for:', email);
 
         // Generate JWT token with very long expiration (essentially permanent)
         const token = jwt.sign(
@@ -293,23 +331,42 @@ app.post('/api/login', async (req, res) => {
         const loginActivity = {
             userId: user.id,
             email: user.email,
-            name: user.name,
+            name: user.name || user.companyName || 'Unknown',
             userType: user.userType,
             timestamp: new Date().toISOString(),
-            ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+            ipAddress: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown',
             userAgent: req.headers['user-agent'] || 'unknown'
         };
         
-        db.loginActivity = db.loginActivity || [];
+        // Ensure loginActivity array exists
+        if (!db.loginActivity) {
+            db.loginActivity = [];
+            console.log('Initialized loginActivity array');
+        }
+        
         db.loginActivity.push(loginActivity);
+        console.log('Login activity added. Total login records:', db.loginActivity.length);
+        console.log('Login activity details:', {
+            userId: loginActivity.userId,
+            email: loginActivity.email,
+            userType: loginActivity.userType,
+            timestamp: loginActivity.timestamp
+        });
         
         // Keep only last 1000 login activities to prevent database bloat
         if (db.loginActivity.length > 1000) {
             db.loginActivity = db.loginActivity.slice(-1000);
+            console.log('Trimmed loginActivity to last 1000 entries');
         }
         
+        // Save to database
         await writeDB(db);
+        
+        // Verify login activity was saved
+        const verifyDb = await readDB();
+        console.log('Verification: Login activity count after save:', verifyDb.loginActivity ? verifyDb.loginActivity.length : 0);
 
+        console.log('Login successful for:', email, user.userType);
         res.json({
             message: 'Login successful',
             token,
@@ -323,7 +380,8 @@ app.post('/api/login', async (req, res) => {
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });
 
@@ -416,26 +474,42 @@ app.post('/api/login-owner', async (req, res) => {
             // Generate JWT token with very long expiration (essentially permanent)
             const token = jwt.sign({ userId: adminUser.id, email: adminUser.email, userType: 'owner' }, JWT_SECRET, { expiresIn: '3650d' }); // 10 years
             
-            // Track login activity
-            const loginActivity = {
-                userId: adminUser.id,
-                email: adminUser.email,
-                name: adminUser.name,
-                userType: 'owner',
-                timestamp: new Date().toISOString(),
-                ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
-                userAgent: req.headers['user-agent'] || 'unknown'
-            };
-            
-            db.loginActivity = db.loginActivity || [];
-            db.loginActivity.push(loginActivity);
-            
-            // Keep only last 1000 login activities to prevent database bloat
-            if (db.loginActivity.length > 1000) {
-                db.loginActivity = db.loginActivity.slice(-1000);
-            }
-            
-            await writeDB(db);
+        // Track login activity
+        const loginActivity = {
+            userId: adminUser.id,
+            email: adminUser.email,
+            name: adminUser.name || 'Owner',
+            userType: 'owner',
+            timestamp: new Date().toISOString(),
+            ipAddress: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        };
+        
+        // Ensure loginActivity array exists
+        if (!db.loginActivity) {
+            db.loginActivity = [];
+            console.log('Initialized loginActivity array for owner login');
+        }
+        
+        db.loginActivity.push(loginActivity);
+        console.log('Owner login activity added. Total login records:', db.loginActivity.length);
+        console.log('Owner login details:', {
+            userId: loginActivity.userId,
+            email: loginActivity.email,
+            timestamp: loginActivity.timestamp
+        });
+        
+        // Keep only last 1000 login activities to prevent database bloat
+        if (db.loginActivity.length > 1000) {
+            db.loginActivity = db.loginActivity.slice(-1000);
+            console.log('Trimmed loginActivity to last 1000 entries');
+        }
+        
+        await writeDB(db);
+        
+        // Verify login activity was saved
+        const verifyDb = await readDB();
+        console.log('Verification: Login activity count after owner login save:', verifyDb.loginActivity ? verifyDb.loginActivity.length : 0);
             
             return res.json({ message: 'Login successful', token, user: { id: adminUser.id, name: adminUser.name, email: adminUser.email, companyName: adminUser.companyName, userType: 'owner' } });
         }
