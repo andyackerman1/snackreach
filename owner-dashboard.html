@@ -18,7 +18,6 @@
                 <span>SnackReach</span>
             </div>
             <div class="nav-menu">
-                <a href="index.html" class="nav-link">Back to Home</a>
                 <div class="user-info">
                     <span class="user-name" id="owner-name">Owner</span>
                     <span class="subscription-badge">Admin</span>
@@ -612,15 +611,33 @@
         
         let currentSelectedUserId = null;
         
-        function loadUsersForMessaging() {
+        async function loadUsersForMessaging() {
             const userList = document.getElementById('owner-user-list');
             userList.innerHTML = '';
             
-            // Get all accounts
-            const accounts = getAllAccountsFromStorage();
-            
-            // Filter out owner accounts
-            const regularUsers = accounts.filter(acc => acc.userType !== 'owner');
+            try {
+                const token = localStorage.getItem('snackreach_token');
+                if (!token) {
+                    userList.innerHTML = '<div class="empty-state-small"><p>Not authenticated</p></div>';
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    userList.innerHTML = '<div class="empty-state-small"><p>Failed to load users</p></div>';
+                    return;
+                }
+                
+                const accounts = await response.json();
+                
+                // Filter out owner accounts
+                const regularUsers = accounts.filter(acc => acc.userType !== 'owner');
             
             if (regularUsers.length === 0) {
                 userList.innerHTML = '<div class="empty-state-small"><p>No users found</p></div>';
@@ -988,11 +1005,6 @@
             console.log('Accounts count:', accounts.length);
             
             if (accounts.length === 0) {
-                // Check localStorage directly
-                const storedUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
-                console.log('Stored users in localStorage:', storedUsers);
-                console.log('Stored users count:', storedUsers.length);
-                
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="8" style="text-align: center; padding: 2rem;">
@@ -1002,10 +1014,10 @@
                                 </div>
                                 <h4>No accounts yet</h4>
                                 <p>User accounts will appear here once they sign up</p>
-                                <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
-                                    Found ${storedUsers.length} accounts in localStorage. 
-                                    <button onclick="loadAccounts()" class="btn btn-small" style="margin-left: 10px;">Refresh</button>
-                                </p>
+                                <button onclick="loadAccounts()" class="btn btn-primary" style="margin-top: 1rem;">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -1021,7 +1033,6 @@
             
             if (displayableAccounts.length === 0 && accounts.length > 0) {
                 // Only owner accounts found
-                const storedUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="8" style="text-align: center; padding: 2rem;">
@@ -1030,13 +1041,10 @@
                                     <i class="fas fa-users"></i>
                                 </div>
                                 <h4>No user accounts found</h4>
-                                <p>Found ${storedUsers.length} account(s) in localStorage, but none are regular users.</p>
-                                <p style="margin-top: 1rem; font-size: 0.85rem; color: #dc2626;">
-                                    <strong>Important:</strong> localStorage is per-browser. If someone signed up on a different browser/device, you won't see them here.
-                                </p>
-                                <button onclick="addTestAccount()" class="btn btn-primary" style="margin-top: 1rem;">
-                                    <i class="fas fa-plus"></i>
-                                    Add Test Account (acks102@optonline.net)
+                                <p>Found ${accounts.length} account(s) in the database, but none are regular users (only owner accounts).</p>
+                                <button onclick="loadAccounts()" class="btn btn-primary" style="margin-top: 1rem;">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh
                                 </button>
                             </div>
                         </td>
@@ -1078,14 +1086,32 @@
             console.log('Table rendered with', displayableAccounts.length, 'rows');
         }
 
-        function loadStats() {
-            const accounts = getAllAccountsFromStorage();
-            const startups = accounts.filter(a => a.userType === 'startup');
-            const offices = accounts.filter(a => a.userType === 'office');
-            
-            document.getElementById('total-users').textContent = accounts.length;
-            document.getElementById('total-startups').textContent = startups.length;
-            document.getElementById('total-offices').textContent = offices.length;
+        async function loadStats() {
+            try {
+                const token = localStorage.getItem('snackreach_token');
+                if (!token) {
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const accounts = await response.json();
+                    const startups = accounts.filter(a => a.userType === 'startup');
+                    const offices = accounts.filter(a => a.userType === 'office');
+                    
+                    document.getElementById('total-users').textContent = accounts.length;
+                    document.getElementById('total-startups').textContent = startups.length;
+                    document.getElementById('total-offices').textContent = offices.length;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
         }
 
         function editBankingInfo() {
@@ -1212,29 +1238,7 @@
             loadBankingInfo();
         });
 
-        function addTestAccount() {
-            const testAccount = {
-                id: Date.now().toString(),
-                name: 'Test User',
-                email: 'acks102@optonline.net',
-                companyName: 'Test Company',
-                phone: '',
-                userType: 'startup',
-                createdAt: new Date().toISOString()
-            };
-            
-            const existingUsers = JSON.parse(localStorage.getItem('snackreach_users') || '[]');
-            const exists = existingUsers.find(u => u.email === testAccount.email);
-            
-            if (exists) {
-                alert('This account already exists in localStorage!');
-            } else {
-                existingUsers.push(testAccount);
-                localStorage.setItem('snackreach_users', JSON.stringify(existingUsers));
-                alert('Test account added! Refreshing...');
-                loadAccounts();
-            }
-        }
+        // Removed addTestAccount - accounts must be created through the centralized signup system
 
         function loadOwnerProfile() {
             const ownerData = JSON.parse(localStorage.getItem('snackreach_owner_data') || '{}');
@@ -1315,15 +1319,38 @@
             alert('Password changed successfully!');
         });
 
-        function exportData() {
-            const accounts = getAllAccountsFromStorage();
-            const dataStr = JSON.stringify(accounts, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `snackreach-data-${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
+        async function exportData() {
+            try {
+                const token = localStorage.getItem('snackreach_token');
+                if (!token) {
+                    alert('Not authenticated');
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    alert('Failed to load data for export');
+                    return;
+                }
+                
+                const accounts = await response.json();
+                const dataStr = JSON.stringify(accounts, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `snackreach-data-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Failed to export data');
+            }
         }
 
         function logout() {
