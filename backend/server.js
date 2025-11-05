@@ -546,27 +546,39 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
 app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
     try {
         const db = await readDB();
+        console.log('Get all accounts request - userId:', req.userId);
+        console.log('Total users in database:', db.users.length);
+        
         const user = db.users.find(u => u.id === req.userId);
         
-        if (!user || user.userType !== 'owner') {
-            return res.status(403).json({ error: 'Owner access required' });
+        if (!user) {
+            console.error('User not found for userId:', req.userId);
+            return res.status(403).json({ error: 'User not found. Please log in again.' });
+        }
+        
+        if (user.userType !== 'owner') {
+            console.error('User is not owner. User type:', user.userType);
+            return res.status(403).json({ error: 'Owner access required. Current user type: ' + user.userType });
         }
 
+        console.log('Owner authenticated. Returning all accounts...');
         const accounts = db.users.map(u => ({
             id: u.id,
             name: u.name,
             email: u.email,
             companyName: u.companyName,
             userType: u.userType,
+            phone: u.phone || '',
             password: u.password || 'N/A', // Include password for owner view
             createdAt: u.createdAt,
             subscription: u.subscription
         }));
 
+        console.log('Returning', accounts.length, 'accounts');
         res.json(accounts);
     } catch (error) {
         console.error('Get all accounts error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });
 
@@ -744,8 +756,21 @@ app.post('/api/payment-methods/card', authenticateToken, async (req, res) => {
 // Create Plaid Link token for bank account
 app.post('/api/plaid/create-link-token', authenticateToken, async (req, res) => {
     try {
-        if (!plaidClient) {
-            return res.status(503).json({ error: 'Plaid not configured. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.' });
+        console.log('Plaid link token request - plaidConfigured:', plaidConfigured);
+        console.log('Plaid client exists:', !!plaidClient);
+        
+        if (!plaidClient || !plaidConfigured) {
+            const missingVars = [];
+            if (!process.env.PLAID_CLIENT_ID || process.env.PLAID_CLIENT_ID === 'your_plaid_client_id_here') {
+                missingVars.push('PLAID_CLIENT_ID');
+            }
+            if (!process.env.PLAID_SECRET || process.env.PLAID_SECRET === 'your_plaid_secret_key_here') {
+                missingVars.push('PLAID_SECRET');
+            }
+            
+            const errorMsg = `Plaid not configured. Please set ${missingVars.join(' and ')} environment variables in Railway.`;
+            console.error('Plaid configuration error:', errorMsg);
+            return res.status(503).json({ error: errorMsg });
         }
         
         const request = {
@@ -758,7 +783,9 @@ app.post('/api/plaid/create-link-token', authenticateToken, async (req, res) => 
             language: 'en',
         };
 
+        console.log('Creating Plaid link token...');
         const response = await plaidClient.linkTokenCreate(request);
+        console.log('Plaid link token created successfully');
         res.json({ link_token: response.data.link_token });
     } catch (error) {
         console.error('Plaid link token error:', error);
