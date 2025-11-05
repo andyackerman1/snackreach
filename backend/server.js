@@ -458,7 +458,6 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
 });
 
 // ==================== REAL PAYMENT ENDPOINTS ====================
-function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
