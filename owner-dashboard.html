@@ -76,6 +76,11 @@
             }
         };
         
+        // Also create aliases without "window." for compatibility
+        window.showAccounts = window.showAccounts;
+        window.showBanking = window.showBanking;
+        window.showSettings = window.showSettings;
+        
         console.log('Tab functions defined in HEAD:', typeof window.showAccounts, typeof window.showBanking, typeof window.showSettings);
     </script>
 </head>
@@ -106,9 +111,9 @@
 
             <!-- SIMPLE TABS - Bulletproof -->
             <div style="border-bottom: 2px solid #e5e7eb; margin-bottom: 30px; padding-bottom: 10px; position: relative; z-index: 1;">
-                <button id="tab-btn-accounts" onclick="window.showAccounts(); return false;" style="padding: 15px 30px; margin-right: 10px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">All Accounts</button>
-                <button id="tab-btn-banking" onclick="window.showBanking(); return false;" style="padding: 15px 30px; margin-right: 10px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">Banking Info</button>
-                <button id="tab-btn-settings" onclick="window.showSettings(); return false;" style="padding: 15px 30px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">Settings</button>
+                <button id="tab-btn-accounts" onclick="if(window.showAccounts){window.showAccounts();}else{alert('showAccounts not defined');} return false;" style="padding: 15px 30px; margin-right: 10px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">All Accounts</button>
+                <button id="tab-btn-banking" onclick="if(window.showBanking){window.showBanking();}else{alert('showBanking not defined');} return false;" style="padding: 15px 30px; margin-right: 10px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">Banking Info</button>
+                <button id="tab-btn-settings" onclick="if(window.showSettings){window.showSettings();}else{alert('showSettings not defined');} return false;" style="padding: 15px 30px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">Settings</button>
             </div>
 
             <!-- Accounts Tab -->
@@ -400,78 +405,6 @@
         </div>
     </section>
 
-    <!-- DEFINE FUNCTIONS IN HEAD - BEFORE ANY HTML -->
-    <script>
-        // DEFINE FUNCTIONS IMMEDIATELY - BEFORE PAGE LOADS
-        window.showAccounts = function() {
-            alert('showAccounts called!'); // Debug
-            try {
-                document.getElementById('tab-accounts').style.display = 'block';
-                document.getElementById('tab-banking').style.display = 'none';
-                document.getElementById('tab-settings').style.display = 'none';
-                
-                document.getElementById('tab-btn-accounts').style.background = '#dc2626';
-                document.getElementById('tab-btn-accounts').style.color = 'white';
-                document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
-                document.getElementById('tab-btn-banking').style.color = '#64748b';
-                document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
-                document.getElementById('tab-btn-settings').style.color = '#64748b';
-                
-                if (typeof loadAccounts === 'function') {
-                    loadAccounts();
-                }
-            } catch(e) {
-                alert('Error: ' + e.message);
-            }
-        };
-        
-        window.showBanking = function() {
-            alert('showBanking called!'); // Debug
-            try {
-                document.getElementById('tab-accounts').style.display = 'none';
-                document.getElementById('tab-banking').style.display = 'block';
-                document.getElementById('tab-settings').style.display = 'none';
-                
-                document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
-                document.getElementById('tab-btn-accounts').style.color = '#64748b';
-                document.getElementById('tab-btn-banking').style.background = '#dc2626';
-                document.getElementById('tab-btn-banking').style.color = 'white';
-                document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
-                document.getElementById('tab-btn-settings').style.color = '#64748b';
-                
-                if (typeof loadBankingInfo === 'function') {
-                    loadBankingInfo();
-                }
-            } catch(e) {
-                alert('Error: ' + e.message);
-            }
-        };
-        
-        window.showSettings = function() {
-            alert('showSettings called!'); // Debug
-            try {
-                document.getElementById('tab-accounts').style.display = 'none';
-                document.getElementById('tab-banking').style.display = 'none';
-                document.getElementById('tab-settings').style.display = 'block';
-                
-                document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
-                document.getElementById('tab-btn-accounts').style.color = '#64748b';
-                document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
-                document.getElementById('tab-btn-banking').style.color = '#64748b';
-                document.getElementById('tab-btn-settings').style.background = '#dc2626';
-                document.getElementById('tab-btn-settings').style.color = 'white';
-                
-                if (typeof loadOwnerProfile === 'function') {
-                    loadOwnerProfile();
-                }
-            } catch(e) {
-                alert('Error: ' + e.message);
-            }
-        };
-        
-        console.log('Tab functions defined:', typeof window.showAccounts, typeof window.showBanking, typeof window.showSettings);
-    </script>
-    
     <script src="js/plaid-link.js"></script>
     <script>
         // Verify functions are available
@@ -481,25 +414,28 @@
             showSettings: typeof window.showSettings
         });
         
-        // Dynamic API URL detection
-        const API_BASE_URL = (() => {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            
-            if (protocol === 'file:' || hostname === '') {
-                return 'https://snackreach-production.up.railway.app/api';
-            }
-            
-            if (hostname.includes('railway.app')) {
-                return '/api';
-            } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                return 'https://snackreach-production.up.railway.app/api';
-            } else {
-                return 'http://localhost:3000/api';
-            }
-        })();
+        // Dynamic API URL detection - only declare once using var (function-scoped, not block-scoped)
+        if (typeof window.API_BASE_URL === 'undefined') {
+            window.API_BASE_URL = (() => {
+                const hostname = window.location.hostname;
+                const protocol = window.location.protocol;
+                
+                if (protocol === 'file:' || hostname === '') {
+                    return 'https://snackreach-production.up.railway.app/api';
+                }
+                
+                if (hostname.includes('railway.app')) {
+                    return '/api';
+                } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                    return 'https://snackreach-production.up.railway.app/api';
+                } else {
+                    return 'http://localhost:3000/api';
+                }
+            })();
+        }
         
-        console.log('API Base URL:', API_BASE_URL);
+        // Reference API_BASE_URL from window, don't redeclare
+        console.log('API Base URL:', window.API_BASE_URL);
 
         // Check authentication
         document.addEventListener('DOMContentLoaded', function() {
@@ -531,7 +467,7 @@
                     return;
                 }
                 
-                const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
+                const response = await fetch(`${window.API_BASE_URL}/admin/all-accounts`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -735,7 +671,7 @@
             try {
                 const token = localStorage.getItem('snackreach_token');
                 if (token) {
-                    const response = await fetch(`${API_BASE_URL}/admin/update-profile`, {
+                    const response = await fetch(`${window.API_BASE_URL}/admin/update-profile`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -791,7 +727,7 @@
                     return;
                 }
                 
-                const response = await fetch(`${API_BASE_URL}/admin/change-password`, {
+                const response = await fetch(`${window.API_BASE_URL}/admin/change-password`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
