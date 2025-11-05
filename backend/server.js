@@ -940,13 +940,18 @@ app.get('*', (req, res) => {
 // Start server
 async function startServer() {
     try {
+        console.log('🔧 Initializing database...');
         await initDatabase();
-        app.listen(PORT, '0.0.0.0', () => {
+        console.log('✅ Database initialized');
+        
+        console.log('🔧 Starting server...');
+        const server = app.listen(PORT, '0.0.0.0', () => {
             console.log(`🚀 SnackReach API server running on port ${PORT}`);
             console.log(`📡 API endpoints available at /api`);
             console.log(`🌐 Frontend files served from: ${path.join(__dirname, '..')}`);
+            console.log(`🌐 Main site: http://localhost:${PORT}/`);
             if (process.env.NODE_ENV !== 'production') {
-                console.log(`   Local: http://localhost:${PORT}/api`);
+                console.log(`   Local API: http://localhost:${PORT}/api`);
             }
             if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_placeholder') {
                 console.log(`⚠️  WARNING: Stripe not configured. Set STRIPE_SECRET_KEY in .env`);
@@ -955,13 +960,37 @@ async function startServer() {
                 console.log(`⚠️  WARNING: Plaid not configured. Set PLAID_CLIENT_ID and PLAID_SECRET in .env`);
             }
         });
+        
+        // Handle server errors
+        server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.error(`❌ Port ${PORT} is already in use`);
+            } else {
+                console.error('❌ Server error:', err);
+            }
+            process.exit(1);
+        });
+        
     } catch (error) {
         console.error('❌ Failed to start server:', error);
+        console.error('Error details:', error.stack);
         process.exit(1);
     }
 }
 
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+});
+
 startServer().catch(error => {
     console.error('❌ Fatal error starting server:', error);
+    console.error('Error stack:', error.stack);
     process.exit(1);
 });
