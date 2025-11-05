@@ -14,11 +14,14 @@
             alert('showAccounts called!'); // Debug
             try {
                 document.getElementById('tab-accounts').style.display = 'block';
+                document.getElementById('tab-messages').style.display = 'none';
                 document.getElementById('tab-banking').style.display = 'none';
                 document.getElementById('tab-settings').style.display = 'none';
                 
                 document.getElementById('tab-btn-accounts').style.background = '#dc2626';
                 document.getElementById('tab-btn-accounts').style.color = 'white';
+                document.getElementById('tab-btn-messages').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-messages').style.color = '#64748b';
                 document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
                 document.getElementById('tab-btn-banking').style.color = '#64748b';
                 document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
@@ -32,15 +35,43 @@
             }
         };
         
+        window.showMessages = function() {
+            alert('showMessages called!'); // Debug
+            try {
+                document.getElementById('tab-accounts').style.display = 'none';
+                document.getElementById('tab-messages').style.display = 'block';
+                document.getElementById('tab-banking').style.display = 'none';
+                document.getElementById('tab-settings').style.display = 'none';
+                
+                document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-accounts').style.color = '#64748b';
+                document.getElementById('tab-btn-messages').style.background = '#dc2626';
+                document.getElementById('tab-btn-messages').style.color = 'white';
+                document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-banking').style.color = '#64748b';
+                document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-settings').style.color = '#64748b';
+                
+                if (typeof loadMessages === 'function') {
+                    loadMessages();
+                }
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        };
+        
         window.showBanking = function() {
             alert('showBanking called!'); // Debug
             try {
                 document.getElementById('tab-accounts').style.display = 'none';
+                document.getElementById('tab-messages').style.display = 'none';
                 document.getElementById('tab-banking').style.display = 'block';
                 document.getElementById('tab-settings').style.display = 'none';
                 
                 document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
                 document.getElementById('tab-btn-accounts').style.color = '#64748b';
+                document.getElementById('tab-btn-messages').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-messages').style.color = '#64748b';
                 document.getElementById('tab-btn-banking').style.background = '#dc2626';
                 document.getElementById('tab-btn-banking').style.color = 'white';
                 document.getElementById('tab-btn-settings').style.background = '#f3f4f6';
@@ -58,11 +89,14 @@
             alert('showSettings called!'); // Debug
             try {
                 document.getElementById('tab-accounts').style.display = 'none';
+                document.getElementById('tab-messages').style.display = 'none';
                 document.getElementById('tab-banking').style.display = 'none';
                 document.getElementById('tab-settings').style.display = 'block';
                 
                 document.getElementById('tab-btn-accounts').style.background = '#f3f4f6';
                 document.getElementById('tab-btn-accounts').style.color = '#64748b';
+                document.getElementById('tab-btn-messages').style.background = '#f3f4f6';
+                document.getElementById('tab-btn-messages').style.color = '#64748b';
                 document.getElementById('tab-btn-banking').style.background = '#f3f4f6';
                 document.getElementById('tab-btn-banking').style.color = '#64748b';
                 document.getElementById('tab-btn-settings').style.background = '#dc2626';
@@ -78,10 +112,11 @@
         
         // Also create aliases without "window." for compatibility
         window.showAccounts = window.showAccounts;
+        window.showMessages = window.showMessages;
         window.showBanking = window.showBanking;
         window.showSettings = window.showSettings;
         
-        console.log('Tab functions defined in HEAD:', typeof window.showAccounts, typeof window.showBanking, typeof window.showSettings);
+        console.log('Tab functions defined in HEAD:', typeof window.showAccounts, typeof window.showMessages, typeof window.showBanking, typeof window.showSettings);
     </script>
 </head>
 <body>
@@ -112,6 +147,7 @@
             <!-- SIMPLE TABS - Bulletproof -->
             <div style="border-bottom: 2px solid #e5e7eb; margin-bottom: 30px; padding-bottom: 10px; position: relative; z-index: 1;">
                 <button id="tab-btn-accounts" onclick="if(window.showAccounts){window.showAccounts();}else{alert('showAccounts not defined');} return false;" style="padding: 15px 30px; margin-right: 10px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">All Accounts</button>
+                <button id="tab-btn-messages" onclick="if(window.showMessages){window.showMessages();}else{alert('showMessages not defined');} return false;" style="padding: 15px 30px; margin-right: 10px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">Messages</button>
                 <button id="tab-btn-banking" onclick="if(window.showBanking){window.showBanking();}else{alert('showBanking not defined');} return false;" style="padding: 15px 30px; margin-right: 10px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">Banking Info</button>
                 <button id="tab-btn-settings" onclick="if(window.showSettings){window.showSettings();}else{alert('showSettings not defined');} return false;" style="padding: 15px 30px; background: #f3f4f6; color: #64748b; border: none; border-radius: 5px; cursor: pointer !important; font-size: 16px; font-weight: 600; pointer-events: auto !important; z-index: 9999; position: relative;">Settings</button>
             </div>
@@ -159,6 +195,68 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Messages Tab -->
+            <div id="tab-messages" style="display: none;">
+                <div class="section-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div>
+                            <h3>Send Messages</h3>
+                            <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">
+                                Start a conversation with food startups or office managers
+                            </p>
+                        </div>
+                        <button class="btn btn-primary" onclick="openNewMessageModal()" style="margin-left: 1rem;">
+                            <i class="fas fa-plus"></i>
+                            New Message
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Message Form -->
+                <div class="profile-section" style="margin-top: 2rem;">
+                    <div class="profile-card" style="background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                        <h4 style="margin-bottom: 1.5rem; font-size: 1.25rem; color: #1e293b;">Start New Message</h4>
+                        
+                        <form id="new-message-form" onsubmit="sendMessage(event)">
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Select Recipient</label>
+                                <select id="message-recipient" required style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem;">
+                                    <option value="">Choose a user...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Subject</label>
+                                <input type="text" id="message-subject" placeholder="Message subject" required style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem;">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 1.5rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Message</label>
+                                <textarea id="message-content" placeholder="Type your message here..." required rows="6" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; resize: vertical;"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                <i class="fas fa-paper-plane"></i>
+                                Send Message
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Sent Messages List -->
+                <div class="profile-section" style="margin-top: 2rem;">
+                    <div class="profile-card" style="background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                        <h4 style="margin-bottom: 1.5rem; font-size: 1.25rem; color: #1e293b;">Recent Messages</h4>
+                        <div id="messages-list">
+                            <div style="text-align: center; padding: 2rem; color: #64748b;">
+                                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                                <p>No messages sent yet</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -528,6 +626,174 @@
         }
         
         window.loadAccounts = loadAccounts;
+
+        // Load messages and users for messaging
+        async function loadMessages() {
+            try {
+                // Load all accounts to populate recipient dropdown
+                const token = localStorage.getItem('snackreach_token');
+                if (!token) {
+                    console.warn('No authentication token found');
+                    return;
+                }
+
+                // Load accounts for recipient selection
+                const accountsResponse = await fetch(`${window.API_BASE_URL}/admin/all-accounts`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (accountsResponse.ok) {
+                    const accounts = await accountsResponse.json();
+                    populateRecipientDropdown(accounts);
+                }
+
+                // Load sent messages
+                await loadSentMessages();
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        function populateRecipientDropdown(accounts) {
+            const select = document.getElementById('message-recipient');
+            select.innerHTML = '<option value="">Choose a user...</option>';
+            
+            // Filter out owner accounts
+            const users = accounts.filter(acc => acc.userType !== 'owner');
+            
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                const label = `${user.name || user.companyName} (${user.email}) - ${user.userType === 'startup' ? 'Food Startup' : 'Office Manager'}`;
+                option.textContent = label;
+                option.setAttribute('data-email', user.email);
+                option.setAttribute('data-name', user.name || user.companyName);
+                option.setAttribute('data-type', user.userType);
+                select.appendChild(option);
+            });
+        }
+
+        async function loadSentMessages() {
+            try {
+                const token = localStorage.getItem('snackreach_token');
+                if (!token) return;
+
+                const response = await fetch(`${window.API_BASE_URL}/admin/messages`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const messages = await response.json();
+                    displayMessages(messages);
+                }
+            } catch (error) {
+                console.error('Error loading sent messages:', error);
+            }
+        }
+
+        function displayMessages(messages) {
+            const container = document.getElementById('messages-list');
+            
+            if (!messages || messages.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: #64748b;">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <p>No messages sent yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = messages.map(msg => `
+                <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <div>
+                            <strong style="color: #1e293b;">To: ${msg.recipientName || msg.recipientEmail}</strong>
+                            <span style="color: #64748b; margin-left: 1rem; font-size: 0.9rem;">
+                                ${msg.recipientType === 'startup' ? 'Food Startup' : 'Office Manager'}
+                            </span>
+                        </div>
+                        <span style="color: #64748b; font-size: 0.85rem;">
+                            ${new Date(msg.createdAt).toLocaleString()}
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong style="color: #374151;">Subject:</strong>
+                        <span style="color: #64748b; margin-left: 0.5rem;">${msg.subject}</span>
+                    </div>
+                    <div style="color: #4b5563; padding: 1rem; background: #f9fafb; border-radius: 8px; margin-top: 0.5rem;">
+                        ${msg.content}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function sendMessage(event) {
+            event.preventDefault();
+            
+            const recipientId = document.getElementById('message-recipient').value;
+            const subject = document.getElementById('message-subject').value;
+            const content = document.getElementById('message-content').value;
+
+            if (!recipientId || !subject || !content) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const recipientOption = document.getElementById('message-recipient').options[document.getElementById('message-recipient').selectedIndex];
+            const recipientEmail = recipientOption.getAttribute('data-email');
+            const recipientName = recipientOption.getAttribute('data-name');
+            const recipientType = recipientOption.getAttribute('data-type');
+
+            try {
+                const token = localStorage.getItem('snackreach_token');
+                const response = await fetch(`${window.API_BASE_URL}/admin/send-message`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientId,
+                        recipientEmail,
+                        recipientName,
+                        recipientType,
+                        subject,
+                        content
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Message sent successfully!');
+                    // Clear form
+                    document.getElementById('new-message-form').reset();
+                    // Reload messages
+                    await loadSentMessages();
+                } else {
+                    throw new Error(data.error || 'Failed to send message');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message: ' + error.message);
+            }
+        }
+
+        function openNewMessageModal() {
+            // Scroll to message form
+            document.getElementById('tab-messages').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.loadMessages = loadMessages;
+        window.sendMessage = sendMessage;
+        window.openNewMessageModal = openNewMessageModal;
 
         // Banking functions
         async function loadBankingInfo() {
