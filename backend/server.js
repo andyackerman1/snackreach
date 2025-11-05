@@ -99,17 +99,6 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'SnackReach API is running' });
 });
 
-// Serve index.html for all non-API routes (frontend routing)
-app.get('*', (req, res, next) => {
-    // Don't serve HTML for API routes
-    if (req.path.startsWith('/api')) {
-        return next();
-    }
-    
-    // Serve index.html for all other routes
-    res.sendFile(path.join(__dirname, '..', 'index.html'));
-});
-
 // User registration
 app.post('/api/register', async (req, res) => {
     try {
@@ -702,6 +691,18 @@ app.get('/api/owner/stripe-status', authenticateToken, async (req, res) => {
         console.error('Stripe status error:', error);
         res.status(400).json({ error: error.message || 'Failed to get status' });
     }
+});
+
+// Serve index.html for all non-API routes (frontend routing)
+// This MUST be last, after all API routes
+app.get('*', (req, res) => {
+    // Don't serve HTML for API routes (shouldn't reach here, but safety check)
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    // Serve index.html for all other routes (enables frontend routing)
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // Start server
