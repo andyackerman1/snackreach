@@ -251,13 +251,17 @@
         }
         
         // Check if user is already logged in
+        // Check if already logged in - if so, redirect to dashboard
+        // Sessions persist until explicit logout
         function checkLoginStatus() {
+            const token = localStorage.getItem('snackreach_token');
             const userType = localStorage.getItem('snackreach_user_type');
-            const userName = localStorage.getItem('snackreach_user_name');
             
-            if (userType && userName) {
-                // User is already logged in, redirect to appropriate dashboard
-                if (userType === 'startup') {
+            if (token && userType) {
+                // User is already logged in - redirect to their dashboard
+                if (userType === 'owner') {
+                    window.location.href = 'owner-dashboard.html';
+                } else if (userType === 'startup') {
                     window.location.href = 'snack-dashboard.html';
                 } else if (userType === 'office') {
                     window.location.href = 'office-dashboard.html';
