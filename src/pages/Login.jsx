@@ -9,7 +9,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  if (!isLoaded) return null;
+  if (!isLoaded) {
+    return (
+      <div className="max-w-md mx-auto mt-20 text-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!signIn) {
+    return (
+      <div className="max-w-md mx-auto mt-20 p-4 bg-red-50 border border-red-200 rounded">
+        <h2 className="text-red-800 font-semibold mb-2">Configuration Error</h2>
+        <p className="text-red-600 text-sm">
+          Clerk is not properly configured. Please check that VITE_CLERK_PUBLISHABLE_KEY is set correctly.
+        </p>
+      </div>
+    );
+  }
 
   async function handleLogin(e) {
     e.preventDefault();
