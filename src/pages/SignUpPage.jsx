@@ -1,150 +1,355 @@
 import { useState } from "react";
 import { useSignUp } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
-export default function CustomSignUpForm() {
+export default function SignUpPage() {
   const { signUp, setActive, isLoaded } = useSignUp();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [error, setError] = useState("");
-  const [pendingVerification, setPendingVerification] = useState(false);
-  const [code, setCode] = useState("");
   const navigate = useNavigate();
+  const [selectedUserType, setSelectedUserType] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    company: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [error, setError] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
-  if (!isLoaded) return null;
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-
-    try {
-      const result = await signUp.create({
-        emailAddress: email,
-        password,
-        firstName,
-        lastName,
-      });
-
-      // Send email verification code
-      if (result.status === "missing_requirements") {
-        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-        setPendingVerification(true);
-      } else if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        navigate("/dashboard");
-      }
-    } catch (err) {
-      setError(err.errors?.[0]?.message || "Sign up failed");
-    }
-  }
-
-  async function handleVerify(e) {
-    e.preventDefault();
-    setError("");
-
-    try {
-      const result = await signUp.attemptEmailAddressVerification({ code });
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        navigate("/dashboard");
-      }
-    } catch (err) {
-      setError(err.errors?.[0]?.message || "Verification failed");
-    }
-  }
-
-  if (pendingVerification) {
+  if (!isLoaded) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="max-w-md w-full mx-auto mt-20">
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-semibold mb-6 text-center">Verify your email</h2>
-            <p className="text-sm text-gray-600 mb-4 text-center">
-              We sent a verification code to {email}
-            </p>
-            <form onSubmit={handleVerify} className="space-y-4">
-              <input
-                type="text"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="Enter verification code"
-                className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition-colors font-medium"
-              >
-                Verify Email
-              </button>
-            </form>
+      <div className="signup-section">
+        <div className="container">
+          <div className="signup-container">
+            <div className="text-center">
+              <p>Loading...</p>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  function selectUserType(type) {
+    setSelectedUserType(type);
+    setShowForm(true);
+    setError("");
+    // Scroll to form
+    setTimeout(() => {
+      document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+
+    if (!acceptTerms) {
+      setError("Please read and accept the Terms of Service and Privacy Policy to continue.");
+      setShowTerms(true);
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match!");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long!");
+      return;
+    }
+
+    try {
+      // Register via backend API
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          companyName: formData.company,
+          phone: formData.phone,
+          userType: selectedUserType === "startup" ? "startup" : "office",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Sign in with Clerk
+        const result = await signUp.create({
+          emailAddress: formData.email,
+          password: formData.password,
+          firstName: formData.name.split(" ")[0],
+          lastName: formData.name.split(" ").slice(1).join(" ") || "",
+        });
+
+        if (result.status === "complete") {
+          await setActive({ session: result.createdSessionId });
+          navigate("/dashboard");
+        }
+      } else {
+        setError(data.error || "Registration failed. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Registration failed. Please try again.");
+    }
+  }
+
+  const formTitle = selectedUserType === "startup" 
+    ? "Join as a Food Startup" 
+    : "Join as an Office Manager";
+  const formSubtitle = selectedUserType === "startup"
+    ? "Start building brand awareness in offices"
+    : "Start discovering discounted startup snacks";
+
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
-      <div className="max-w-md w-full mx-auto mt-20">
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Sign up</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="First name"
-                className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Last name"
-                className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition-colors font-medium"
-            >
-              Sign Up
-            </button>
-          </form>
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{" "}
-              <a href="/login" className="text-blue-600 hover:underline">
-                Sign in
-              </a>
-            </p>
+    <>
+      {/* Navigation */}
+      <nav className="navbar">
+        <div className="nav-container">
+          <div className="nav-logo">
+            <i className="fas fa-utensils"></i>
+            <span>SnackReach</span>
+          </div>
+          <div className="nav-menu">
+            <Link to="/" className="nav-link">Back to Home</Link>
           </div>
         </div>
-      </div>
-    </div>
+      </nav>
+
+      {/* Signup Section */}
+      <section className="signup-section">
+        <div className="container">
+          <div className="signup-container">
+            <div className="signup-header">
+              <h1>Join SnackReach</h1>
+              <p>Choose your role to get started</p>
+            </div>
+            
+            <div className="user-type-selection">
+              <div
+                className={`user-type-card ${selectedUserType === "startup" ? "selected" : ""}`}
+                onClick={() => selectUserType("startup")}
+              >
+                <div className="user-type-icon">
+                  <i className="fas fa-rocket"></i>
+                </div>
+                <h3>Food Startup</h3>
+                <p>I'm a startup snack company looking to build brand awareness through discounted office deals</p>
+                <ul className="benefits-list">
+                  <li><i className="fas fa-check"></i> Reach office workers directly</li>
+                  <li><i className="fas fa-check"></i> Build brand awareness</li>
+                  <li><i className="fas fa-check"></i> Get feedback from real customers</li>
+                  <li><i className="fas fa-check"></i> Create long-term partnerships</li>
+                </ul>
+              </div>
+              
+              <div
+                className={`user-type-card ${selectedUserType === "office" ? "selected" : ""}`}
+                onClick={() => selectUserType("office")}
+              >
+                <div className="user-type-icon">
+                  <i className="fas fa-building"></i>
+                </div>
+                <h3>Office Manager</h3>
+                <p>I manage an office and want to discover discounted snacks from innovative startups</p>
+                <ul className="benefits-list">
+                  <li><i className="fas fa-check"></i> Access to startup discounts</li>
+                  <li><i className="fas fa-check"></i> Discover new brands first</li>
+                  <li><i className="fas fa-check"></i> Support emerging companies</li>
+                  <li><i className="fas fa-check"></i> Custom office deals</li>
+                </ul>
+              </div>
+            </div>
+
+            {showForm && (
+              <form id="signup-form" onSubmit={handleSubmit} className="signup-form">
+                <div className="form-header">
+                  <h2 id="form-title">{formTitle}</h2>
+                  <p id="form-subtitle">{formSubtitle}</p>
+                </div>
+                
+                {error && (
+                  <div className="error-message" style={{ display: "block", marginBottom: "1rem" }}>
+                    {error}
+                  </div>
+                )}
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="signup-name">Full Name</label>
+                    <input
+                      type="text"
+                      id="signup-name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="signup-email">Email</label>
+                    <input
+                      type="email"
+                      id="signup-email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="signup-company">Company Name</label>
+                    <input
+                      type="text"
+                      id="signup-company"
+                      value={formData.company}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="signup-phone">Phone Number</label>
+                    <input
+                      type="tel"
+                      id="signup-phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="signup-password">Password</label>
+                  <input
+                    type="password"
+                    id="signup-password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="signup-confirm">Confirm Password</label>
+                  <input
+                    type="password"
+                    id="signup-confirm"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    required
+                  />
+                </div>
+                
+                <div className="terms-section">
+                  <div className="terms-checkbox">
+                    <input
+                      type="checkbox"
+                      id="accept-terms"
+                      checked={acceptTerms}
+                      onChange={(e) => setAcceptTerms(e.target.checked)}
+                      required
+                    />
+                    <label htmlFor="accept-terms">
+                      I agree to the{" "}
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowTerms(true);
+                        }}
+                      >
+                        Terms of Service and Privacy Policy
+                      </a>
+                    </label>
+                  </div>
+                  <p className="terms-note">
+                    By creating an account, you acknowledge that you have read and understand our terms, including important disclaimers about shipping, product safety, and liability.
+                  </p>
+                </div>
+                
+                <button type="submit" className="btn btn-primary btn-large btn-full">
+                  <i className="fas fa-user-plus"></i>
+                  Create Account
+                </button>
+                
+                <p className="login-link">
+                  Already have an account? <Link to="/login">Login here</Link>
+                </p>
+              </form>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Terms Modal */}
+      {showTerms && (
+        <div className="modal" style={{ display: "flex" }} onClick={() => setShowTerms(false)}>
+          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Terms of Service and Privacy Policy</h2>
+              <span className="close" onClick={() => setShowTerms(false)}>&times;</span>
+            </div>
+            <div className="modal-body terms-content">
+              <div className="terms-section-content">
+                <h3>1. Platform Overview</h3>
+                <p>SnackReach is a marketplace platform that connects food startup companies with office spaces. We facilitate introductions and provide a platform for communication, but we do not participate in transactions, shipping, or product fulfillment.</p>
+                
+                <h3>2. Shipping and Fulfillment</h3>
+                <p><strong>SnackReach is not responsible for shipping, delivery, or fulfillment of any products.</strong> All shipping arrangements, costs, and logistics are the sole responsibility of the snack companies and office managers. We do not guarantee delivery times, shipping methods, or product availability. Users are responsible for coordinating directly with each other regarding shipping arrangements.</p>
+                
+                <h3>3. Product Safety and Liability</h3>
+                <p>SnackReach does not verify, test, or guarantee the safety, quality, or compliance of any products listed on the platform. All product safety, quality control, and regulatory compliance is the sole responsibility of the snack companies. Office managers and end consumers assume all risks associated with consuming products purchased through the platform.</p>
+                
+                <h3>4. User Responsibilities</h3>
+                <p>Users are responsible for all aspects of their transactions, including payment processing, product delivery, quality assurance, and customer service. SnackReach acts solely as a platform for connection and does not participate in or guarantee any transactions.</p>
+                
+                <h3>5. Privacy Policy</h3>
+                <p>We collect and store user information necessary for platform functionality. User data is stored securely and used only for platform operations. We do not sell user data to third parties.</p>
+                
+                <h3>6. Account Security</h3>
+                <p>Users are responsible for maintaining the security of their accounts and passwords. SnackReach is not liable for unauthorized access to user accounts.</p>
+                
+                <h3>7. Limitation of Liability</h3>
+                <p>SnackReach is not liable for any damages, losses, or issues arising from transactions, product quality, shipping problems, or any other interactions between users on the platform.</p>
+                
+                <h3>8. Dispute Resolution</h3>
+                <p>Any disputes between users must be resolved directly between the parties involved. SnackReach is not responsible for mediating or resolving disputes.</p>
+                
+                <h3>9. Platform Availability</h3>
+                <p>SnackReach does not guarantee uninterrupted platform availability and is not liable for service interruptions or technical issues.</p>
+                
+                <h3>10. Changes to Terms</h3>
+                <p>SnackReach reserves the right to modify these terms at any time. Users will be notified of significant changes via email or platform notification. Continued use of the platform after changes constitutes acceptance of the new terms.</p>
+                
+                <h3>11. Contact Information</h3>
+                <p>For questions about these terms, please contact us through the platform or at the contact information provided in your account dashboard.</p>
+                
+                <div className="terms-acceptance">
+                  <p><strong>By checking the box and creating an account, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and Privacy Policy.</strong></p>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-primary" onClick={() => { setAcceptTerms(true); setShowTerms(false); }}>
+                I Understand and Accept
+              </button>
+              <button className="btn btn-outline" onClick={() => setShowTerms(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
