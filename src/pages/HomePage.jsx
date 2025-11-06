@@ -48,7 +48,7 @@ export default function HomePage() {
             }}>
               SnackReach is the B2B marketplace where innovative food startups meet office managers 
               looking for the perfect snacks. Discover unique products, support emerging brands, 
-              and keep your team happy with delicious, healthy options.
+              and keep your team happy with delicious, exciting, new options.
             </p>
           </div>
         </div>
