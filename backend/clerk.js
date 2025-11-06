@@ -5,6 +5,13 @@ require('dotenv').config();
 // Clerk configuration
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
 
+// Debug: Check if key is loaded
+console.log("Clerk Secret Key Loaded?", !!process.env.CLERK_SECRET_KEY);
+if (CLERK_SECRET_KEY) {
+    console.log("Clerk Key Length:", CLERK_SECRET_KEY.length);
+    console.log("Clerk Key Starts With:", CLERK_SECRET_KEY.substring(0, 7));
+}
+
 if (!CLERK_SECRET_KEY) {
     console.warn('⚠️  Clerk not configured. Set CLERK_SECRET_KEY in .env');
     console.warn('   Get your key at: https://dashboard.clerk.com');
