@@ -7,6 +7,8 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const { supabase, testConnection } = require('./supabase');
+const { clerkClient, getClerkUser, createClerkUser, updateClerkUserMetadata, getClerkUserData, clerkConfigured } = require('./clerk');
 require('dotenv').config();
 
 // Stripe and Plaid setup
@@ -146,118 +148,30 @@ app.get('/signup.html', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'signup.html'));
 });
 
-app.get('/admin-dashboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'admin-dashboard.html'));
-});
 
 app.get('/reset-password.html', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'reset-password.html'));
 });
 
-// Database file path
-const DB_PATH = path.join(__dirname, 'data', 'database.json');
-
-// Initialize database - PERMANENT STORAGE
-// This ensures the database file exists and is ready for permanent account storage
+// Initialize database connection
+// Note: All user data is stored in Clerk, not Supabase or JSON files
 async function initDatabase() {
     try {
-        const dataDir = path.join(__dirname, 'data');
-        await fs.mkdir(dataDir, { recursive: true });
-        console.log('✅ Data directory ready:', dataDir);
-        
-        try {
-            await fs.access(DB_PATH);
-            // Database exists - verify it's readable and PRESERVE all existing data
-            const existing = await fs.readFile(DB_PATH, 'utf8');
-            const db = JSON.parse(existing);
-            
-            // CRITICAL: Never overwrite existing accounts - preserve all data
-            if (db.users && db.users.length > 0) {
-                console.log('✅ Existing database loaded:', DB_PATH);
-                console.log('✅ PRESERVING:', db.users.length, 'existing accounts');
-                console.log('⚠️  IMPORTANT: All existing accounts are preserved and will NOT be deleted');
-            } else {
-                console.log('✅ Existing database loaded:', DB_PATH);
-                console.log('✅ Database file exists (empty or ready for accounts)');
+        if (clerkConfigured) {
+            // Get user count from Clerk
+            try {
+                const users = await clerkClient.users.getUserList({ limit: 1 });
+                console.log('✅ Clerk database ready - all user data stored in Clerk');
+            } catch (error) {
+                console.warn('⚠️  Could not connect to Clerk:', error.message);
             }
-            
-            // Ensure all required arrays exist WITHOUT overwriting existing data
-            if (!db.users) db.users = [];
-            if (!db.snackCompanies) db.snackCompanies = [];
-            if (!db.offices) db.offices = [];
-            if (!db.products) db.products = [];
-            if (!db.orders) db.orders = [];
-            if (!db.messages) db.messages = [];
-            if (!db.loginActivity) db.loginActivity = [];
-            if (!db.passwordResetTokens) db.passwordResetTokens = [];
-            
-            // Only write if we added missing arrays (to preserve existing data)
-            const needsUpdate = !db.passwordResetTokens || 
-                              !db.loginActivity || 
-                              !db.messages || 
-                              !db.orders || 
-                              !db.products || 
-                              !db.offices || 
-                              !db.snackCompanies;
-            
-            if (needsUpdate) {
-                await writeDB(db);
-                console.log('✅ Database structure updated (preserving all existing accounts)');
-            }
-        } catch {
-            // ONLY create new database if file doesn't exist
-            // This should NEVER happen in production if Railway persistent storage is configured
-            const initialData = {
-                users: [],           // PERMANENT: All user accounts stored here
-                snackCompanies: [],
-                offices: [],
-                products: [],
-                orders: [],
-                messages: [],
-                loginActivity: [],    // Login history (optional, for user convenience only)
-                passwordResetTokens: []
-            };
-            await fs.writeFile(DB_PATH, JSON.stringify(initialData, null, 2));
-            console.log('✅ New database created for permanent storage:', DB_PATH);
-            console.log('✅ Database location:', process.env.NODE_ENV === 'production' ? 'Railway (persistent)' : 'Local filesystem');
-            console.log('⚠️  NOTE: This is a NEW database file. If you expected existing accounts, check Railway persistent storage configuration.');
+        } else {
+            console.warn('⚠️  Clerk not configured - user management will not work');
+            console.warn('   Make sure CLERK_SECRET_KEY is set in .env');
         }
     } catch (error) {
-        console.error('❌ CRITICAL ERROR initializing database:', error);
-        console.error('   Database path:', DB_PATH);
-        throw error; // Fail fast if we can't initialize database
-    }
-}
-
-// Read database
-async function readDB() {
-    try {
-        const data = await fs.readFile(DB_PATH, 'utf8');
-        const db = JSON.parse(data);
-        // Ensure all required arrays exist
-        if (!db.users) db.users = [];
-        if (!db.snackCompanies) db.snackCompanies = [];
-        if (!db.offices) db.offices = [];
-        if (!db.products) db.products = [];
-        if (!db.orders) db.orders = [];
-        if (!db.messages) db.messages = [];
-        if (!db.loginActivity) db.loginActivity = [];
-        if (!db.passwordResetTokens) db.passwordResetTokens = [];
-        return db;
-    } catch (error) {
-        console.error('Error reading database:', error);
-        console.error('Database path:', DB_PATH);
-        // Return empty database structure
-        return {
-            users: [],
-            snackCompanies: [],
-            offices: [],
-            products: [],
-            orders: [],
-            messages: [],
-            loginActivity: [],
-            passwordResetTokens: []
-        };
+        console.error('❌ Error initializing database:', error.message);
+        console.warn('   Server will continue but user operations may fail');
     }
 }
 
@@ -613,62 +527,21 @@ async function sendPasswordResetEmail(user, resetLink) {
     }
 }
 
-// Write database - PERMANENT STORAGE
-// This function ensures accounts are permanently saved to disk
-// Works on both local development and Railway production
-// CRITICAL: NEVER deletes existing accounts - only adds or updates
+// Database functions - No longer needed since we use Clerk only
+// These are kept as stubs for backward compatibility with endpoints that might still reference them
+async function readDB() {
+    // Return empty structure - all user data is in Clerk now
+    return {
+        users: [],
+        messages: [],
+        passwordResetTokens: []
+    };
+}
+
 async function writeDB(data) {
-    try {
-        // Ensure data directory exists (creates if it doesn't)
-        const dataDir = path.join(__dirname, 'data');
-        await fs.mkdir(dataDir, { recursive: true });
-        
-        // CRITICAL: Accounts are PERMANENTLY saved - never deleted automatically
-        // This ensures all user accounts persist across server restarts
-        // On Railway: Database file persists in the data/ directory
-        // On Local: Database file is saved in backend/data/database.json
-        // IMPORTANT: Frontend updates (admin-dashboard.html) do NOT affect this database
-        
-        // Atomic write: Write to temporary file first, then rename (prevents corruption)
-        const tempPath = DB_PATH + '.tmp';
-        const jsonData = JSON.stringify(data, null, 2);
-        
-        // Write to temporary file
-        await fs.writeFile(tempPath, jsonData, { encoding: 'utf8', flag: 'w' });
-        
-        // Atomic rename (ensures data integrity)
-        await fs.rename(tempPath, DB_PATH);
-        
-        // Verify write was successful by reading back
-        const verify = await fs.readFile(DB_PATH, 'utf8');
-        const verifyData = JSON.parse(verify);
-        
-        console.log('✅ Database written successfully to:', DB_PATH);
-        console.log('✅ Total users permanently saved:', verifyData.users ? verifyData.users.length : 0);
-        console.log('✅ Database location:', process.env.NODE_ENV === 'production' ? 'Railway (persistent)' : 'Local filesystem');
-        
-        // CRITICAL SAFETY CHECK: Ensure accounts are never lost
-        if (verifyData.users && verifyData.users.length !== (data.users ? data.users.length : 0)) {
-            console.error('⚠️  WARNING: User count mismatch after write!');
-            console.error('   Expected:', data.users ? data.users.length : 0);
-            console.error('   Actual:', verifyData.users.length);
-            console.error('   ⚠️  This should NEVER happen - accounts may have been lost!');
-        }
-        
-        // Log account preservation status
-        if (verifyData.users && verifyData.users.length > 0) {
-            console.log('✅ Account preservation verified:', verifyData.users.length, 'accounts safely stored');
-        }
-    } catch (error) {
-        console.error('❌ CRITICAL ERROR writing database:', error);
-        console.error('   Database path:', DB_PATH);
-        console.error('   Error details:', error.message);
-        console.error('   Stack:', error.stack);
-        
-        // Don't throw - log error but allow app to continue
-        // This prevents one bad write from crashing the entire server
-        console.error('   Attempting to continue despite write error...');
-    }
+    // No-op - all user data is stored in Clerk
+    // This function is kept for compatibility but doesn't do anything
+    console.log('⚠️  writeDB called but data is stored in Clerk, not JSON file');
 }
 
 // Health check
@@ -676,48 +549,67 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'SnackReach API is running' });
 });
 
-// Database diagnostic endpoint - helps verify accounts are being stored
+// Database diagnostic endpoint - shows Clerk users
 app.get('/api/database-status', async (req, res) => {
     try {
-        const db = await readDB();
-        const stats = {
-            databasePath: DB_PATH,
-            databaseExists: true,
-            totalAccounts: db.users ? db.users.length : 0,
-            accounts: db.users ? db.users.map(u => ({
-                id: u.id,
-                email: u.email,
-                userType: u.userType,
-                createdAt: u.createdAt
-            })) : [],
-            environment: process.env.NODE_ENV || 'development',
-            dataDirectory: path.join(__dirname, 'data'),
-            timestamp: new Date().toISOString()
-        };
-        
-        // Check if database file exists and is readable
-        try {
-            await fs.access(DB_PATH);
-            stats.databaseFileExists = true;
-            const fileStats = await fs.stat(DB_PATH);
-            stats.databaseFileSize = fileStats.size;
-            stats.databaseFileModified = fileStats.mtime.toISOString();
-        } catch {
-            stats.databaseFileExists = false;
+        if (!clerkConfigured) {
+            return res.json({
+                databaseType: 'Clerk (NOT CONFIGURED)',
+                totalAccounts: 0,
+                accounts: [],
+                environment: process.env.NODE_ENV || 'development',
+                timestamp: new Date().toISOString(),
+                message: '⚠️ Clerk is not configured. Set CLERK_SECRET_KEY in Railway environment variables.',
+                fix: 'Go to Railway Dashboard → Your Service → Variables → Add CLERK_SECRET_KEY',
+                clerkConfigured: false
+            });
         }
-        
-        res.json(stats);
+
+        // Get users from Clerk
+        try {
+            const users = await clerkClient.users.getUserList({ limit: 100 });
+            
+            const stats = {
+                databaseType: 'Clerk',
+                databaseUrl: 'https://dashboard.clerk.com',
+                totalAccounts: users.data ? users.data.length : 0,
+                accounts: users.data ? users.data.map(u => ({
+                    id: u.id,
+                    email: u.emailAddresses[0]?.emailAddress || '',
+                    userType: u.publicMetadata?.userType || 'office',
+                    companyName: u.publicMetadata?.companyName || '',
+                    createdAt: u.createdAt
+                })) : [],
+                environment: process.env.NODE_ENV || 'development',
+                timestamp: new Date().toISOString(),
+                connected: true,
+                clerkConfigured: true,
+                message: '✅ All user data lives in Clerk metadata'
+            };
+            
+            res.json(stats);
+        } catch (clerkError) {
+            res.json({
+                databaseType: 'Clerk (Connection Error)',
+                totalAccounts: 0,
+                accounts: [],
+                environment: process.env.NODE_ENV || 'development',
+                timestamp: new Date().toISOString(),
+                error: clerkError.message,
+                message: '❌ Could not connect to Clerk. Check CLERK_SECRET_KEY in Railway.',
+                clerkConfigured: false
+            });
+        }
     } catch (error) {
         res.status(500).json({
             error: 'Database diagnostic failed',
             message: error.message,
-            databasePath: DB_PATH,
             stack: error.stack
         });
     }
 });
 
-// User registration
+// User registration with Clerk
 app.post('/api/register', async (req, res) => {
     try {
         const { name, email, password, companyName, phone, userType, cardInfo } = req.body;
@@ -729,99 +621,65 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        const db = await readDB();
-        console.log('Current database users count:', db.users.length);
-        
-        // ============================================================
-        // PERMANENT ACCOUNT STORAGE - CRITICAL
-        // ============================================================
-        // Accounts are PERMANENTLY saved to database.json file
-        // - NEVER automatically deleted
-        // - Persists across server restarts
-        // - Works on both LOCAL and RAILWAY
-        // - All user data is permanently stored
-        // ============================================================
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create user
-        const newUser = {
-            id: Date.now().toString(),
-            name,
-            email,
-            password: hashedPassword,
-            companyName,
-            phone: phone || '',
-            userType: userType || 'office',
-            cardInfo: cardInfo || {},
-            subscription: {
-                status: 'active',
-                plan: 'premium',
-                price: 2.00,
-                billingCycle: 'monthly'
-            },
-            paymentMethods: [],
-            createdAt: new Date().toISOString()
-        };
-
-        db.users.push(newUser);
-        console.log('📝 Adding new user to database:', newUser.email, newUser.userType);
-        console.log('📝 Current database users count BEFORE save:', db.users.length);
-        console.log('📝 Database file path:', DB_PATH);
-        
-        // CRITICAL: Save account to database (permanent storage)
-        console.log('💾 Saving to database...');
-        await writeDB(db);
-        console.log('💾 Database write completed');
-        
-        // CRITICAL: Verify user account was saved - read back immediately
-        console.log('🔍 Verifying account was saved...');
-        const verifyDb = await readDB();
-        console.log('🔍 Database read after save - users count:', verifyDb.users.length);
-        
-        const savedUser = verifyDb.users.find(u => u.id === newUser.id);
-        if (savedUser) {
-            console.log('✅ VERIFIED: User account permanently saved:', savedUser.email);
-            console.log('✅ VERIFIED: Database now contains:', verifyDb.users.length, 'total accounts');
-            console.log('✅ VERIFIED: Account ID:', savedUser.id);
-            console.log('✅ VERIFIED: Account email:', savedUser.email);
-        } else {
-            console.error('❌ CRITICAL ERROR: User account NOT found after save!');
-            console.error('   Expected user ID:', newUser.id);
-            console.error('   Expected email:', newUser.email);
-            console.error('   Database users:', verifyDb.users.map(u => ({ id: u.id, email: u.email })));
-            console.error('   This is a serious issue - account may not be saved!');
+        // Clerk is required - all data lives in Clerk
+        if (!clerkConfigured) {
+            return res.status(503).json({ error: 'Clerk is required but not configured. Please set CLERK_SECRET_KEY in environment variables.' });
         }
 
-        // Generate JWT token
-        // Generate JWT token with very long expiration (essentially permanent)
-        const token = jwt.sign(
-            { userId: newUser.id, email: newUser.email, userType: newUser.userType },
-            JWT_SECRET,
-            { expiresIn: '3650d' } // 10 years - essentially permanent session
-        );
+        try {
+            console.log('📝 Creating user in Clerk:', email);
+            
+            // Create user in Clerk with ALL data stored in metadata
+            const clerkUser = await createClerkUser({
+                email: email.toLowerCase().trim(),
+                password: password,
+                name: name,
+                userType: userType || 'office',
+                companyName: companyName,
+                phone: phone || null,
+                cardInfo: cardInfo || {},
+                subscription: {
+                    status: 'active',
+                    plan: 'premium',
+                    price: 2.00,
+                    billingCycle: 'monthly'
+                },
+                paymentMethods: []
+            });
 
-        console.log('User registered successfully:', newUser.email);
-        
-        // Send welcome email (async, don't wait for it)
-        sendWelcomeEmail(newUser).catch(err => {
-            console.error('❌ Failed to send welcome email after registration:', err.message);
-            console.error('   Registration succeeded, but email failed. User can still login.');
-            // Don't fail registration if email fails
-        });
-        
-        res.json({
-            message: 'User registered successfully',
-            token,
-            user: {
-                id: newUser.id,
-                name: newUser.name,
-                email: newUser.email,
-                companyName: newUser.companyName,
-                userType: newUser.userType
+            console.log('✅ User created in Clerk:', clerkUser.id);
+            console.log('✅ All user data stored in Clerk metadata (no Supabase needed)');
+
+            // Send welcome email (async)
+            sendWelcomeEmail({
+                name: name,
+                email: email,
+                companyName: companyName,
+                userType: userType || 'office'
+            }).catch(err => {
+                console.error('❌ Failed to send welcome email:', err.message);
+            });
+
+            // Return user data
+            res.json({
+                message: 'User registered successfully. Please sign in.',
+                user: {
+                    id: clerkUser.id,
+                    email: clerkUser.emailAddresses[0]?.emailAddress || email,
+                    name: clerkUser.firstName + ' ' + (clerkUser.lastName || ''),
+                    companyName: companyName,
+                    userType: userType || 'office'
+                },
+                clerkUserId: clerkUser.id
+            });
+        } catch (error) {
+            console.error('❌ Clerk registration error:', error);
+            // If Clerk fails, check if it's a duplicate email
+            if (error.errors && error.errors.some(e => e.message && e.message.includes('already exists'))) {
+                return res.status(400).json({ error: 'Email already registered' });
             }
-        });
+            return res.status(500).json({ error: 'Failed to create account: ' + (error.message || 'Unknown error') });
+        }
     } catch (error) {
         console.error('Registration error:', error);
         console.error('Error stack:', error.stack);
@@ -830,6 +688,8 @@ app.post('/api/register', async (req, res) => {
 });
 
 // User login
+// Note: With Clerk, users typically authenticate through Clerk's frontend components
+// This endpoint is kept for backward compatibility and API-only authentication
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -841,59 +701,18 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ error: 'Email and password required' });
         }
 
-        const db = await readDB();
-        console.log('Database loaded, total users:', db.users.length);
-        
-        const user = db.users.find(u => u.email === email);
-
-        if (!user) {
-            console.error('Login failed: User not found for email:', email);
-            return res.status(401).json({ error: 'Invalid credentials' });
+        // Clerk is required - authentication handled by Clerk frontend
+        if (!clerkConfigured) {
+            return res.status(503).json({ error: 'Clerk is required but not configured.' });
         }
 
-        console.log('User found:', user.email, user.userType);
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            console.error('Login failed: Invalid password for email:', email);
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        console.log('Password validated successfully for:', email);
-
-        // Generate JWT token with very long expiration (essentially permanent)
-        const token = jwt.sign(
-            { userId: user.id, email: user.email, userType: user.userType },
-            JWT_SECRET,
-            { expiresIn: '3650d' } // 10 years - essentially permanent session
-        );
-
-        // Account is already in database - just verify it exists
-        // No need to save again during login (account was saved during registration)
-        console.log('🔍 Verifying account exists in database...');
-        const verifyDb = await readDB();
-        const savedUser = verifyDb.users.find(u => u.id === user.id);
-        if (savedUser) {
-            console.log('✅ Account verified in database:', savedUser.email);
-            console.log('✅ Total accounts in database:', verifyDb.users.length);
-        } else {
-            console.error('⚠️  WARNING: User account not found in database during login!');
-            console.error('   This should not happen - account should exist from registration');
-            console.error('   User ID:', user.id);
-            console.error('   User email:', user.email);
-        }
-
-        console.log('Login successful for:', email, user.userType);
-        res.json({
-            message: 'Login successful',
-            token,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                companyName: user.companyName,
-                userType: user.userType
-            }
+        // With Clerk, users authenticate through Clerk's frontend components
+        // This endpoint is for backward compatibility only
+        // Users should use Clerk's SignIn component on the frontend
+        return res.status(400).json({ 
+            error: 'Please use Clerk authentication for login. Use Clerk\'s SignIn component on the frontend to authenticate.',
+            useClerkAuth: true,
+            message: 'Authentication is handled by Clerk. Use Clerk\'s frontend components or session tokens.'
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -902,8 +721,45 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Authentication middleware
-function authenticateToken(req, res, next) {
+// Authentication middleware - supports both Clerk and JWT tokens
+async function authenticateToken(req, res, next) {
+    // Try Clerk authentication first if configured
+    if (clerkConfigured) {
+        try {
+            // Check for Clerk session token
+            const authHeader = req.headers['authorization'];
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                const token = authHeader.split(' ')[1];
+                
+                // Verify Clerk session token
+                try {
+                    // Clerk uses JWT tokens - verify the token
+                    const { verifyToken } = require('@clerk/clerk-sdk-node');
+                    const session = await verifyToken(token);
+                    
+                    if (session && session.sub) {
+                        // Get user from Clerk (all data lives in Clerk)
+                        const clerkUser = await clerkClient.users.getUser(session.sub);
+                        req.userId = session.sub;
+                        req.clerkUserId = session.sub;
+                        req.userType = clerkUser.publicMetadata?.userType || 'office';
+                        req.email = clerkUser.emailAddresses[0]?.emailAddress || '';
+                        
+                        // All user data is in Clerk - no Supabase needed
+                        return next();
+                    }
+                } catch (clerkError) {
+                    // Clerk token invalid, try JWT fallback
+                    console.log('Clerk token verification failed, trying JWT fallback:', clerkError.message);
+                }
+            }
+        } catch (error) {
+            console.error('Clerk authentication error:', error);
+            // Fall through to JWT fallback
+        }
+    }
+    
+    // Fallback to JWT authentication (for backward compatibility)
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -921,180 +777,77 @@ function authenticateToken(req, res, next) {
     });
 }
 
-// Get user profile
+// Get user profile - all data from Clerk
 app.get('/api/profile', authenticateToken, async (req, res) => {
     try {
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+        // Clerk is required - all data lives in Clerk
+        if (!req.clerkUserId || !clerkConfigured) {
+            return res.status(401).json({ error: 'Clerk authentication required' });
         }
-        
-        res.json({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            companyName: user.companyName,
-            userType: user.userType,
-            phone: user.phone || '',
-            subscription: user.subscription
-        });
+
+        try {
+            // Get all user data from Clerk (including metadata)
+            const userData = await getClerkUserData(req.clerkUserId);
+            
+            res.json({
+                user: userData
+            });
+        } catch (error) {
+            console.error('Error fetching Clerk user:', error);
+            return res.status(500).json({ error: 'Failed to fetch user profile' });
+        }
     } catch (error) {
         console.error('Get profile error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Update user profile
+// Update user profile - all data stored in Clerk
 app.put('/api/profile', authenticateToken, async (req, res) => {
     try {
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
+        if (!req.clerkUserId || !clerkConfigured) {
+            return res.status(401).json({ error: 'Clerk authentication required' });
+        }
+
+        const { name, companyName, phone } = req.body;
         
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+        // Get current user data
+        const currentUser = await clerkClient.users.getUser(req.clerkUserId);
+        const currentPublicMetadata = currentUser.publicMetadata || {};
+        const currentPrivateMetadata = currentUser.privateMetadata || {};
+        
+        // Prepare update data
+        const updateData = {};
+        
+        // Update name if provided
+        if (name) {
+            const nameParts = name.split(' ');
+            updateData.firstName = nameParts[0] || name;
+            updateData.lastName = nameParts.slice(1).join(' ') || '';
         }
         
-        const { name, email, companyName, phone } = req.body;
+        // Update metadata
+        const publicMetadata = { ...currentPublicMetadata };
+        const privateMetadata = { ...currentPrivateMetadata };
         
-        if (name) user.name = name;
-        if (email) user.email = email;
-        if (companyName) user.companyName = companyName;
-        if (phone) user.phone = phone;
+        if (companyName) publicMetadata.companyName = companyName;
+        if (phone !== undefined) privateMetadata.phone = phone;
         
-        await writeDB(db);
+        updateData.publicMetadata = publicMetadata;
+        updateData.privateMetadata = privateMetadata;
+        
+        // Update user in Clerk
+        const updatedUser = await clerkClient.users.updateUser(req.clerkUserId, updateData);
+        
+        // Get full updated user data
+        const userData = await getClerkUserData(req.clerkUserId);
         
         res.json({
-            success: true,
             message: 'Profile updated successfully',
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                companyName: user.companyName,
-                phone: user.phone
-            }
+            user: userData
         });
     } catch (error) {
         console.error('Update profile error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// ==================== ADMIN ENDPOINTS ====================
-
-// Admin login (simple password-based auth)
-app.post('/api/admin/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        // Simple admin credentials - CHANGE THESE IN PRODUCTION!
-        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'snackreach1@gmail.com';
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Greylock21';
-
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password required' });
-        }
-
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-            // Generate admin token
-            const token = jwt.sign(
-                { userId: 'admin', email: ADMIN_EMAIL, userType: 'admin' },
-                JWT_SECRET,
-                { expiresIn: '3650d' } // 10 years - permanent admin session
-            );
-
-            console.log('✅ Admin login successful');
-            return res.json({
-                message: 'Admin login successful',
-                token,
-                user: {
-                    id: 'admin',
-                    email: ADMIN_EMAIL,
-                    userType: 'admin'
-                }
-            });
-        }
-
-        return res.status(401).json({ error: 'Invalid admin credentials' });
-    } catch (error) {
-        console.error('Admin login error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Get all accounts (admin only)
-app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
-    try {
-        console.log('Admin accounts request received');
-        console.log('User ID:', req.userId);
-        console.log('User Type:', req.userType);
-        console.log('Environment:', process.env.NODE_ENV || 'development');
-        console.log('Database path:', DB_PATH);
-        
-        // Check if user is admin
-        if (req.userType !== 'admin') {
-            console.error('Access denied - user is not admin. Type:', req.userType);
-            return res.status(403).json({ error: 'Admin access required' });
-        }
-
-        // Check if database file exists
-        try {
-            await fs.access(DB_PATH);
-            console.log('✅ Database file exists');
-        } catch {
-            console.warn('⚠️  Database file does not exist, will be created on first write');
-        }
-
-        const db = await readDB();
-        console.log('✅ Database loaded successfully');
-        console.log('✅ Total users in database:', db.users ? db.users.length : 0);
-        console.log('✅ Database structure:', {
-            hasUsers: !!db.users,
-            usersArrayLength: db.users ? db.users.length : 0,
-            hasOtherData: {
-                snackCompanies: db.snackCompanies ? db.snackCompanies.length : 0,
-                offices: db.offices ? db.offices.length : 0,
-                products: db.products ? db.products.length : 0,
-                orders: db.orders ? db.orders.length : 0
-            }
-        });
-
-        // Return all accounts with safe data (no passwords)
-        // CRITICAL: This is reading from the SAME database file as account creation
-        // All accounts stored in backend/data/database.json are permanently saved
-        const accounts = (db.users || []).map(u => ({
-            id: u.id,
-            name: u.name,
-            email: u.email,
-            companyName: u.companyName,
-            userType: u.userType,
-            phone: u.phone || '',
-            createdAt: u.createdAt,
-            subscription: u.subscription,
-            lastLogin: u.lastLogin || null
-        }));
-
-        console.log('✅ Returning', accounts.length, 'accounts to admin dashboard');
-        console.log('💾 Database file:', DB_PATH);
-        console.log('🔒 Accounts are permanently stored - admin dashboard reads from same database as account creation');
-        if (accounts.length > 0) {
-            console.log('✅ Sample account:', accounts[0]);
-        } else {
-            console.warn('⚠️  WARNING: Database is empty! No accounts found.');
-            console.warn('   This is normal if:');
-            console.warn('   1. This is a fresh Railway deployment');
-            console.warn('   2. No accounts have been created on Railway yet');
-            console.warn('   3. Accounts created locally are NOT synced to Railway');
-            console.warn('   Solution: Create accounts via Railway signup page');
-        }
-        
-        res.json(accounts);
-    } catch (error) {
-        console.error('❌ Get all accounts error:', error);
-        console.error('   Error message:', error.message);
-        console.error('   Error stack:', error.stack);
         res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });
@@ -1266,6 +1019,47 @@ app.get('/api/email-status', (req, res) => {
     });
 });
 
+// ==================== CLERK WEBHOOK HANDLER ====================
+// This endpoint receives webhooks from Clerk when users are created/updated/deleted
+// Set this URL in your Clerk dashboard: https://your-domain.com/api/clerk-webhook
+// Note: All data lives in Clerk, so webhooks are mainly for logging/notifications
+app.post('/api/clerk-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    try {
+        if (!clerkConfigured) {
+            return res.status(503).json({ error: 'Clerk not configured' });
+        }
+
+        const svixId = req.headers['svix-id'];
+        const svixTimestamp = req.headers['svix-timestamp'];
+        const svixSignature = req.headers['svix-signature'];
+
+        if (!svixId || !svixTimestamp || !svixSignature) {
+            return res.status(400).json({ error: 'Missing svix headers' });
+        }
+
+        // Parse webhook payload
+        const payload = JSON.parse(req.body.toString());
+        const eventType = payload.type;
+        const data = payload.data;
+
+        console.log('📥 Clerk webhook received:', eventType, data.id);
+
+        // All data lives in Clerk - webhooks are for logging/notifications only
+        if (eventType === 'user.created') {
+            console.log('✅ New user created in Clerk:', data.id, data.email_addresses[0]?.email_address);
+        } else if (eventType === 'user.updated') {
+            console.log('✅ User updated in Clerk:', data.id);
+        } else if (eventType === 'user.deleted') {
+            console.log('✅ User deleted from Clerk:', data.id);
+        }
+
+        res.json({ received: true, message: 'Webhook processed - all data lives in Clerk' });
+    } catch (error) {
+        console.error('❌ Clerk webhook error:', error);
+        res.status(500).json({ error: 'Webhook processing failed' });
+    }
+});
+
 // Delete user account (user can delete their own account)
 app.delete('/api/account', authenticateToken, async (req, res) => {
     try {
@@ -1300,57 +1094,6 @@ app.delete('/api/account', authenticateToken, async (req, res) => {
         res.json({ 
             success: true,
             message: 'Account deleted successfully' 
-        });
-    } catch (error) {
-        console.error('Error deleting account:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Admin delete account (admin can delete any account)
-app.delete('/api/admin/account/:userId', authenticateToken, async (req, res) => {
-    try {
-        // Check if user is admin
-        if (req.userType !== 'admin') {
-            return res.status(403).json({ error: 'Admin access required' });
-        }
-        
-        const targetUserId = req.params.userId;
-        const db = await readDB();
-        
-        // Find user to delete
-        const userIndex = db.users.findIndex(u => u.id === targetUserId);
-        if (userIndex === -1) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        const user = db.users[userIndex];
-        console.log('Admin deleting account:', user.email, 'by admin:', req.userId);
-        
-        // Remove user from database
-        db.users.splice(userIndex, 1);
-        
-        // Also remove user's messages if any
-        if (db.messages) {
-            db.messages = db.messages.filter(msg => 
-                msg.fromUserId !== targetUserId && msg.toUserId !== targetUserId
-            );
-        }
-        
-        // Save updated database
-        await writeDB(db);
-        
-        console.log('✅ Account deleted by admin:', user.email);
-        console.log('✅ Remaining users in database:', db.users.length);
-        
-        res.json({ 
-            success: true,
-            message: 'Account deleted successfully',
-            deletedAccount: {
-                id: user.id,
-                email: user.email,
-                name: user.name
-            }
         });
     } catch (error) {
         console.error('Error deleting account:', error);
@@ -1833,16 +1576,10 @@ app.get('*', (req, res) => {
 async function startServer() {
     try {
         console.log('🔧 Initializing database...');
-        console.log('📁 Database will be stored at:', DB_PATH);
         await initDatabase();
         
-        // Verify database is ready and show current account count
-        const initialDb = await readDB();
         console.log('✅ Database initialized successfully');
-        console.log('📊 Current accounts in database:', initialDb.users ? initialDb.users.length : 0);
-        if (initialDb.users && initialDb.users.length > 0) {
-            console.log('✅ Existing accounts found - all will be preserved');
-        }
+        console.log('📊 All user data stored in Clerk');
         
         console.log('🔧 Starting server...');
         const server = app.listen(PORT, '0.0.0.0', () => {
@@ -1850,8 +1587,7 @@ async function startServer() {
             console.log(`📡 API endpoints available at /api`);
             console.log(`🌐 Frontend files served from: ${path.join(__dirname, '..')}`);
             console.log(`🌐 Main site: http://localhost:${PORT}/`);
-            console.log(`💾 Database location: ${DB_PATH}`);
-            console.log(`💾 Accounts will be permanently saved to: ${DB_PATH}`);
+            console.log(`💾 User data: Stored in Clerk (https://dashboard.clerk.com)`);
             if (process.env.NODE_ENV !== 'production') {
                 console.log(`   Local API: http://localhost:${PORT}/api`);
             }

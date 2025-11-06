@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Clerk JavaScript SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -194,8 +196,26 @@
 
     <script src="js/api.js"></script>
     <script>
+        // Clerk Configuration
+        const CLERK_PUBLISHABLE_KEY = 'pk_test_cHJldHR5LXRyZWVmcm9nLTg4LmNsZXJrLmFjY291bnRzLmRldiQ';
+        let clerk = null;
+
+        // Initialize Clerk
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                clerk = new Clerk(CLERK_PUBLISHABLE_KEY);
+                await clerk.load();
+                
+                // Check if user is already signed in
+                if (clerk.user) {
+                    await handleClerkSignIn(clerk.user);
+                }
+            } catch (error) {
+                console.error('Clerk initialization error:', error);
+            }
+        });
+
         // Check if already logged in - if so, redirect to dashboard
-        // Sessions persist until explicit logout
         function checkLoginStatus() {
             const token = localStorage.getItem('snackreach_token');
             const userType = localStorage.getItem('snackreach_user_type');
@@ -209,6 +229,64 @@
                 } else if (userType === 'office') {
                     window.location.href = 'office-dashboard.html';
                 }
+            }
+        }
+
+        // Handle Clerk sign-in and get user data
+        async function handleClerkSignIn(user) {
+            try {
+                // Get session token from Clerk
+                const session = await clerk.session;
+                if (!session) {
+                    return;
+                }
+
+                const sessionToken = await session.getToken();
+                
+                // Get user data from backend
+                const API_BASE_URL = (() => {
+                    const hostname = window.location.hostname;
+                    if (hostname.includes('railway.app')) {
+                        return '/api';
+                    } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                        return 'https://snackreach-production.up.railway.app/api';
+                    } else {
+                        return 'http://localhost:3000/api';
+                    }
+                })();
+
+                // Get user profile from backend
+                const response = await fetch(`${API_BASE_URL}/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const userData = data.user;
+                    
+                    // Store user info
+                    localStorage.setItem('snackreach_token', sessionToken);
+                    localStorage.setItem('snackreach_user_type', userData.userType || 'office');
+                    localStorage.setItem('snackreach_user_name', userData.name || user.emailAddresses[0]?.emailAddress || 'User');
+                    localStorage.setItem('snackreach_company_name', userData.companyName || '');
+                    
+                    // Redirect based on user type
+                    if (userData.userType === 'owner') {
+                        window.location.href = 'owner-dashboard.html';
+                    } else if (userData.userType === 'startup') {
+                        window.location.href = 'snack-dashboard.html';
+                    } else if (userData.userType === 'office') {
+                        window.location.href = 'office-dashboard.html';
+                    } else {
+                        window.location.href = 'snack-dashboard.html';
+                    }
+                }
+            } catch (error) {
+                console.error('Error handling Clerk sign-in:', error);
             }
         }
 
@@ -240,7 +318,7 @@
             window.location.href = 'snack-dashboard.html';
         }
 
-        // Handle login form submission
+        // Handle login form submission using Clerk
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -259,57 +337,50 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
             
             try {
-                // Dynamic API URL detection - works across all environments
-                const API_BASE_URL = (() => {
-                    const hostname = window.location.hostname;
-                    if (hostname.includes('railway.app')) {
-                        return '/api'; // Same domain on Railway
-                    } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                        return 'https://snackreach-production.up.railway.app/api'; // Production Railway backend
-                    } else {
-                        return 'http://localhost:3000/api'; // Local development
-                    }
-                })();
+                // Wait for Clerk to be loaded
+                if (!clerk) {
+                    clerk = new Clerk(CLERK_PUBLISHABLE_KEY);
+                    await clerk.load();
+                }
 
-                const response = await fetch(`${API_BASE_URL}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password }),
+                // Sign in using Clerk
+                const signInAttempt = await clerk.client.signIn.create({
+                    identifier: email,
+                    password: password,
                 });
 
-                const data = await response.json();
+                // Complete the sign-in
+                const signInResult = await signInAttempt.attemptPassword({
+                    password: password,
+                });
 
-                if (response.ok && data.token) {
-                    // Success - save token and user info
-                    localStorage.setItem('snackreach_token', data.token);
-                    localStorage.setItem('snackreach_user_type', data.user.userType);
-                    localStorage.setItem('snackreach_user_name', data.user.name);
-                    localStorage.setItem('snackreach_company_name', data.user.companyName || data.user.name);
+                if (signInResult.status === 'complete') {
+                    // Get the session
+                    const session = signInResult.createdSessionId 
+                        ? await clerk.client.sessions.get(signInResult.createdSessionId)
+                        : await clerk.session;
                     
-                    // Redirect based on user type
-                    if (data.user.userType === 'owner') {
-                        window.location.href = 'owner-dashboard.html';
-                    } else if (data.user.userType === 'startup') {
-                        window.location.href = 'snack-dashboard.html';
-                    } else if (data.user.userType === 'office') {
-                        window.location.href = 'office-dashboard.html';
+                    if (session) {
+                        const sessionToken = await session.getToken();
+                        await handleClerkSignIn(clerk.user);
                     } else {
-                        window.location.href = 'snack-dashboard.html';
+                        throw new Error('Failed to create session');
                     }
                 } else {
-                    // Show error
-                    errorDiv.textContent = data.error || 'Invalid email or password. Please try again.';
-                    errorDiv.style.display = 'block';
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
+                    throw new Error('Sign-in incomplete');
                 }
             } catch (error) {
                 console.error('Login error:', error);
                 
                 // Show user-friendly error
-                errorDiv.textContent = 'Unable to connect to server. Please check your connection or try again later.';
+                let errorMessage = 'Invalid email or password. Please try again.';
+                if (error.errors && error.errors.length > 0) {
+                    errorMessage = error.errors[0].message || errorMessage;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                errorDiv.textContent = errorMessage;
                 errorDiv.style.display = 'block';
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;

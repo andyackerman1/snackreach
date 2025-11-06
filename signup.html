@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Clerk JavaScript SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -376,24 +378,61 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Store login information
-                    if (data.token) {
-                        localStorage.setItem('snackreach_token', data.token);
-                        localStorage.setItem('snackreach_user_type', data.user.userType);
-                        localStorage.setItem('snackreach_user_name', data.user.name);
-                        localStorage.setItem('snackreach_company_name', data.user.companyName);
+                    // User created in Clerk via backend
+                    // Now sign them in using Clerk
+                    try {
+                        const CLERK_PUBLISHABLE_KEY = 'pk_test_cHJldHR5LXRyZWVmcm9nLTg4LmNsZXJrLmFjY291bnRzLmRldiQ';
+                        
+                        if (!window.clerk) {
+                            window.clerk = new Clerk(CLERK_PUBLISHABLE_KEY);
+                            await window.clerk.load();
+                        }
+                        
+                        // Sign in the newly created user
+                        const signInAttempt = await window.clerk.client.signIn.create({
+                            identifier: email,
+                            password: password,
+                        });
+                        
+                        const signInResult = await signInAttempt.attemptPassword({
+                            password: password,
+                        });
+                        
+                        if (signInResult.status === 'complete') {
+                            const session = signInResult.createdSessionId 
+                                ? await window.clerk.client.sessions.get(signInResult.createdSessionId)
+                                : await window.clerk.session;
+                            
+                            if (session) {
+                                const sessionToken = await session.getToken();
+                                
+                                // Store user info
+                                localStorage.setItem('snackreach_token', sessionToken);
+                                localStorage.setItem('snackreach_user_type', data.user.userType || selectedUserType);
+                                localStorage.setItem('snackreach_user_name', data.user.name || name);
+                                localStorage.setItem('snackreach_company_name', data.user.companyName || company);
+                                
+                                // Redirect to appropriate dashboard
+                                if (selectedUserType === 'startup') {
+                                    window.location.href = 'snack-dashboard.html';
+                                } else {
+                                    window.location.href = 'office-dashboard.html';
+                                }
+                                return;
+                            }
+                        }
+                    } catch (clerkError) {
+                        console.error('Clerk sign-in error:', clerkError);
+                        // Fall through to manual redirect
                     }
                     
-                    // Account is saved to centralized backend database
-                    // localStorage is only used for session token (not account storage)
-                    alert(`Welcome to SnackReach, ${name}!\n\nYour account has been created and saved to the centralized system!`);
+                    // Fallback: Store basic info and redirect (user will need to sign in)
+                    localStorage.setItem('snackreach_user_type', data.user.userType || selectedUserType);
+                    localStorage.setItem('snackreach_user_name', data.user.name || name);
+                    localStorage.setItem('snackreach_company_name', data.user.companyName || company);
                     
-                    // Redirect to appropriate dashboard
-                    if (selectedUserType === 'startup') {
-                        window.location.href = 'snack-dashboard.html';
-                    } else {
-                        window.location.href = 'office-dashboard.html';
-                    }
+                    alert(`Welcome to SnackReach, ${name}!\n\nYour account has been created! Please sign in to continue.`);
+                    window.location.href = 'login.html';
                 } else {
                     throw new Error(data.error || 'Registration failed');
                 }
