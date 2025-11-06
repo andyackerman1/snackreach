@@ -684,39 +684,18 @@ app.post('/api/register', async (req, res) => {
         db.users.push(newUser);
         console.log('Adding new user to database:', newUser.email, newUser.userType);
         
-        // Track registration as a login activity (since they're automatically logged in)
-        const loginActivity = {
-            userId: newUser.id,
-            email: newUser.email,
-            name: newUser.name || newUser.companyName || 'Unknown',
-            userType: newUser.userType,
-            timestamp: new Date().toISOString(),
-            ipAddress: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown',
-            userAgent: req.headers['user-agent'] || 'unknown',
-            isRegistration: true
-        };
-        
-        // Ensure loginActivity array exists
-        if (!db.loginActivity) {
-            db.loginActivity = [];
-            console.log('Initialized loginActivity array during registration');
-        }
-        
-        db.loginActivity.push(loginActivity);
-        console.log('Registration login activity added. Total login records:', db.loginActivity.length);
-        
-        // Keep only last 1000 login activities to prevent database bloat
-        if (db.loginActivity.length > 1000) {
-            db.loginActivity = db.loginActivity.slice(-1000);
-        }
-        
+        // Save account to database (permanent storage)
         await writeDB(db);
         
-        // Verify user and login activity were saved
+        // Verify user account was saved
         const verifyDb = await readDB();
-        console.log('Database after save - users count:', verifyDb.users.length);
-        console.log('Login activity count:', verifyDb.loginActivity ? verifyDb.loginActivity.length : 0);
-        console.log('New user ID:', newUser.id, 'Email:', newUser.email);
+        const savedUser = verifyDb.users.find(u => u.id === newUser.id);
+        if (savedUser) {
+            console.log('✅ User account permanently saved:', savedUser.email);
+            console.log('✅ Database now contains:', verifyDb.users.length, 'total accounts');
+        } else {
+            console.error('⚠️  WARNING: User account not found after save!');
+        }
 
         // Generate JWT token
         // Generate JWT token with very long expiration (essentially permanent)
