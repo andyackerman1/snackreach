@@ -181,8 +181,7 @@ async function initDatabase() {
                 products: [],
                 orders: [],
                 messages: [],
-                loginActivity: [],    // Login history (successful and failed)
-                loginAttempts: []     // Detailed login attempts tracking
+                loginActivity: []    // Login history (optional, for user convenience only)
             };
             await fs.writeFile(DB_PATH, JSON.stringify(initialData, null, 2));
             console.log('✅ New database created for permanent storage:', DB_PATH);
@@ -208,7 +207,6 @@ async function readDB() {
         if (!db.orders) db.orders = [];
         if (!db.messages) db.messages = [];
         if (!db.loginActivity) db.loginActivity = [];
-        if (!db.loginAttempts) db.loginAttempts = [];
         if (!db.passwordResetTokens) db.passwordResetTokens = [];
         return db;
     } catch (error) {
@@ -223,7 +221,6 @@ async function readDB() {
             orders: [],
             messages: [],
             loginActivity: [],
-            loginAttempts: [],
             passwordResetTokens: []
         };
     }
@@ -763,29 +760,8 @@ app.post('/api/login', async (req, res) => {
 
         console.log('Login attempt received for email:', email);
 
-        // Track login attempt (before validation)
-        const loginAttempt = {
-            email: email || 'unknown',
-            timestamp: new Date().toISOString(),
-            ipAddress: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown',
-            userAgent: req.headers['user-agent'] || 'unknown',
-            success: false,
-            reason: 'pending'
-        };
-
         if (!email || !password) {
             console.error('Login failed: Missing email or password');
-            loginAttempt.reason = 'missing_credentials';
-            // Store failed attempt
-            const db = await readDB();
-            if (!db.loginAttempts) db.loginAttempts = [];
-            db.loginAttempts.push(loginAttempt);
-            // Keep only last 5000 login attempts
-            if (db.loginAttempts.length > 5000) {
-                db.loginAttempts = db.loginAttempts.slice(-5000);
-            }
-            await writeDB(db);
-            
             return res.status(400).json({ error: 'Email and password required' });
         }
 
@@ -796,40 +772,16 @@ app.post('/api/login', async (req, res) => {
 
         if (!user) {
             console.error('Login failed: User not found for email:', email);
-            loginAttempt.reason = 'user_not_found';
-            // Store failed attempt
-            if (!db.loginAttempts) db.loginAttempts = [];
-            db.loginAttempts.push(loginAttempt);
-            if (db.loginAttempts.length > 5000) {
-                db.loginAttempts = db.loginAttempts.slice(-5000);
-            }
-            await writeDB(db);
-            
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         console.log('User found:', user.email, user.userType);
-        loginAttempt.userId = user.id;
-        loginAttempt.userType = user.userType;
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             console.error('Login failed: Invalid password for email:', email);
-            loginAttempt.reason = 'invalid_password';
-            // Store failed attempt
-            if (!db.loginAttempts) db.loginAttempts = [];
-            db.loginAttempts.push(loginAttempt);
-            if (db.loginAttempts.length > 5000) {
-                db.loginAttempts = db.loginAttempts.slice(-5000);
-            }
-            await writeDB(db);
-            
             return res.status(401).json({ error: 'Invalid credentials' });
         }
-
-        // Mark as successful
-        loginAttempt.success = true;
-        loginAttempt.reason = 'success';
 
         console.log('Password validated successfully for:', email);
 
@@ -840,56 +792,18 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '3650d' } // 10 years - essentially permanent session
         );
 
-        // Track successful login activity
-        const loginActivity = {
-            userId: user.id,
-            email: user.email,
-            name: user.name || user.companyName || 'Unknown',
-            userType: user.userType,
-            timestamp: new Date().toISOString(),
-            ipAddress: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown',
-            userAgent: req.headers['user-agent'] || 'unknown',
-            success: true
-        };
-        
-        // Store successful login attempt
-        if (!db.loginAttempts) db.loginAttempts = [];
-        db.loginAttempts.push(loginAttempt);
-        
-        // Ensure loginActivity array exists
-        if (!db.loginActivity) {
-            db.loginActivity = [];
-            console.log('Initialized loginActivity array');
-        }
-        
-        db.loginActivity.push(loginActivity);
-        console.log('Login activity added. Total login records:', db.loginActivity.length);
-        console.log('Login activity details:', {
-            userId: loginActivity.userId,
-            email: loginActivity.email,
-            userType: loginActivity.userType,
-            timestamp: loginActivity.timestamp
-        });
-        
-        // Keep only last 1000 login activities to prevent database bloat
-        if (db.loginActivity.length > 1000) {
-            db.loginActivity = db.loginActivity.slice(-1000);
-            console.log('Trimmed loginActivity to last 1000 entries');
-        }
-        
-        // Keep only last 5000 login attempts
-        if (db.loginAttempts.length > 5000) {
-            db.loginAttempts = db.loginAttempts.slice(-5000);
-            console.log('Trimmed loginAttempts to last 5000 entries');
-        }
-        
-        // Save to database
+        // Save user account info (accounts are permanently stored)
+        // No need to track login attempts - just ensure account exists and is saved
         await writeDB(db);
         
-        // Verify login activity was saved
+        // Verify account was saved
         const verifyDb = await readDB();
-        console.log('Verification: Login activity count after save:', verifyDb.loginActivity ? verifyDb.loginActivity.length : 0);
-        console.log('Verification: Login attempts count after save:', verifyDb.loginAttempts ? verifyDb.loginAttempts.length : 0);
+        const savedUser = verifyDb.users.find(u => u.id === user.id);
+        if (savedUser) {
+            console.log('✅ User account verified in database:', savedUser.email);
+        } else {
+            console.error('⚠️  WARNING: User account not found after save!');
+        }
 
         console.log('Login successful for:', email, user.userType);
         res.json({
@@ -1268,153 +1182,6 @@ app.get('/api/email-status', (req, res) => {
         emailFrom: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'not set',
         baseUrl: process.env.BASE_URL || 'not set'
     });
-});
-
-// ==================== LOGIN TRACKING ENDPOINTS ====================
-
-// Get login history for authenticated user
-app.get('/api/login-history', authenticateToken, async (req, res) => {
-    try {
-        const db = await readDB();
-        const userId = req.userId;
-        
-        // Get successful login activities for this user
-        const userLogins = (db.loginActivity || []).filter(activity => activity.userId === userId);
-        
-        // Sort by timestamp (newest first)
-        userLogins.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
-        res.json({
-            success: true,
-            count: userLogins.length,
-            logins: userLogins.slice(0, 100) // Return last 100 logins
-        });
-    } catch (error) {
-        console.error('Error retrieving login history:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Get all login attempts (admin only - for security monitoring)
-app.get('/api/admin/login-attempts', authenticateToken, async (req, res) => {
-    try {
-        // Check if user is admin
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        // Check for admin userType or admin credentials
-        const isAdmin = user && (user.userType === 'admin' || user.email === process.env.ADMIN_EMAIL);
-        
-        if (!isAdmin) {
-            return res.status(403).json({ error: 'Admin access required' });
-        }
-        
-        const loginAttempts = db.loginAttempts || [];
-        
-        // Sort by timestamp (newest first)
-        const sortedAttempts = [...loginAttempts].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
-        // Get query parameters for filtering
-        const limit = parseInt(req.query.limit) || 100;
-        const offset = parseInt(req.query.offset) || 0;
-        const success = req.query.success === 'true' ? true : req.query.success === 'false' ? false : null;
-        const email = req.query.email;
-        
-        let filtered = sortedAttempts;
-        
-        // Filter by success status
-        if (success !== null) {
-            filtered = filtered.filter(attempt => attempt.success === success);
-        }
-        
-        // Filter by email
-        if (email) {
-            filtered = filtered.filter(attempt => 
-                attempt.email && attempt.email.toLowerCase().includes(email.toLowerCase())
-            );
-        }
-        
-        // Apply pagination
-        const paginated = filtered.slice(offset, offset + limit);
-        
-        res.json({
-            success: true,
-            total: filtered.length,
-            limit,
-            offset,
-            attempts: paginated
-        });
-    } catch (error) {
-        console.error('Error retrieving login attempts:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Get login statistics (admin only)
-app.get('/api/admin/login-statistics', authenticateToken, async (req, res) => {
-    try {
-        // Check if user is admin
-        const db = await readDB();
-        const user = db.users.find(u => u.id === req.userId);
-        
-        // Check for admin userType or admin credentials
-        const isAdmin = user && (user.userType === 'admin' || user.email === process.env.ADMIN_EMAIL);
-        
-        if (!isAdmin) {
-            return res.status(403).json({ error: 'Admin access required' });
-        }
-        
-        const loginAttempts = db.loginAttempts || [];
-        const loginActivity = db.loginActivity || [];
-        
-        // Calculate statistics
-        const totalAttempts = loginAttempts.length;
-        const successfulLogins = loginAttempts.filter(a => a.success === true).length;
-        const failedLogins = loginAttempts.filter(a => a.success === false).length;
-        const successRate = totalAttempts > 0 ? ((successfulLogins / totalAttempts) * 100).toFixed(2) : 0;
-        
-        // Get recent activity (last 24 hours, 7 days, 30 days)
-        const now = new Date();
-        const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        
-        const attempts24h = loginAttempts.filter(a => new Date(a.timestamp) >= last24h).length;
-        const attempts7d = loginAttempts.filter(a => new Date(a.timestamp) >= last7d).length;
-        const attempts30d = loginAttempts.filter(a => new Date(a.timestamp) >= last30d).length;
-        
-        // Get failed login reasons
-        const failedReasons = {};
-        loginAttempts.filter(a => !a.success).forEach(attempt => {
-            const reason = attempt.reason || 'unknown';
-            failedReasons[reason] = (failedReasons[reason] || 0) + 1;
-        });
-        
-        // Get unique users who logged in
-        const uniqueUsers = new Set(loginActivity.map(a => a.userId));
-        const uniqueUsersAttempted = new Set(loginAttempts.filter(a => a.userId).map(a => a.userId));
-        
-        res.json({
-            success: true,
-            statistics: {
-                totalAttempts,
-                successfulLogins,
-                failedLogins,
-                successRate: parseFloat(successRate),
-                uniqueUsersLoggedIn: uniqueUsers.size,
-                uniqueUsersAttemptedLogin: uniqueUsersAttempted.size,
-                recentActivity: {
-                    last24Hours: attempts24h,
-                    last7Days: attempts7d,
-                    last30Days: attempts30d
-                },
-                failedLoginReasons: failedReasons
-            }
-        });
-    } catch (error) {
-        console.error('Error retrieving login statistics:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
 });
 
 // ==================== MESSAGING ENDPOINTS ====================
