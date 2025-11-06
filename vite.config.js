@@ -16,9 +16,5 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
   },
-  // Set NODE_ENV for production builds
-  define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-  },
 });
 
