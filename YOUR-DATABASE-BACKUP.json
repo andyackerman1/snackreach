@@ -1,0 +1,27 @@
+{
+  "users": [
+    {
+      "id": "1762358273242",
+      "name": "debbie",
+      "email": "acks102@optonline.ney",
+      "password": "$2a$10$yZOo0/KosI5/cOq6pKJt7.r7k2gFGSg8PtM0OF51pKbm4xF5SUX4G",
+      "companyName": "debbie's",
+      "phone": "5166251117",
+      "userType": "startup",
+      "cardInfo": {},
+      "subscription": {
+        "status": "active",
+        "plan": "premium",
+        "price": 2,
+        "billingCycle": "monthly"
+      },
+      "paymentMethods": [],
+      "createdAt": "2025-11-05T15:57:53.242Z"
+    }
+  ],
+  "snackCompanies": [],
+  "offices": [],
+  "products": [],
+  "orders": [],
+  "messages": []
+}
