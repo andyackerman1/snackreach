@@ -25,33 +25,31 @@ export default function HomePage() {
             margin: "0 auto", 
             padding: "80px 40px",
             display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-start",
-            gap: "4rem"
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center"
           }}>
-            <div style={{ flex: "1", minWidth: "0" }}>
-              <h1 className="hero-title" style={{ 
-                fontSize: "3.5rem", 
-                lineHeight: "1.2", 
-                letterSpacing: "0.01em",
-                marginBottom: "0",
-                textAlign: "left"
-              }}>
-                Connect Food Startups with <span className="highlight">Office Spaces</span>
-              </h1>
-            </div>
-            <div style={{ flex: "1", minWidth: "0", paddingTop: "0.5rem" }}>
-              <p className="hero-description" style={{ 
-                fontSize: "1.2rem", 
-                lineHeight: "1.8", 
-                textAlign: "left",
-                margin: "0"
-              }}>
-                SnackReach is the B2B marketplace where innovative food startups meet office managers 
-                looking for the perfect snacks. Discover unique products, support emerging brands, 
-                and keep your team happy with delicious, healthy options.
-              </p>
-            </div>
+            <h1 className="hero-title" style={{ 
+              fontSize: "4rem", 
+              lineHeight: "1.2", 
+              letterSpacing: "0.01em",
+              marginBottom: "2.5rem",
+              textAlign: "center",
+              maxWidth: "100%"
+            }}>
+              Connect Food Startups with <span className="highlight">Office Spaces</span>
+            </h1>
+            <p className="hero-description" style={{ 
+              fontSize: "1.3rem", 
+              lineHeight: "1.8", 
+              textAlign: "center",
+              margin: "0",
+              maxWidth: "900px"
+            }}>
+              SnackReach is the B2B marketplace where innovative food startups meet office managers 
+              looking for the perfect snacks. Discover unique products, support emerging brands, 
+              and keep your team happy with delicious, healthy options.
+            </p>
           </div>
         </div>
       </section>
