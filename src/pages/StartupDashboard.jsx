@@ -1,18 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser, SignOutButton } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
 export default function StartupDashboard() {
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
+  const [activeView, setActiveView] = useState("products"); // products, orders, offices
+  const [orderFilter, setOrderFilter] = useState("active"); // active, past
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showEditProductModal, setShowEditProductModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [productData, setProductData] = useState({
     name: "",
     description: "",
     image: null,
     imagePreview: null,
   });
+  const [profileData, setProfileData] = useState({
+    companyName: "",
+    phone: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Mock data - replace with API calls
+  const [products] = useState([]);
+  const [orders] = useState([]);
+  const [offices] = useState([]);
 
   if (!isLoaded) {
     return (
@@ -29,6 +43,14 @@ export default function StartupDashboard() {
 
   const companyName = user.publicMetadata?.companyName || "";
 
+  // Initialize profile data
+  useEffect(() => {
+    setProfileData({
+      companyName: user.publicMetadata?.companyName || "",
+      phone: user.publicMetadata?.phone || "",
+    });
+  }, [user]);
+
   const handleOpenAddProduct = () => {
     setShowAddProductModal(true);
   };
@@ -41,6 +63,47 @@ export default function StartupDashboard() {
       image: null,
       imagePreview: null,
     });
+  };
+
+  const handleOpenEditProduct = (product) => {
+    setEditingProduct(product);
+    setProductData({
+      name: product.name || "",
+      description: product.description || "",
+      image: null,
+      imagePreview: product.image || null,
+    });
+    setShowEditProductModal(true);
+  };
+
+  const handleCloseEditProduct = () => {
+    setShowEditProductModal(false);
+    setEditingProduct(null);
+    setProductData({
+      name: "",
+      description: "",
+      image: null,
+      imagePreview: null,
+    });
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      // TODO: Implement API call to delete product
+      console.log("Deleting product:", productId);
+    }
+  };
+
+  const handleOpenEditProfile = () => {
+    setProfileData({
+      companyName: user.publicMetadata?.companyName || "",
+      phone: user.publicMetadata?.phone || "",
+    });
+    setShowEditProfileModal(true);
+  };
+
+  const handleCloseEditProfile = () => {
+    setShowEditProfileModal(false);
   };
 
   const handleImageChange = (e) => {
@@ -62,29 +125,270 @@ export default function StartupDashboard() {
     });
   };
 
+  const handleProfileInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData({
+      ...profileData,
+      [name]: value,
+    });
+  };
+
   const handleSubmitProduct = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
       // TODO: Implement API call to save product
-      // For now, just log the data
       console.log("Product data:", productData);
-      
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show success message (you can add toast notifications here)
-      alert("Product added successfully!");
-      
-      // Reset form and close modal
+      alert("Product saved successfully!");
       handleCloseAddProduct();
     } catch (error) {
-      console.error("Error adding product:", error);
-      alert("Failed to add product. Please try again.");
+      console.error("Error saving product:", error);
+      alert("Failed to save product. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // TODO: Implement API call to update product
+      console.log("Updating product:", editingProduct.id, productData);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      alert("Product updated successfully!");
+      handleCloseEditProduct();
+    } catch (error) {
+      console.error("Error updating product:", error);
+      alert("Failed to update product. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitProfile = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // TODO: Implement API call to update profile
+      console.log("Profile data:", profileData);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      alert("Profile updated successfully!");
+      handleCloseEditProfile();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const renderMainContent = () => {
+    if (activeView === "products") {
+      return (
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  <i className="fas fa-box mr-2 text-red-600"></i>
+                  Your Products
+                </h2>
+                <p className="text-gray-600 text-sm mt-1">
+                  Manage your snack products and offerings
+                </p>
+              </div>
+              <button 
+                onClick={handleOpenAddProduct}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
+              >
+                <i className="fas fa-plus mr-2"></i>
+                Add Product
+              </button>
+            </div>
+          </div>
+          <div className="p-6">
+            {products.length === 0 ? (
+              <div className="text-center py-12">
+                <i className="fas fa-box text-gray-300 text-5xl mb-4"></i>
+                <p className="text-gray-500 mb-4">No products listed yet</p>
+                <button 
+                  onClick={handleOpenAddProduct}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                >
+                  <i className="fas fa-plus mr-2"></i>
+                  Add Your First Product
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product) => (
+                  <div key={product.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition">
+                    {product.image && (
+                      <img src={product.image} alt={product.name} className="w-full h-48 object-cover" />
+                    )}
+                    <div className="p-4">
+                      <h3 className="font-bold text-lg mb-2">{product.name}</h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleOpenEditProduct(product)}
+                          className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"
+                        >
+                          <i className="fas fa-edit mr-1"></i>
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="flex-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
+                        >
+                          <i className="fas fa-trash mr-1"></i>
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (activeView === "orders") {
+      const filteredOrders = orderFilter === "active" 
+        ? orders.filter(order => order.status === "active")
+        : orders.filter(order => order.status === "completed" || order.status === "cancelled");
+
+      return (
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  <i className="fas fa-shopping-cart mr-2 text-red-600"></i>
+                  Orders
+                </h2>
+                <p className="text-gray-600 text-sm mt-1">
+                  Manage incoming and past orders
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setOrderFilter("active")}
+                  className={`px-4 py-2 rounded transition text-sm ${
+                    orderFilter === "active"
+                      ? "bg-red-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  Active Orders
+                </button>
+                <button
+                  onClick={() => setOrderFilter("past")}
+                  className={`px-4 py-2 rounded transition text-sm ${
+                    orderFilter === "past"
+                      ? "bg-red-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  Past Orders
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            {filteredOrders.length === 0 ? (
+              <div className="text-center py-12">
+                <i className="fas fa-shopping-cart text-gray-300 text-5xl mb-4"></i>
+                <p className="text-gray-500 mb-4">
+                  No {orderFilter === "active" ? "active" : "past"} orders yet
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredOrders.map((order) => (
+                  <div key={order.id} className="border rounded-lg p-4 hover:shadow-md transition">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-lg">Order #{order.id}</h3>
+                        <p className="text-gray-600 text-sm mt-1">
+                          From: {order.officeName}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                          Date: {order.date}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                          Total: ${order.total}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded text-sm ${
+                        order.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                      }`}>
+                        {order.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (activeView === "offices") {
+      return (
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                <i className="fas fa-building mr-2 text-red-600"></i>
+                Office Connections
+              </h2>
+              <p className="text-gray-600 text-sm mt-1">
+                Offices you've done past orders with
+              </p>
+            </div>
+          </div>
+          <div className="p-6">
+            {offices.length === 0 ? (
+              <div className="text-center py-12">
+                <i className="fas fa-building text-gray-300 text-5xl mb-4"></i>
+                <p className="text-gray-500 mb-4">No office connections yet</p>
+                <p className="text-sm text-gray-400">
+                  Offices will appear here once you complete orders with them
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {offices.map((office) => (
+                  <div key={office.id} className="border rounded-lg p-4 hover:shadow-md transition">
+                    <h3 className="font-bold text-lg">{office.name}</h3>
+                    <p className="text-gray-600 text-sm mt-1">
+                      Contact: {office.contactEmail}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      Total Orders: {office.totalOrders}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      Last Order: {office.lastOrderDate}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -127,112 +431,80 @@ export default function StartupDashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <button
+            onClick={() => setActiveView("offices")}
+            className={`bg-white rounded-lg shadow p-6 text-left hover:shadow-lg transition ${
+              activeView === "offices" ? "ring-2 ring-red-600" : ""
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Office Connections</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-2xl font-bold text-gray-900">{offices.length}</p>
               </div>
               <div className="bg-blue-100 rounded-full p-3">
                 <i className="fas fa-building text-blue-600 text-xl"></i>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          </button>
+          <button
+            onClick={() => setActiveView("orders")}
+            className={`bg-white rounded-lg shadow p-6 text-left hover:shadow-lg transition ${
+              activeView === "orders" ? "ring-2 ring-red-600" : ""
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Active Orders</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {orders.filter(o => o.status === "active").length}
+                </p>
               </div>
               <div className="bg-green-100 rounded-full p-3">
                 <i className="fas fa-shopping-cart text-green-600 text-xl"></i>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          </button>
+          <button
+            onClick={() => setActiveView("products")}
+            className={`bg-white rounded-lg shadow p-6 text-left hover:shadow-lg transition ${
+              activeView === "products" ? "ring-2 ring-red-600" : ""
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Products Listed</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-2xl font-bold text-gray-900">{products.length}</p>
               </div>
               <div className="bg-purple-100 rounded-full p-3">
                 <i className="fas fa-box text-purple-600 text-xl"></i>
               </div>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Products & Orders Section */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Products Section */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">
-                      <i className="fas fa-box mr-2 text-red-600"></i>
-                      Your Products
-                    </h2>
-                    <p className="text-gray-600 text-sm mt-1">
-                      Manage your snack products and offerings
-                    </p>
-                  </div>
-                  <button 
-                    onClick={handleOpenAddProduct}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
-                  >
-                    <i className="fas fa-plus mr-2"></i>
-                    Add Product
-                  </button>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="text-center py-12">
-                  <i className="fas fa-box text-gray-300 text-5xl mb-4"></i>
-                  <p className="text-gray-500 mb-4">No products listed yet</p>
-                  <button 
-                    onClick={handleOpenAddProduct}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-                  >
-                    <i className="fas fa-plus mr-2"></i>
-                    Add Your First Product
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Office Connections Section */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b">
-                <h2 className="text-xl font-bold text-gray-900">
-                  <i className="fas fa-building mr-2 text-red-600"></i>
-                  Office Connections
-                </h2>
-                <p className="text-gray-600 text-sm mt-1">
-                  Offices interested in your products
-                </p>
-              </div>
-              <div className="p-6">
-                <div className="text-center py-12">
-                  <i className="fas fa-building text-gray-300 text-5xl mb-4"></i>
-                  <p className="text-gray-500 mb-4">No office connections yet</p>
-                  <p className="text-sm text-gray-400">
-                    Office managers will appear here as they discover your products
-                  </p>
-                </div>
-              </div>
-            </div>
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {renderMainContent()}
           </div>
 
-          {/* Quick Actions Sidebar */}
-          <div className="space-y-6">
-            {/* Profile Card */}
+          {/* Profile Sidebar */}
+          <div>
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Your Profile
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Your Profile
+                </h3>
+                <button
+                  onClick={handleOpenEditProfile}
+                  className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                >
+                  <i className="fas fa-edit mr-1"></i>
+                  Edit
+                </button>
+              </div>
               <div className="space-y-3">
                 <div>
                   <p className="text-xs text-gray-500 uppercase mb-1">Email</p>
@@ -252,34 +524,6 @@ export default function StartupDashboard() {
                 </div>
               </div>
             </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Quick Actions
-              </h3>
-              <div className="space-y-2">
-                <button 
-                  onClick={handleOpenAddProduct}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition"
-                >
-                  <i className="fas fa-plus mr-2 text-red-600"></i>
-                  Add Product
-                </button>
-                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition">
-                  <i className="fas fa-building mr-2 text-red-600"></i>
-                  View Offices
-                </button>
-                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition">
-                  <i className="fas fa-shopping-cart mr-2 text-red-600"></i>
-                  Manage Orders
-                </button>
-                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition">
-                  <i className="fas fa-cog mr-2 text-red-600"></i>
-                  Settings
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </main>
@@ -294,7 +538,6 @@ export default function StartupDashboard() {
             className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-2xl font-bold text-gray-900">
                 Add New Product
@@ -306,10 +549,7 @@ export default function StartupDashboard() {
                 &times;
               </button>
             </div>
-
-            {/* Modal Body */}
             <form onSubmit={handleSubmitProduct} className="p-6">
-              {/* Product Name */}
               <div className="mb-6">
                 <label htmlFor="product-name" className="block text-sm font-medium text-gray-700 mb-2">
                   Product Name <span className="text-red-600">*</span>
@@ -325,8 +565,6 @@ export default function StartupDashboard() {
                   placeholder="Enter product name"
                 />
               </div>
-
-              {/* Product Image */}
               <div className="mb-6">
                 <label htmlFor="product-image" className="block text-sm font-medium text-gray-700 mb-2">
                   Product Image <span className="text-red-600">*</span>
@@ -360,8 +598,6 @@ export default function StartupDashboard() {
                   </label>
                 </div>
               </div>
-
-              {/* Product Description */}
               <div className="mb-6">
                 <label htmlFor="product-description" className="block text-sm font-medium text-gray-700 mb-2">
                   Description <span className="text-red-600">*</span>
@@ -377,8 +613,6 @@ export default function StartupDashboard() {
                   placeholder="Describe your product, ingredients, flavors, etc."
                 />
               </div>
-
-              {/* Modal Footer */}
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
                   type="button"
@@ -410,7 +644,217 @@ export default function StartupDashboard() {
           </div>
         </div>
       )}
+
+      {/* Edit Product Modal */}
+      {showEditProductModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={handleCloseEditProduct}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Edit Product
+              </h2>
+              <button
+                onClick={handleCloseEditProduct}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleUpdateProduct} className="p-6">
+              <div className="mb-6">
+                <label htmlFor="edit-product-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Product Name <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="edit-product-name"
+                  name="name"
+                  value={productData.name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Enter product name"
+                />
+              </div>
+              <div className="mb-6">
+                <label htmlFor="edit-product-image" className="block text-sm font-medium text-gray-700 mb-2">
+                  Product Image <span className="text-red-600">*</span>
+                </label>
+                <div className="space-y-4">
+                  {productData.imagePreview && (
+                    <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+                      <img
+                        src={productData.imagePreview}
+                        alt="Product preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <i className="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (MAX. 5MB)</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="edit-product-image"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className="mb-6">
+                <label htmlFor="edit-product-description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Description <span className="text-red-600">*</span>
+                </label>
+                <textarea
+                  id="edit-product-description"
+                  name="description"
+                  value={productData.description}
+                  onChange={handleInputChange}
+                  required
+                  rows={5}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Describe your product, ingredients, flavors, etc."
+                />
+              </div>
+              <div className="flex justify-end gap-4 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={handleCloseEditProduct}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-check mr-2"></i>
+                      Update Product
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfileModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={handleCloseEditProfile}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Edit Profile
+              </h2>
+              <button
+                onClick={handleCloseEditProfile}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSubmitProfile} className="p-6">
+              <div className="mb-6">
+                <label htmlFor="profile-company" className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Name <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="profile-company"
+                  name="companyName"
+                  value={profileData.companyName}
+                  onChange={handleProfileInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Enter company name"
+                />
+              </div>
+              <div className="mb-6">
+                <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  id="profile-phone"
+                  name="phone"
+                  value={profileData.phone}
+                  onChange={handleProfileInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={user.emailAddresses[0]?.emailAddress}
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+              </div>
+              <div className="flex justify-end gap-4 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={handleCloseEditProfile}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-check mr-2"></i>
+                      Update Profile
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
