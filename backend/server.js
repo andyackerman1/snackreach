@@ -676,6 +676,47 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'SnackReach API is running' });
 });
 
+// Database diagnostic endpoint - helps verify accounts are being stored
+app.get('/api/database-status', async (req, res) => {
+    try {
+        const db = await readDB();
+        const stats = {
+            databasePath: DB_PATH,
+            databaseExists: true,
+            totalAccounts: db.users ? db.users.length : 0,
+            accounts: db.users ? db.users.map(u => ({
+                id: u.id,
+                email: u.email,
+                userType: u.userType,
+                createdAt: u.createdAt
+            })) : [],
+            environment: process.env.NODE_ENV || 'development',
+            dataDirectory: path.join(__dirname, 'data'),
+            timestamp: new Date().toISOString()
+        };
+        
+        // Check if database file exists and is readable
+        try {
+            await fs.access(DB_PATH);
+            stats.databaseFileExists = true;
+            const fileStats = await fs.stat(DB_PATH);
+            stats.databaseFileSize = fileStats.size;
+            stats.databaseFileModified = fileStats.mtime.toISOString();
+        } catch {
+            stats.databaseFileExists = false;
+        }
+        
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({
+            error: 'Database diagnostic failed',
+            message: error.message,
+            databasePath: DB_PATH,
+            stack: error.stack
+        });
+    }
+});
+
 // User registration
 app.post('/api/register', async (req, res) => {
     try {
@@ -1792,8 +1833,16 @@ app.get('*', (req, res) => {
 async function startServer() {
     try {
         console.log('🔧 Initializing database...');
+        console.log('📁 Database will be stored at:', DB_PATH);
         await initDatabase();
-        console.log('✅ Database initialized');
+        
+        // Verify database is ready and show current account count
+        const initialDb = await readDB();
+        console.log('✅ Database initialized successfully');
+        console.log('📊 Current accounts in database:', initialDb.users ? initialDb.users.length : 0);
+        if (initialDb.users && initialDb.users.length > 0) {
+            console.log('✅ Existing accounts found - all will be preserved');
+        }
         
         console.log('🔧 Starting server...');
         const server = app.listen(PORT, '0.0.0.0', () => {
@@ -1801,6 +1850,8 @@ async function startServer() {
             console.log(`📡 API endpoints available at /api`);
             console.log(`🌐 Frontend files served from: ${path.join(__dirname, '..')}`);
             console.log(`🌐 Main site: http://localhost:${PORT}/`);
+            console.log(`💾 Database location: ${DB_PATH}`);
+            console.log(`💾 Accounts will be permanently saved to: ${DB_PATH}`);
             if (process.env.NODE_ENV !== 'production') {
                 console.log(`   Local API: http://localhost:${PORT}/api`);
             }
