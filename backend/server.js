@@ -124,9 +124,12 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve static files from root (frontend HTML/CSS/JS)
+// Serve static files - React build in production, root directory in development
 // This must come before API routes to serve static files correctly
-app.use(express.static(path.join(__dirname, '..'), {
+const staticPath = process.env.NODE_ENV === 'production' 
+    ? path.join(__dirname, '..', 'dist')  // Serve built React app
+    : path.join(__dirname, '..');          // Serve development files
+app.use(express.static(staticPath, {
     dotfiles: 'ignore',
     etag: true,
     maxAge: '1d'
@@ -1582,7 +1585,10 @@ app.get('*', (req, res) => {
     }
     
     // Serve index.html for all other routes (enables frontend routing)
-    const indexPath = path.join(__dirname, '..', 'index.html');
+    // In production, serve from dist folder (React build), otherwise from root
+    const indexPath = process.env.NODE_ENV === 'production'
+        ? path.join(__dirname, '..', 'dist', 'index.html')
+        : path.join(__dirname, '..', 'index.html');
     res.sendFile(indexPath, (err) => {
         if (err) {
             console.error('Error sending index.html:', err);
