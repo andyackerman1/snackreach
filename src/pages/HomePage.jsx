@@ -18,33 +18,33 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="hero">
+      <section className="hero" style={{ padding: "100px 0 60px" }}>
         <div className="container">
           <div style={{ 
-            maxWidth: "1200px", 
+            maxWidth: "1100px", 
             margin: "0 auto", 
-            padding: "80px 40px",
+            padding: "0 40px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             textAlign: "center"
           }}>
             <h1 className="hero-title" style={{ 
-              fontSize: "4rem", 
+              fontSize: "3.2rem", 
               lineHeight: "1.2", 
               letterSpacing: "0.01em",
-              marginBottom: "2.5rem",
+              marginBottom: "2rem",
               textAlign: "center",
               maxWidth: "100%"
             }}>
               Connect Food Startups with <span className="highlight">Office Spaces</span>
             </h1>
             <p className="hero-description" style={{ 
-              fontSize: "1.3rem", 
-              lineHeight: "1.8", 
+              fontSize: "1.15rem", 
+              lineHeight: "1.7", 
               textAlign: "center",
               margin: "0",
-              maxWidth: "900px"
+              maxWidth: "800px"
             }}>
               SnackReach is the B2B marketplace where innovative food startups meet office managers 
               looking for the perfect snacks. Discover unique products, support emerging brands, 
@@ -55,9 +55,9 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="features">
+      <section className="features" style={{ padding: "60px 0 80px" }}>
         <div className="container">
-          <h2 className="section-title">Why Choose SnackReach?</h2>
+          <h2 className="section-title" style={{ marginBottom: "2.5rem" }}>Why Choose SnackReach?</h2>
           <div className="features-grid" style={{ maxWidth: "1000px", margin: "0 auto", gridTemplateColumns: "repeat(2, 1fr)", gap: "2rem" }}>
             <div className="feature-card">
               <div className="feature-icon">
