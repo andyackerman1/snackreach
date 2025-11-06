@@ -529,7 +529,7 @@ async function sendPasswordResetEmail(user, resetLink) {
                 </body>
                 </html>
             `,
-            text: \`
+            text: `
                 Reset Your Password - SnackReach
                 
                 Hi ${user.name || user.companyName || 'there'},
@@ -547,7 +547,7 @@ async function sendPasswordResetEmail(user, resetLink) {
                 
                 Best regards,
                 The SnackReach Team
-            \`
+            `
         };
 
         const info = await emailTransporter.sendMail(mailOptions);
