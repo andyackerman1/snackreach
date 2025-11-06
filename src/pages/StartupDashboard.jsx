@@ -1,9 +1,18 @@
+import { useState } from "react";
 import { useUser, SignOutButton } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
 export default function StartupDashboard() {
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [productData, setProductData] = useState({
+    name: "",
+    description: "",
+    image: null,
+    imagePreview: null,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isLoaded) {
     return (
@@ -19,6 +28,64 @@ export default function StartupDashboard() {
   }
 
   const companyName = user.publicMetadata?.companyName || "";
+
+  const handleOpenAddProduct = () => {
+    setShowAddProductModal(true);
+  };
+
+  const handleCloseAddProduct = () => {
+    setShowAddProductModal(false);
+    setProductData({
+      name: "",
+      description: "",
+      image: null,
+      imagePreview: null,
+    });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProductData({
+        ...productData,
+        image: file,
+        imagePreview: URL.createObjectURL(file),
+      });
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProductData({
+      ...productData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmitProduct = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // TODO: Implement API call to save product
+      // For now, just log the data
+      console.log("Product data:", productData);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Show success message (you can add toast notifications here)
+      alert("Product added successfully!");
+      
+      // Reset form and close modal
+      handleCloseAddProduct();
+    } catch (error) {
+      console.error("Error adding product:", error);
+      alert("Failed to add product. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -112,7 +179,10 @@ export default function StartupDashboard() {
                       Manage your snack products and offerings
                     </p>
                   </div>
-                  <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">
+                  <button 
+                    onClick={handleOpenAddProduct}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
+                  >
                     <i className="fas fa-plus mr-2"></i>
                     Add Product
                   </button>
@@ -122,7 +192,10 @@ export default function StartupDashboard() {
                 <div className="text-center py-12">
                   <i className="fas fa-box text-gray-300 text-5xl mb-4"></i>
                   <p className="text-gray-500 mb-4">No products listed yet</p>
-                  <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                  <button 
+                    onClick={handleOpenAddProduct}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                  >
                     <i className="fas fa-plus mr-2"></i>
                     Add Your First Product
                   </button>
@@ -186,7 +259,10 @@ export default function StartupDashboard() {
                 Quick Actions
               </h3>
               <div className="space-y-2">
-                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition">
+                <button 
+                  onClick={handleOpenAddProduct}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition"
+                >
                   <i className="fas fa-plus mr-2 text-red-600"></i>
                   Add Product
                 </button>
@@ -207,6 +283,133 @@ export default function StartupDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Add Product Modal */}
+      {showAddProductModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={handleCloseAddProduct}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Add New Product
+              </h2>
+              <button
+                onClick={handleCloseAddProduct}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSubmitProduct} className="p-6">
+              {/* Product Name */}
+              <div className="mb-6">
+                <label htmlFor="product-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Product Name <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="product-name"
+                  name="name"
+                  value={productData.name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Enter product name"
+                />
+              </div>
+
+              {/* Product Image */}
+              <div className="mb-6">
+                <label htmlFor="product-image" className="block text-sm font-medium text-gray-700 mb-2">
+                  Product Image <span className="text-red-600">*</span>
+                </label>
+                <div className="space-y-4">
+                  {productData.imagePreview && (
+                    <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+                      <img
+                        src={productData.imagePreview}
+                        alt="Product preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <i className="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (MAX. 5MB)</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="product-image"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      required
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Product Description */}
+              <div className="mb-6">
+                <label htmlFor="product-description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Description <span className="text-red-600">*</span>
+                </label>
+                <textarea
+                  id="product-description"
+                  name="description"
+                  value={productData.description}
+                  onChange={handleInputChange}
+                  required
+                  rows={5}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Describe your product, ingredients, flavors, etc."
+                />
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end gap-4 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={handleCloseAddProduct}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-check mr-2"></i>
+                      Add Product
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
