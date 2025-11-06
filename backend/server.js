@@ -35,7 +35,8 @@ try {
     const emailService = process.env.EMAIL_SERVICE || 'gmail'; // 'gmail', 'sendgrid', 'smtp'
     const emailUser = process.env.EMAIL_USER;
     const emailPassword = process.env.EMAIL_PASSWORD;
-    const emailFrom = process.env.EMAIL_FROM || emailUser || 'noreply@snackreach.com';
+    // Default to noreply email for all automated emails
+    const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_NOREPLY || 'noreply@snackreach.com';
     
     if (emailUser && emailPassword) {
         if (emailService === 'sendgrid') {
@@ -242,8 +243,9 @@ async function sendWelcomeEmail(user) {
     }
 
     try {
-        const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@snackreach.com';
-        const baseUrl = process.env.BASE_URL || 'https://snackreach-production.up.railway.app';
+        // Use noreply email for automated messages
+        const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_NOREPLY || 'noreply@snackreach.com';
+        const baseUrl = process.env.BASE_URL || process.env.RAILWAY_PUBLIC_DOMAIN || 'https://snackreach-production.up.railway.app';
         
         console.log('📧 Sending email from:', emailFrom);
         console.log('📧 Base URL:', baseUrl);
@@ -375,6 +377,185 @@ async function sendWelcomeEmail(user) {
         console.log('✅ Email response:', info.response);
     } catch (error) {
         console.error('❌ Error sending welcome email to:', user.email);
+        console.error('❌ Error details:', {
+            message: error.message,
+            code: error.code,
+            command: error.command,
+            response: error.response,
+            responseCode: error.responseCode
+        });
+        console.error('❌ Full error:', error);
+        
+        // More specific error messages
+        if (error.code === 'EAUTH') {
+            console.error('❌ Authentication failed - check EMAIL_USER and EMAIL_PASSWORD');
+        } else if (error.code === 'ECONNECTION') {
+            console.error('❌ Connection failed - check SMTP settings');
+        } else if (error.code === 'ETIMEDOUT') {
+            console.error('❌ Connection timeout - check network/firewall');
+        }
+        
+        throw error;
+    }
+}
+
+// Send password reset email to users
+async function sendPasswordResetEmail(user, resetLink) {
+    console.log('📧 Attempting to send password reset email to:', user.email);
+    console.log('📧 Email configured:', emailConfigured);
+    console.log('📧 Email transporter exists:', !!emailTransporter);
+    
+    if (!emailConfigured || !emailTransporter) {
+        console.warn('⚠️  Email not configured, skipping password reset email for:', user.email);
+        console.warn('   To enable emails, set EMAIL_USER and EMAIL_PASSWORD in .env');
+        console.warn('   See EMAIL-SETUP.md for instructions');
+        return;
+    }
+
+    try {
+        // Use noreply email for automated messages
+        const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_NOREPLY || 'noreply@snackreach.com';
+        const baseUrl = process.env.BASE_URL || process.env.RAILWAY_PUBLIC_DOMAIN || 'https://snackreach-production.up.railway.app';
+        
+        console.log('📧 Sending password reset email from:', emailFrom);
+        console.log('📧 Reset link:', resetLink);
+        
+        const mailOptions = {
+            from: emailFrom,
+            to: user.email,
+            subject: 'Reset Your SnackReach Password',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body {
+                            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 600px;
+                            margin: 0 auto;
+                            padding: 20px;
+                        }
+                        .header {
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 30px;
+                            text-align: center;
+                            border-radius: 8px 8px 0 0;
+                        }
+                        .header h1 {
+                            margin: 0;
+                            font-size: 28px;
+                        }
+                        .content {
+                            background: #ffffff;
+                            padding: 30px;
+                            border: 1px solid #e5e7eb;
+                            border-top: none;
+                            border-radius: 0 0 8px 8px;
+                        }
+                        .button {
+                            display: inline-block;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 14px 28px;
+                            text-decoration: none;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            margin: 20px 0;
+                        }
+                        .reset-link {
+                            background: #f3f4f6;
+                            padding: 15px;
+                            border-radius: 6px;
+                            word-break: break-all;
+                            font-family: monospace;
+                            font-size: 12px;
+                            margin: 20px 0;
+                            color: #1f2937;
+                        }
+                        .warning {
+                            background: #fef3c7;
+                            border-left: 4px solid #f59e0b;
+                            padding: 15px;
+                            margin: 20px 0;
+                            border-radius: 4px;
+                        }
+                        .footer {
+                            text-align: center;
+                            color: #6b7280;
+                            font-size: 14px;
+                            margin-top: 30px;
+                            padding-top: 20px;
+                            border-top: 1px solid #e5e7eb;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Reset Your Password</h1>
+                    </div>
+                    <div class="content">
+                        <p>Hi ${user.name || user.companyName || 'there'},</p>
+                        
+                        <p>We received a request to reset your password for your SnackReach account.</p>
+                        
+                        <div style="text-align: center;">
+                            <a href="${resetLink}" class="button">Reset Password</a>
+                        </div>
+                        
+                        <p>Or copy and paste this link into your browser:</p>
+                        <div class="reset-link">${resetLink}</div>
+                        
+                        <div class="warning">
+                            <strong>⚠️ Important:</strong>
+                            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                                <li>This link will expire in 1 hour</li>
+                                <li>If you didn't request this, you can safely ignore this email</li>
+                                <li>Your password will remain unchanged until you click the link above</li>
+                            </ul>
+                        </div>
+                        
+                        <p>If you have any questions or concerns, please contact our support team.</p>
+                        
+                        <p>Best regards,<br><strong>The SnackReach Team</strong></p>
+                    </div>
+                    <div class="footer">
+                        <p>This is an automated message. Please do not reply to this email.</p>
+                        <p>&copy; ${new Date().getFullYear()} SnackReach. All rights reserved.</p>
+                    </div>
+                </body>
+                </html>
+            `,
+            text: \`
+                Reset Your Password - SnackReach
+                
+                Hi ${user.name || user.companyName || 'there'},
+                
+                We received a request to reset your password for your SnackReach account.
+                
+                Click this link to reset your password:
+                ${resetLink}
+                
+                This link will expire in 1 hour.
+                
+                If you didn't request this password reset, you can safely ignore this email. Your password will remain unchanged until you click the link above.
+                
+                If you have any questions or concerns, please contact our support team.
+                
+                Best regards,
+                The SnackReach Team
+            \`
+        };
+
+        const info = await emailTransporter.sendMail(mailOptions);
+        console.log('✅ Password reset email sent successfully to:', user.email);
+        console.log('✅ Email message ID:', info.messageId);
+        console.log('✅ Email response:', info.response);
+    } catch (error) {
+        console.error('❌ Error sending password reset email to:', user.email);
         console.error('❌ Error details:', {
             message: error.message,
             code: error.code,
@@ -925,12 +1106,16 @@ app.post('/api/forgot-password', async (req, res) => {
 
         console.log('Password reset link generated:', resetLink);
 
-        // TODO: Send email with reset link using email service (SendGrid, Nodemailer, etc.)
-        // For now, return the link in the response so user can use it
-        // In production, you would send an email and NOT return the link
+        // Send password reset email
+        await sendPasswordResetEmail(user, resetLink).catch(err => {
+            console.error('❌ Failed to send password reset email:', err.message);
+            // Don't fail the request if email fails, but log it
+            console.error('   Password reset token is still valid, but email was not sent.');
+        });
+
+        // Always return success message (don't reveal if email exists for security)
         return res.json({ 
-            message: `Password reset link generated! Click the link below to reset your password.`,
-            resetLink: resetLink // Include reset link (remove this when email is implemented)
+            message: 'If an account exists with that email, a password reset link has been sent.'
         });
 
     } catch (error) {
