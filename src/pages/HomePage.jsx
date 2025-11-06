@@ -20,15 +20,38 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="hero">
         <div className="container">
-          <div className="hero-container hero-centered" style={{ maxWidth: "900px", margin: "0 auto", padding: "0 40px" }}>
-            <h1 className="hero-title" style={{ marginBottom: "3.5rem", lineHeight: "1.3", letterSpacing: "0.02em" }}>
-              Connect Food Startups with <span className="highlight">Office Spaces</span>
-            </h1>
-            <p className="hero-description" style={{ fontSize: "1.25rem", lineHeight: "1.8", maxWidth: "700px", margin: "0 auto", marginTop: "0" }}>
-              SnackReach is the B2B marketplace where innovative food startups meet office managers 
-              looking for the perfect snacks. Discover unique products, support emerging brands, 
-              and keep your team happy with delicious, healthy options.
-            </p>
+          <div style={{ 
+            maxWidth: "1200px", 
+            margin: "0 auto", 
+            padding: "80px 40px",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-start",
+            gap: "4rem"
+          }}>
+            <div style={{ flex: "1", minWidth: "0" }}>
+              <h1 className="hero-title" style={{ 
+                fontSize: "3.5rem", 
+                lineHeight: "1.2", 
+                letterSpacing: "0.01em",
+                marginBottom: "0",
+                textAlign: "left"
+              }}>
+                Connect Food Startups with <span className="highlight">Office Spaces</span>
+              </h1>
+            </div>
+            <div style={{ flex: "1", minWidth: "0", paddingTop: "0.5rem" }}>
+              <p className="hero-description" style={{ 
+                fontSize: "1.2rem", 
+                lineHeight: "1.8", 
+                textAlign: "left",
+                margin: "0"
+              }}>
+                SnackReach is the B2B marketplace where innovative food startups meet office managers 
+                looking for the perfect snacks. Discover unique products, support emerging brands, 
+                and keep your team happy with delicious, healthy options.
+              </p>
+            </div>
           </div>
         </div>
       </section>
