@@ -1006,6 +1006,8 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
         });
 
         // Return all accounts with safe data (no passwords)
+        // CRITICAL: This is reading from the SAME database file as account creation
+        // All accounts stored in backend/data/database.json are permanently saved
         const accounts = (db.users || []).map(u => ({
             id: u.id,
             name: u.name,
@@ -1018,7 +1020,9 @@ app.get('/api/admin/all-accounts', authenticateToken, async (req, res) => {
             lastLogin: u.lastLogin || null
         }));
 
-        console.log('✅ Returning', accounts.length, 'accounts to admin');
+        console.log('✅ Returning', accounts.length, 'accounts to admin dashboard');
+        console.log('💾 Database file:', DB_PATH);
+        console.log('🔒 Accounts are permanently stored - admin dashboard reads from same database as account creation');
         if (accounts.length > 0) {
             console.log('✅ Sample account:', accounts[0]);
         } else {

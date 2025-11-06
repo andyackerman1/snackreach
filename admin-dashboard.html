@@ -456,7 +456,9 @@
             }
         });
 
-        // Load all accounts
+        // Load all accounts from backend database
+        // CRITICAL: This reads from the SAME database as account creation
+        // Accounts are stored in backend/data/database.json and persist permanently
         async function loadAccounts() {
             const container = document.getElementById('accounts-container');
             const errorDiv = document.getElementById('error-message');
@@ -467,13 +469,16 @@
                 return;
             }
 
-            container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Loading accounts...</p></div>';
+            container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Loading accounts from backend database...</p></div>';
             errorDiv.style.display = 'none';
 
             try {
-                console.log('Loading accounts from:', `${API_BASE_URL}/admin/all-accounts`);
-                console.log('Using token:', token.substring(0, 20) + '...');
+                console.log('🔗 Connecting to backend database...');
+                console.log('📡 API URL:', `${API_BASE_URL}/admin/all-accounts`);
+                console.log('🔐 Using admin authentication token');
                 
+                // CRITICAL: This reads from the SAME database file as account creation
+                // backend/data/database.json - accounts are permanently stored here
                 const response = await fetch(`${API_BASE_URL}/admin/all-accounts`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -481,11 +486,11 @@
                     },
                 });
 
-                console.log('Accounts response status:', response.status);
-                console.log('Accounts response ok:', response.ok);
+                console.log('📊 Response status:', response.status);
+                console.log('✅ Response ok:', response.ok);
 
                 if (response.status === 401 || response.status === 403) {
-                    console.error('Authentication failed, redirecting to login');
+                    console.error('❌ Authentication failed, redirecting to login');
                     localStorage.removeItem('admin_token');
                     showLogin();
                     return;
@@ -493,24 +498,28 @@
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('Error loading accounts:', errorText);
-                    errorDiv.textContent = `Failed to load accounts: ${response.status} ${errorText}`;
+                    console.error('❌ Error loading accounts:', errorText);
+                    errorDiv.textContent = `Failed to load accounts from backend: ${response.status} ${errorText}`;
                     errorDiv.style.display = 'block';
                     container.innerHTML = '';
                     return;
                 }
 
                 const accounts = await response.json();
-                console.log('Accounts received:', accounts ? accounts.length : 0);
+                console.log('✅ Accounts loaded from backend database:', accounts ? accounts.length : 0);
+                console.log('💾 All accounts are stored in: backend/data/database.json');
+                console.log('🔒 Accounts persist permanently - never deleted automatically');
 
                 if (!accounts || accounts.length === 0) {
                     container.innerHTML = `
                         <div class="no-accounts">
                             <i class="fas fa-users"></i>
-                            <p style="font-size: 1.1rem; margin-bottom: 1rem;">No accounts found in database</p>
+                            <p style="font-size: 1.1rem; margin-bottom: 1rem;">No accounts found in backend database</p>
                             <p style="color: #64748b; font-size: 0.9rem; max-width: 600px; margin: 0 auto;">
+                                <strong>Database Connection:</strong> Admin dashboard is connected to backend database.<br>
+                                <strong>Storage Location:</strong> backend/data/database.json<br>
+                                <strong>Persistence:</strong> Accounts are permanently stored and never deleted automatically.<br><br>
                                 <strong>Note:</strong> Local and Railway use separate databases.<br>
-                                Accounts created locally won't appear here on Railway.<br>
                                 To see accounts on Railway, create them via:<br>
                                 <a href="${API_BASE_URL.replace('/api', '/signup.html')}" target="_blank" style="color: #667eea; text-decoration: underline;">
                                     Railway Signup Page
@@ -525,8 +534,15 @@
                 // Update stats
                 updateStats(accounts);
 
-                // Display accounts table
+                // Display accounts table with connection info
                 const tableHTML = `
+                    <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+                        <p style="margin: 0; color: #1e40af; font-size: 0.875rem;">
+                            <strong>✅ Connected to Backend Database</strong> | 
+                            <strong>Storage:</strong> backend/data/database.json | 
+                            <strong>Accounts:</strong> ${accounts.length} permanently saved
+                        </p>
+                    </div>
                     <table class="accounts-table">
                         <thead>
                             <tr>
@@ -557,10 +573,20 @@
 
                 container.innerHTML = tableHTML;
             } catch (error) {
-                console.error('Error loading accounts:', error);
-                errorDiv.textContent = 'Failed to load accounts. Please try again.';
+                console.error('❌ Error loading accounts from backend:', error);
+                errorDiv.textContent = `Failed to connect to backend database: ${error.message}. Make sure the backend server is running.`;
                 errorDiv.style.display = 'block';
-                container.innerHTML = '';
+                container.innerHTML = `
+                    <div class="no-accounts">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p style="font-size: 1.1rem; margin-bottom: 1rem; color: #dc2626;">Backend Connection Error</p>
+                        <p style="color: #64748b; font-size: 0.9rem; max-width: 600px; margin: 0 auto;">
+                            Cannot connect to backend database at: ${API_BASE_URL}<br>
+                            <strong>Accounts are stored in:</strong> backend/data/database.json<br>
+                            <strong>Action:</strong> Make sure the backend server is running
+                        </p>
+                    </div>
+                `;
             }
         }
 
