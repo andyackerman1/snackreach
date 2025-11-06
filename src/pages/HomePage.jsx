@@ -29,16 +29,6 @@ export default function HomePage() {
               looking for the perfect snacks. Discover unique products, support emerging brands, 
               and keep your team happy with delicious, healthy options.
             </p>
-            <div className="hero-buttons">
-              <Link to="/signup" className="btn btn-primary btn-large">
-                <i className="fas fa-rocket"></i>
-                Get Started
-              </Link>
-              <Link to="/login" className="btn btn-outline btn-large">
-                <i className="fas fa-sign-in-alt"></i>
-                Sign In
-              </Link>
-            </div>
           </div>
         </div>
       </section>
@@ -47,7 +37,7 @@ export default function HomePage() {
       <section className="features">
         <div className="container">
           <h2 className="section-title">Why Choose SnackReach?</h2>
-          <div className="features-grid" style={{ maxWidth: "1000px", margin: "0 auto" }}>
+          <div className="features-grid" style={{ maxWidth: "1000px", margin: "0 auto", gridTemplateColumns: "repeat(2, 1fr)", gap: "2rem" }}>
             <div className="feature-card">
               <div className="feature-icon">
                 <i className="fas fa-store"></i>
