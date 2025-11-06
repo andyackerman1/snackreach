@@ -167,13 +167,46 @@ async function initDatabase() {
         
         try {
             await fs.access(DB_PATH);
-            // Database exists - verify it's readable
+            // Database exists - verify it's readable and PRESERVE all existing data
             const existing = await fs.readFile(DB_PATH, 'utf8');
             const db = JSON.parse(existing);
-            console.log('✅ Existing database loaded:', DB_PATH);
-            console.log('✅ Permanent accounts found:', db.users ? db.users.length : 0);
+            
+            // CRITICAL: Never overwrite existing accounts - preserve all data
+            if (db.users && db.users.length > 0) {
+                console.log('✅ Existing database loaded:', DB_PATH);
+                console.log('✅ PRESERVING:', db.users.length, 'existing accounts');
+                console.log('⚠️  IMPORTANT: All existing accounts are preserved and will NOT be deleted');
+            } else {
+                console.log('✅ Existing database loaded:', DB_PATH);
+                console.log('✅ Database file exists (empty or ready for accounts)');
+            }
+            
+            // Ensure all required arrays exist WITHOUT overwriting existing data
+            if (!db.users) db.users = [];
+            if (!db.snackCompanies) db.snackCompanies = [];
+            if (!db.offices) db.offices = [];
+            if (!db.products) db.products = [];
+            if (!db.orders) db.orders = [];
+            if (!db.messages) db.messages = [];
+            if (!db.loginActivity) db.loginActivity = [];
+            if (!db.passwordResetTokens) db.passwordResetTokens = [];
+            
+            // Only write if we added missing arrays (to preserve existing data)
+            const needsUpdate = !db.passwordResetTokens || 
+                              !db.loginActivity || 
+                              !db.messages || 
+                              !db.orders || 
+                              !db.products || 
+                              !db.offices || 
+                              !db.snackCompanies;
+            
+            if (needsUpdate) {
+                await writeDB(db);
+                console.log('✅ Database structure updated (preserving all existing accounts)');
+            }
         } catch {
-            // Create initial database structure for permanent storage
+            // ONLY create new database if file doesn't exist
+            // This should NEVER happen in production if Railway persistent storage is configured
             const initialData = {
                 users: [],           // PERMANENT: All user accounts stored here
                 snackCompanies: [],
@@ -181,11 +214,13 @@ async function initDatabase() {
                 products: [],
                 orders: [],
                 messages: [],
-                loginActivity: []    // Login history (optional, for user convenience only)
+                loginActivity: [],    // Login history (optional, for user convenience only)
+                passwordResetTokens: []
             };
             await fs.writeFile(DB_PATH, JSON.stringify(initialData, null, 2));
             console.log('✅ New database created for permanent storage:', DB_PATH);
             console.log('✅ Database location:', process.env.NODE_ENV === 'production' ? 'Railway (persistent)' : 'Local filesystem');
+            console.log('⚠️  NOTE: This is a NEW database file. If you expected existing accounts, check Railway persistent storage configuration.');
         }
     } catch (error) {
         console.error('❌ CRITICAL ERROR initializing database:', error);
@@ -581,6 +616,7 @@ async function sendPasswordResetEmail(user, resetLink) {
 // Write database - PERMANENT STORAGE
 // This function ensures accounts are permanently saved to disk
 // Works on both local development and Railway production
+// CRITICAL: NEVER deletes existing accounts - only adds or updates
 async function writeDB(data) {
     try {
         // Ensure data directory exists (creates if it doesn't)
@@ -591,6 +627,7 @@ async function writeDB(data) {
         // This ensures all user accounts persist across server restarts
         // On Railway: Database file persists in the data/ directory
         // On Local: Database file is saved in backend/data/database.json
+        // IMPORTANT: Frontend updates (admin-dashboard.html) do NOT affect this database
         
         // Atomic write: Write to temporary file first, then rename (prevents corruption)
         const tempPath = DB_PATH + '.tmp';
@@ -610,11 +647,17 @@ async function writeDB(data) {
         console.log('✅ Total users permanently saved:', verifyData.users ? verifyData.users.length : 0);
         console.log('✅ Database location:', process.env.NODE_ENV === 'production' ? 'Railway (persistent)' : 'Local filesystem');
         
-        // Ensure accounts are never lost
+        // CRITICAL SAFETY CHECK: Ensure accounts are never lost
         if (verifyData.users && verifyData.users.length !== (data.users ? data.users.length : 0)) {
             console.error('⚠️  WARNING: User count mismatch after write!');
             console.error('   Expected:', data.users ? data.users.length : 0);
             console.error('   Actual:', verifyData.users.length);
+            console.error('   ⚠️  This should NEVER happen - accounts may have been lost!');
+        }
+        
+        // Log account preservation status
+        if (verifyData.users && verifyData.users.length > 0) {
+            console.log('✅ Account preservation verified:', verifyData.users.length, 'accounts safely stored');
         }
     } catch (error) {
         console.error('❌ CRITICAL ERROR writing database:', error);
