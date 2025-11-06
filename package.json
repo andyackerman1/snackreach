@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node -e \"if (!process.env.VITE_CLERK_PUBLISHABLE_KEY) { console.error('❌ ERROR: VITE_CLERK_PUBLISHABLE_KEY is not set!'); console.error('Please set this environment variable in Railway Variables.'); process.exit(1); }\" && vite build",
     "preview": "vite preview",
     "start": "cd backend && node server.js",
     "start:backend": "cd backend && node server.js",
