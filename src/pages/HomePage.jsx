@@ -47,7 +47,7 @@ export default function HomePage() {
       <section className="features">
         <div className="container">
           <h2 className="section-title">Why Choose SnackReach?</h2>
-          <div className="features-grid">
+          <div className="features-grid" style={{ maxWidth: "1000px", margin: "0 auto" }}>
             <div className="feature-card">
               <div className="feature-icon">
                 <i className="fas fa-store"></i>
@@ -68,20 +68,6 @@ export default function HomePage() {
               </div>
               <h3>Great Deals</h3>
               <p>Get exclusive discounts and special pricing from startups building brand awareness.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <i className="fas fa-shipping-fast"></i>
-              </div>
-              <h3>Easy Ordering</h3>
-              <p>Streamlined ordering process with subscription options and flexible delivery schedules.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <i className="fas fa-shield-alt"></i>
-              </div>
-              <h3>Secure Payments</h3>
-              <p>Safe and secure payment processing with multiple payment options for your convenience.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">
