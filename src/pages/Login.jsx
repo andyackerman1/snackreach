@@ -74,7 +74,9 @@ export default function LoginPage() {
             <span>SnackReach</span>
           </div>
           <div className="nav-menu">
-            <Link to="/" className="nav-link">Back to Home</Link>
+            <Link to="/" className="nav-link">
+              <i className="fas fa-home"></i> Back to Home
+            </Link>
           </div>
         </div>
       </nav>
