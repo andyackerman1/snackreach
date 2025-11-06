@@ -154,6 +154,28 @@
             font-weight: 600;
         }
         
+        .btn-delete {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .btn-delete:hover {
+            background: #b91c1c;
+        }
+        
+        .btn-delete i {
+            font-size: 0.875rem;
+        }
+        
         .badge-startup {
             background: #dbeafe;
             color: #1e40af;
@@ -515,6 +537,7 @@
                                 <th>Type</th>
                                 <th>Phone</th>
                                 <th>Created</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -527,6 +550,11 @@
                                     <td><span class="badge badge-${account.userType === 'startup' ? 'startup' : 'office'}">${account.userType === 'startup' ? 'Food Startup' : 'Office Manager'}</span></td>
                                     <td>${account.phone || 'N/A'}</td>
                                     <td>${new Date(account.createdAt).toLocaleDateString()}</td>
+                                    <td>
+                                        <button class="btn-delete" onclick="deleteAccount('${account.id}', '${account.email}', '${(account.name || 'N/A').replace(/'/g, "\\'")}')" title="Delete Account">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -565,6 +593,52 @@
 
         function refreshAccounts() {
             loadAccounts();
+        }
+
+        // Delete account function
+        async function deleteAccount(userId, userEmail, userName) {
+            const confirmMessage = `Are you sure you want to permanently delete this account?\n\n` +
+                                  `Name: ${userName}\n` +
+                                  `Email: ${userEmail}\n\n` +
+                                  `This action cannot be undone. All account data, messages, and information will be permanently deleted.`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            // Double confirmation
+            const doubleConfirm = confirm(`⚠️ FINAL WARNING ⚠️\n\n` +
+                                        `You are about to permanently delete:\n` +
+                                        `${userName} (${userEmail})\n\n` +
+                                        `This cannot be undone. Are you absolutely sure?`);
+            if (!doubleConfirm) {
+                return;
+            }
+            
+            const token = localStorage.getItem('admin_token');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/account/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`Account deleted successfully:\n${userName} (${userEmail})`);
+                    // Reload accounts to show updated list
+                    loadAccounts();
+                } else {
+                    alert('Error deleting account: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert('Failed to delete account. Please try again.');
+            }
         }
 
         // Auto-refresh every 30 seconds
