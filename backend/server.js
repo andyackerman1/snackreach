@@ -675,10 +675,28 @@ app.post('/api/register', async (req, res) => {
             });
         } catch (error) {
             console.error('❌ Clerk registration error:', error);
+            console.error('Error details:', {
+                message: error.message,
+                status: error.status,
+                statusCode: error.statusCode,
+                errors: error.errors || error.clerkErrors || 'No error details'
+            });
+            
+            // Handle specific Clerk errors
+            if (error.status === 422 || error.statusCode === 422) {
+                // Unprocessable Entity - usually means invalid data format
+                const errorMsg = error.errors?.[0]?.message || error.message || 'Invalid user data format';
+                return res.status(422).json({ 
+                    error: 'Failed to create account: ' + errorMsg,
+                    details: 'Please check that all required fields are provided correctly.'
+                });
+            }
+            
             // If Clerk fails, check if it's a duplicate email
             if (error.errors && error.errors.some(e => e.message && e.message.includes('already exists'))) {
                 return res.status(400).json({ error: 'Email already registered' });
             }
+            
             return res.status(500).json({ error: 'Failed to create account: ' + (error.message || 'Unknown error') });
         }
     } catch (error) {

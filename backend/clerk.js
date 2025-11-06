@@ -62,31 +62,70 @@ async function createClerkUser(userData) {
     }
     
     try {
-        const user = await clerkClient.users.createUser({
+        // Build the user object with proper formatting
+        const userPayload = {
             emailAddress: [userData.email],
             password: userData.password,
-            firstName: userData.name?.split(' ')[0] || userData.name,
+            firstName: userData.name?.split(' ')[0] || userData.name || '',
             lastName: userData.name?.split(' ').slice(1).join(' ') || '',
-            publicMetadata: {
-                userType: userData.userType || 'office',
-                companyName: userData.companyName || '',
-                // Store subscription info in public metadata
-                subscription: userData.subscription || {
-                    status: 'active',
-                    plan: 'premium',
-                    price: 2.00,
-                    billingCycle: 'monthly'
-                },
-            },
-            privateMetadata: {
-                phone: userData.phone || '',
-                cardInfo: userData.cardInfo || {},
-                paymentMethods: userData.paymentMethods || [],
-            },
+        };
+
+        // Add metadata only if we have data
+        const publicMetadata = {};
+        if (userData.userType) {
+            publicMetadata.userType = userData.userType;
+        }
+        if (userData.companyName) {
+            publicMetadata.companyName = userData.companyName;
+        }
+        if (userData.subscription) {
+            publicMetadata.subscription = userData.subscription;
+        } else {
+            // Default subscription
+            publicMetadata.subscription = {
+                status: 'active',
+                plan: 'premium',
+                price: 2.00,
+                billingCycle: 'monthly'
+            };
+        }
+
+        const privateMetadata = {};
+        if (userData.phone) {
+            privateMetadata.phone = userData.phone;
+        }
+        if (userData.cardInfo && Object.keys(userData.cardInfo).length > 0) {
+            privateMetadata.cardInfo = userData.cardInfo;
+        }
+        if (userData.paymentMethods && userData.paymentMethods.length > 0) {
+            privateMetadata.paymentMethods = userData.paymentMethods;
+        }
+
+        // Only add metadata if we have data
+        if (Object.keys(publicMetadata).length > 0) {
+            userPayload.publicMetadata = publicMetadata;
+        }
+        if (Object.keys(privateMetadata).length > 0) {
+            userPayload.privateMetadata = privateMetadata;
+        }
+
+        console.log('Creating Clerk user with payload:', {
+            emailAddress: userPayload.emailAddress,
+            firstName: userPayload.firstName,
+            lastName: userPayload.lastName,
+            hasPublicMetadata: !!userPayload.publicMetadata,
+            hasPrivateMetadata: !!userPayload.privateMetadata
         });
+
+        const user = await clerkClient.users.createUser(userPayload);
         return user;
     } catch (error) {
         console.error('Error creating Clerk user:', error);
+        console.error('Error details:', {
+            message: error.message,
+            status: error.status,
+            errors: error.errors || error.clerkErrors
+        });
         throw error;
     }
 }
