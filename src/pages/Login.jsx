@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { useSignIn } from "@clerk/clerk-react";
+import { useState, useEffect } from "react";
+import { useSignIn, useAuth } from "@clerk/clerk-react";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function LoginPage() {
   const { signIn, setActive, isLoaded } = useSignIn();
+  const { isSignedIn } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,6 +14,13 @@ export default function LoginPage() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotError, setForgotError] = useState("");
   const [forgotSuccess, setForgotSuccess] = useState("");
+
+  // Redirect if already signed in
+  useEffect(() => {
+    if (isSignedIn) {
+      navigate("/dashboard");
+    }
+  }, [isSignedIn, navigate]);
 
   if (!isLoaded) {
     return (
@@ -57,14 +65,30 @@ export default function LoginPage() {
       });
 
       if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        navigate("/dashboard");
+        try {
+          await setActive({ session: result.createdSessionId });
+          navigate("/dashboard");
+        } catch (sessionError) {
+          // If session already exists, just navigate to dashboard
+          if (sessionError.errors?.[0]?.message?.includes("Session already exists") || 
+              sessionError.errors?.[0]?.code === "session_exists") {
+            navigate("/dashboard");
+          } else {
+            throw sessionError;
+          }
+        }
       } else {
         console.log(result);
       }
     } catch (err) {
       console.error(err);
-      setError(err.errors?.[0]?.message || "Invalid email or password. Please try again.");
+      // Handle "Session already exists" error gracefully
+      if (err.errors?.[0]?.message?.includes("Session already exists") || 
+          err.errors?.[0]?.code === "session_exists") {
+        navigate("/dashboard");
+      } else {
+        setError(err.errors?.[0]?.message || "Invalid email or password. Please try again.");
+      }
     }
   }
 
