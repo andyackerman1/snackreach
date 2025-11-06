@@ -144,12 +144,13 @@ app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
+// Redirect old HTML routes to React app routes
 app.get('/login.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'login.html'));
+    res.redirect('/login');
 });
 
 app.get('/signup.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'signup.html'));
+    res.redirect('/signup');
 });
 
 
