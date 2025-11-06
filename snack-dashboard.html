@@ -392,7 +392,7 @@
                                     <h5>Delete Account</h5>
                                     <p>Permanently delete your account</p>
                                 </div>
-                                <button class="btn btn-outline btn-small" style="color: #dc2626; border-color: #dc2626;">
+                                <button class="btn btn-outline btn-small" style="color: #dc2626; border-color: #dc2626;" onclick="deleteAccount()">
                                     <i class="fas fa-trash"></i>
                                     Delete Account
                                 </button>
@@ -1068,6 +1068,59 @@
                 localStorage.removeItem('snackreach_user_name');
                 localStorage.removeItem('snackreach_company_name');
                 window.location.href = 'index.html';
+            }
+        }
+        
+        // Delete account function
+        async function deleteAccount() {
+            const confirmMessage = 'Are you sure you want to permanently delete your account? This action cannot be undone.\n\n' +
+                                  'All your data, messages, and account information will be permanently deleted.';
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            // Double confirmation
+            const doubleConfirm = confirm('This is your last chance. Are you absolutely sure you want to delete your account?');
+            if (!doubleConfirm) {
+                return;
+            }
+            
+            const API_BASE_URL = (() => {
+                const hostname = window.location.hostname;
+                if (hostname.includes('railway.app')) {
+                    return '/api';
+                } else if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                    return 'https://snackreach-production.up.railway.app/api';
+                } else {
+                    return 'http://localhost:3000/api';
+                }
+            })();
+            
+            const token = localStorage.getItem('snackreach_token');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/account`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Your account has been permanently deleted.');
+                    // Clear all local storage
+                    localStorage.clear();
+                    // Redirect to home page
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Error deleting account: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert('Failed to delete account. Please try again.');
             }
         }
         

@@ -1163,6 +1163,47 @@ app.get('/api/email-status', (req, res) => {
     });
 });
 
+// Delete user account
+app.delete('/api/account', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const db = await readDB();
+        
+        // Find user
+        const userIndex = db.users.findIndex(u => u.id === userId);
+        if (userIndex === -1) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        const user = db.users[userIndex];
+        console.log('Deleting account:', user.email);
+        
+        // Remove user from database
+        db.users.splice(userIndex, 1);
+        
+        // Also remove user's messages if any
+        if (db.messages) {
+            db.messages = db.messages.filter(msg => 
+                msg.fromUserId !== userId && msg.toUserId !== userId
+            );
+        }
+        
+        // Save updated database
+        await writeDB(db);
+        
+        console.log('✅ Account deleted successfully:', user.email);
+        console.log('✅ Remaining users in database:', db.users.length);
+        
+        res.json({ 
+            success: true,
+            message: 'Account deleted successfully' 
+        });
+    } catch (error) {
+        console.error('Error deleting account:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // ==================== MESSAGING ENDPOINTS ====================
 
 // Get list of offices (for startups to message)
