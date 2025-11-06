@@ -35,9 +35,10 @@ export default function HomePage() {
               letterSpacing: "0.01em",
               marginBottom: "2rem",
               textAlign: "center",
-              maxWidth: "100%"
+              maxWidth: "100%",
+              whiteSpace: "nowrap"
             }}>
-              Connect Food Startups with <span className="highlight">Office Spaces</span>
+              Connect <span className="highlight">Food Startups</span> with <span className="highlight">Office Spaces</span>
             </h1>
             <p className="hero-description" style={{ 
               fontSize: "1.15rem", 
