@@ -7,7 +7,8 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const { supabase, testConnection } = require('./supabase');
+// Supabase removed - all data now in Clerk
+// const { supabase, testConnection } = require('./supabase');
 const { clerkClient, getClerkUser, createClerkUser, updateClerkUserMetadata, getClerkUserData, clerkConfigured } = require('./clerk');
 require('dotenv').config();
 
