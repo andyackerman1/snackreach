@@ -725,19 +725,32 @@ app.post('/api/register', async (req, res) => {
         };
 
         db.users.push(newUser);
-        console.log('Adding new user to database:', newUser.email, newUser.userType);
+        console.log('📝 Adding new user to database:', newUser.email, newUser.userType);
+        console.log('📝 Current database users count BEFORE save:', db.users.length);
+        console.log('📝 Database file path:', DB_PATH);
         
-        // Save account to database (permanent storage)
+        // CRITICAL: Save account to database (permanent storage)
+        console.log('💾 Saving to database...');
         await writeDB(db);
+        console.log('💾 Database write completed');
         
-        // Verify user account was saved
+        // CRITICAL: Verify user account was saved - read back immediately
+        console.log('🔍 Verifying account was saved...');
         const verifyDb = await readDB();
+        console.log('🔍 Database read after save - users count:', verifyDb.users.length);
+        
         const savedUser = verifyDb.users.find(u => u.id === newUser.id);
         if (savedUser) {
-            console.log('✅ User account permanently saved:', savedUser.email);
-            console.log('✅ Database now contains:', verifyDb.users.length, 'total accounts');
+            console.log('✅ VERIFIED: User account permanently saved:', savedUser.email);
+            console.log('✅ VERIFIED: Database now contains:', verifyDb.users.length, 'total accounts');
+            console.log('✅ VERIFIED: Account ID:', savedUser.id);
+            console.log('✅ VERIFIED: Account email:', savedUser.email);
         } else {
-            console.error('⚠️  WARNING: User account not found after save!');
+            console.error('❌ CRITICAL ERROR: User account NOT found after save!');
+            console.error('   Expected user ID:', newUser.id);
+            console.error('   Expected email:', newUser.email);
+            console.error('   Database users:', verifyDb.users.map(u => ({ id: u.id, email: u.email })));
+            console.error('   This is a serious issue - account may not be saved!');
         }
 
         // Generate JWT token
@@ -814,17 +827,19 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '3650d' } // 10 years - essentially permanent session
         );
 
-        // Save user account info (accounts are permanently stored)
-        // No need to track login attempts - just ensure account exists and is saved
-        await writeDB(db);
-        
-        // Verify account was saved
+        // Account is already in database - just verify it exists
+        // No need to save again during login (account was saved during registration)
+        console.log('🔍 Verifying account exists in database...');
         const verifyDb = await readDB();
         const savedUser = verifyDb.users.find(u => u.id === user.id);
         if (savedUser) {
-            console.log('✅ User account verified in database:', savedUser.email);
+            console.log('✅ Account verified in database:', savedUser.email);
+            console.log('✅ Total accounts in database:', verifyDb.users.length);
         } else {
-            console.error('⚠️  WARNING: User account not found after save!');
+            console.error('⚠️  WARNING: User account not found in database during login!');
+            console.error('   This should not happen - account should exist from registration');
+            console.error('   User ID:', user.id);
+            console.error('   User email:', user.email);
         }
 
         console.log('Login successful for:', email, user.userType);
