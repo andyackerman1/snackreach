@@ -402,12 +402,18 @@ export default function StartupDashboard() {
       
       // Handle logo: only convert if a new file was selected
       if (companyInfo.logo) {
+        console.log("Processing logo file:", companyInfo.logo.name, companyInfo.logo.size, "bytes");
         // Compress and convert to base64 - works with any size photo
         // The compression function will automatically resize and compress to fit Clerk's limits
         try {
           const logoData = await compressImage(companyInfo.logo);
+          console.log("Logo compressed successfully, size:", logoData.length, "characters");
+          if (!logoData || logoData.length === 0) {
+            throw new Error("Compression resulted in empty data");
+          }
           requestBody.logo = logoData;
         } catch (compressError) {
+          console.error("Compression error:", compressError);
           throw new Error(compressError.message || "Failed to process image. Please try a different image.");
         }
       } else if (companyInfo.logoPreview && typeof companyInfo.logoPreview === 'string' && companyInfo.logoPreview.startsWith('data:')) {
@@ -422,6 +428,8 @@ export default function StartupDashboard() {
       // If logoPreview is a blob URL or null/undefined, don't include logo in request
       // This preserves the existing logo in metadata
 
+      console.log("Sending request to /api/profile with logo:", requestBody.logo ? "Yes (" + requestBody.logo.length + " chars)" : "No");
+      
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: {
@@ -434,10 +442,11 @@ export default function StartupDashboard() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: response.statusText }));
         const errorMessage = errorData.error || "Failed to update company info";
+        console.error("API error:", response.status, errorMessage);
         
         // Provide more helpful error messages
         if (response.status === 422 || errorMessage.includes('Unprocessable Entity')) {
-          throw new Error("Failed to upload logo. Please try again or use a different image.");
+          throw new Error("The logo image is too large or invalid. Please try a different image.");
         }
         throw new Error(errorMessage);
       }
@@ -1499,7 +1508,7 @@ export default function StartupDashboard() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (MAX. 5MB)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (any size - will be automatically compressed)</p>
                     </div>
                     <input
                       type="file"
@@ -1631,7 +1640,7 @@ export default function StartupDashboard() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (MAX. 5MB)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (any size - will be automatically compressed)</p>
                     </div>
                     <input
                       type="file"
@@ -1846,7 +1855,7 @@ export default function StartupDashboard() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (MAX. 5MB)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (any size - will be automatically compressed)</p>
                     </div>
                     <input
                       type="file"
