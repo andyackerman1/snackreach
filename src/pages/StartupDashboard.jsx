@@ -35,7 +35,6 @@ export default function StartupDashboard() {
   const [searchFilters, setSearchFilters] = useState({
     location: "",
     name: "",
-    snackPreference: "",
   });
 
   // Mock data - replace with API calls
@@ -781,10 +780,8 @@ export default function StartupDashboard() {
           office.location.toLowerCase().includes(searchFilters.location.toLowerCase());
         const matchesName = !searchFilters.name || 
           office.name.toLowerCase().includes(searchFilters.name.toLowerCase());
-        const matchesSnackPreference = !searchFilters.snackPreference || 
-          office.snackPreference.toLowerCase().includes(searchFilters.snackPreference.toLowerCase());
         
-        return matchesLocation && matchesName && matchesSnackPreference;
+        return matchesLocation && matchesName;
       });
 
       return (
@@ -803,7 +800,7 @@ export default function StartupDashboard() {
           
           {/* Search Filters */}
           <div className="p-6 border-b bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="search-location" className="block text-sm font-medium text-gray-700 mb-2">
                   <i className="fas fa-map-marker-alt mr-1 text-red-600"></i>
@@ -834,25 +831,10 @@ export default function StartupDashboard() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
                 />
               </div>
-              <div>
-                <label htmlFor="search-snack" className="block text-sm font-medium text-gray-700 mb-2">
-                  <i className="fas fa-utensils mr-1 text-red-600"></i>
-                  Snack Preference
-                </label>
-                <input
-                  type="text"
-                  id="search-snack"
-                  name="snackPreference"
-                  value={searchFilters.snackPreference}
-                  onChange={handleSearchFilterChange}
-                  placeholder="e.g., healthy snacks, protein bars"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                />
-              </div>
             </div>
-            {(searchFilters.location || searchFilters.name || searchFilters.snackPreference) && (
+            {(searchFilters.location || searchFilters.name) && (
               <button
-                onClick={() => setSearchFilters({ location: "", name: "", snackPreference: "" })}
+                onClick={() => setSearchFilters({ location: "", name: "" })}
                 className="mt-4 text-sm text-red-600 hover:text-red-700"
               >
                 <i className="fas fa-times mr-1"></i>
