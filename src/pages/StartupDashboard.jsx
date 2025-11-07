@@ -1433,7 +1433,7 @@ export default function StartupDashboard() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (up to ~1.8MB; compressed under ~420KB automatically)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (up to ~1.8MB; ensure final image is ~420KB or smaller)</p>
                     </div>
                     <input
                       type="file"
@@ -1565,7 +1565,7 @@ export default function StartupDashboard() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (up to ~1.8MB; compressed under ~420KB automatically)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (up to ~1.8MB; ensure final image is ~420KB or smaller)</p>
                     </div>
                     <input
                       type="file"
@@ -1780,7 +1780,7 @@ export default function StartupDashboard() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (up to ~1.8MB; compressed under ~420KB automatically)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (up to ~1.8MB; ensure final image is ~420KB or smaller)</p>
                     </div>
                     <input
                       type="file"
