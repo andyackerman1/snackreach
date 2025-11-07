@@ -284,17 +284,27 @@ export default function StartupDashboard() {
     try {
       const session = await getToken();
       
-      // Convert logo file to base64 for storage (or upload to a service)
-      let logoData = companyInfo.logoPreview;
-      if (companyInfo.logo && !companyInfo.logoPreview.startsWith('data:')) {
-        // Convert file to base64
+      // Prepare request body
+      const requestBody = {
+        description: companyInfo.description || "",
+      };
+      
+      // Handle logo: only convert if a new file was selected
+      if (companyInfo.logo) {
+        // New logo file selected - convert to base64
         const reader = new FileReader();
-        logoData = await new Promise((resolve, reject) => {
+        const logoData = await new Promise((resolve, reject) => {
           reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
+          reader.onerror = (error) => reject(new Error("Failed to read logo file: " + error.message));
           reader.readAsDataURL(companyInfo.logo);
         });
+        requestBody.logo = logoData;
+      } else if (companyInfo.logoPreview && typeof companyInfo.logoPreview === 'string' && companyInfo.logoPreview.startsWith('data:')) {
+        // No new file, but there's an existing base64 logo - keep it
+        requestBody.logo = companyInfo.logoPreview;
       }
+      // If logoPreview is a blob URL or null/undefined, don't include logo in request
+      // This preserves the existing logo in metadata
 
       const response = await fetch("/api/profile", {
         method: "PUT",
@@ -302,10 +312,7 @@ export default function StartupDashboard() {
           "Authorization": `Bearer ${session}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          description: companyInfo.description,
-          logo: logoData,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
