@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser, SignOutButton } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +9,13 @@ export default function OfficeDashboard() {
   const [messages, setMessages] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [newMessage, setNewMessage] = useState("");
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [profileData, setProfileData] = useState({
+    email: "",
+    companyName: "",
+    phone: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Mock data - replace with API calls
   const [startups] = useState([]);
@@ -28,6 +35,54 @@ export default function OfficeDashboard() {
   }
 
   const companyName = user.publicMetadata?.companyName || "";
+
+  // Initialize profile data
+  useEffect(() => {
+    setProfileData({
+      email: user.emailAddresses[0]?.emailAddress || "",
+      companyName: user.publicMetadata?.companyName || "",
+      phone: user.privateMetadata?.phone || "",
+    });
+  }, [user]);
+
+  const handleOpenEditProfile = () => {
+    setProfileData({
+      email: user.emailAddresses[0]?.emailAddress || "",
+      companyName: user.publicMetadata?.companyName || "",
+      phone: user.privateMetadata?.phone || "",
+    });
+    setShowEditProfileModal(true);
+  };
+
+  const handleCloseEditProfile = () => {
+    setShowEditProfileModal(false);
+  };
+
+  const handleProfileInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData({
+      ...profileData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmitProfile = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // TODO: Implement API call to update profile
+      console.log("Profile data:", profileData);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      alert("Profile updated successfully!");
+      handleCloseEditProfile();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedChat) return;
@@ -439,9 +494,18 @@ export default function OfficeDashboard() {
           {/* Profile Sidebar */}
           <div>
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Your Profile
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Your Profile
+                </h3>
+                <button
+                  onClick={handleOpenEditProfile}
+                  className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                >
+                  <i className="fas fa-edit mr-1"></i>
+                  Edit
+                </button>
+              </div>
               <div className="space-y-3">
                 <div>
                   <p className="text-xs text-gray-500 uppercase mb-1">Email</p>
@@ -464,6 +528,105 @@ export default function OfficeDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Edit Profile Modal */}
+      {showEditProfileModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={handleCloseEditProfile}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Edit Profile
+              </h2>
+              <button
+                onClick={handleCloseEditProfile}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSubmitProfile} className="p-6">
+              <div className="mb-6">
+                <label htmlFor="profile-company" className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Name <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="profile-company"
+                  name="companyName"
+                  value={profileData.companyName}
+                  onChange={handleProfileInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Enter company name"
+                />
+              </div>
+              <div className="mb-6">
+                <label htmlFor="profile-email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="profile-email"
+                  name="email"
+                  value={profileData.email}
+                  onChange={handleProfileInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div className="mb-6">
+                <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  id="profile-phone"
+                  name="phone"
+                  value={profileData.phone}
+                  onChange={handleProfileInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Enter phone number"
+                />
+              </div>
+
+              <div className="flex justify-end gap-4 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={handleCloseEditProfile}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-check mr-2"></i>
+                      Update Profile
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
