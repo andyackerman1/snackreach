@@ -40,8 +40,6 @@ export default function StartupDashboard() {
 
   // Mock data - replace with API calls
   const [products, setProducts] = useState([]);
-  const [orders] = useState([]);
-  const [offices] = useState([]);
   const [allOffices, setAllOffices] = useState([]);
   const [isLoadingOffices, setIsLoadingOffices] = useState(false);
   const [messages, setMessages] = useState([]);
