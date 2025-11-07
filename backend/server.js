@@ -795,11 +795,13 @@ async function authenticateToken(req, res, next) {
                 // Verify Clerk session token
                 try {
                     // The token from frontend getToken() is a JWT session token
-                    // We need to verify it using Clerk's verifyToken
+                    // We need to verify it using Clerk's verifyToken with the secret key
                     const { verifyToken } = require('@clerk/clerk-sdk-node');
                     
-                    // verifyToken uses the CLERK_SECRET_KEY from environment automatically
-                    const session = await verifyToken(token);
+                    // verifyToken needs the secret key in options
+                    const session = await verifyToken(token, {
+                        secretKey: process.env.CLERK_SECRET_KEY
+                    });
                     
                     console.log('🔍 Token verification result:', {
                         hasSession: !!session,
@@ -827,6 +829,7 @@ async function authenticateToken(req, res, next) {
                     console.error('❌ Clerk token verification failed:', clerkError.message);
                     console.error('Error stack:', clerkError.stack);
                     console.error('Token preview:', token ? token.substring(0, 30) + '...' : 'No token');
+                    console.error('CLERK_SECRET_KEY exists:', !!process.env.CLERK_SECRET_KEY);
                     
                     // Return 403 with helpful error message
                     return res.status(403).json({ 
