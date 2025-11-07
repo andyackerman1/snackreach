@@ -21,7 +21,6 @@ export default function OfficeDashboard() {
 
   // State for data
   const [startups, setStartups] = useState([]);
-  const [orders] = useState([]);
   const [isLoadingStartups, setIsLoadingStartups] = useState(false);
   const [selectedStartup, setSelectedStartup] = useState(null);
   const [startupProducts, setStartupProducts] = useState([]);
