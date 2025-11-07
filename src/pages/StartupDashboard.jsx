@@ -875,40 +875,53 @@ export default function StartupDashboard() {
       const handleSendMessage = async () => {
         if (!newMessage.trim() || !selectedChat) return;
 
-        const message = {
-          id: Date.now(),
-          text: newMessage,
-          senderId: user.id,
-          senderName: companyName || user.firstName,
-          timestamp: new Date().toISOString(),
-          isSent: true,
-        };
-
-        const updatedChat = {
-          ...selectedChat,
-          messages: [...selectedChat.messages, message],
-        };
-
-        const updatedMessages = messages.map(m => m.id === selectedChat.id ? updatedChat : m);
-        setMessages(updatedMessages);
-        setSelectedChat(updatedChat);
-        setNewMessage("");
-
-        // Save messages to Clerk metadata
         try {
           const session = await getToken();
-          await fetch("/api/profile", {
-            method: "PUT",
+          
+          // Determine recipient ID based on chat type
+          const recipientId = selectedChat.officeId || selectedChat.startupId;
+          if (!recipientId || recipientId === user.id) {
+            alert("Cannot determine recipient. Please try again.");
+            return;
+          }
+
+          // Send message via API (stores in both users' metadata)
+          const response = await fetch("/api/messages", {
+            method: "POST",
             headers: {
               "Authorization": `Bearer ${session}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              messages: updatedMessages,
+              toUserId: recipientId,
+              message: newMessage,
+              chatId: selectedChat.id,
             }),
           });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: response.statusText }));
+            throw new Error(errorData.error || "Failed to send message");
+          }
+
+          const data = await response.json();
+          
+          // Update local state with the returned chat
+          if (data.chat) {
+            const updatedMessages = messages.map(m => 
+              m.id === selectedChat.id ? data.chat : m
+            );
+            setMessages(updatedMessages);
+            setSelectedChat(data.chat);
+          }
+          
+          setNewMessage("");
+          
+          // Reload user data to get updated messages
+          window.location.reload();
         } catch (error) {
-          console.error("Error saving messages:", error);
+          console.error("Error sending message:", error);
+          alert("Failed to send message: " + error.message);
         }
       };
 

@@ -1395,68 +1395,136 @@ app.post('/api/products', authenticateToken, async (req, res) => {
     }
 });
 
-// Send a message
+// Send a message - store in both sender and recipient's Clerk metadata
 app.post('/api/messages', authenticateToken, async (req, res) => {
     try {
-        const { toUserId, subject, message } = req.body;
+        const { toUserId, message, chatId } = req.body;
 
-        if (!toUserId || !subject || !message) {
-            return res.status(400).json({ error: 'toUserId, subject, and message are required' });
+        if (!toUserId || !message) {
+            return res.status(400).json({ error: 'toUserId and message are required' });
         }
 
-        const db = await readDB();
+        if (!clerkConfigured) {
+            return res.status(503).json({ error: 'Clerk is required but not configured.' });
+        }
+
+        // Get sender and recipient from Clerk
+        const sender = await clerkClient.users.getUser(req.clerkUserId);
+        const recipient = await clerkClient.users.getUser(toUserId);
+
+        if (!sender || !recipient) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Verify sender and recipient are different types
+        const senderType = sender.publicMetadata?.userType;
+        const recipientType = recipient.publicMetadata?.userType;
         
-        // Verify recipient exists
-        const recipient = db.users.find(u => u.id === toUserId);
-        if (!recipient) {
-            return res.status(404).json({ error: 'Recipient not found' });
-        }
-
-        // Verify sender and recipient are different types (startup can message office, office can message startup)
-        const sender = db.users.find(u => u.id === req.userId);
-        if (!sender) {
-            return res.status(404).json({ error: 'Sender not found' });
-        }
-
-        // Check if startup is messaging office or office is messaging startup
         const isValidMessage = 
-            (sender.userType === 'startup' && recipient.userType === 'office') ||
-            (sender.userType === 'office' && recipient.userType === 'startup');
+            (senderType === 'startup' && recipientType === 'office') ||
+            (senderType === 'office' && recipientType === 'startup');
 
         if (!isValidMessage) {
             return res.status(403).json({ error: 'You can only message different user types (startup ↔ office)' });
         }
 
-        // Create message
+        // Create message object
         const newMessage = {
-            id: Date.now().toString(),
-            fromUserId: req.userId,
-            fromUserName: sender.name || sender.companyName,
-            fromUserEmail: sender.email,
-            fromUserType: sender.userType,
-            toUserId: toUserId,
-            toUserName: recipient.name || recipient.companyName,
-            toUserEmail: recipient.email,
-            toUserType: recipient.userType,
-            subject: subject,
-            message: message,
+            id: Date.now(),
+            text: message,
+            senderId: req.clerkUserId,
+            senderName: sender.publicMetadata?.companyName || `${sender.firstName} ${sender.lastName}`.trim(),
+            recipientId: toUserId,
+            recipientName: recipient.publicMetadata?.companyName || `${recipient.firstName} ${recipient.lastName}`.trim(),
             timestamp: new Date().toISOString(),
-            read: false
+            isSent: true,
         };
 
-        if (!db.messages) db.messages = [];
-        db.messages.push(newMessage);
+        // Get current messages for both users
+        const senderMessages = sender.publicMetadata?.messages || [];
+        const recipientMessages = recipient.publicMetadata?.messages || [];
 
-        await writeDB(db);
-        console.log('Message sent from', sender.userType, req.userId, 'to', recipient.userType, toUserId);
+        // Helper to get user display name
+        const getDisplayName = (user) => {
+            return user.publicMetadata?.companyName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.emailAddresses[0]?.emailAddress || 'User';
+        };
+
+        const senderName = getDisplayName(sender);
+        const recipientName = getDisplayName(recipient);
+
+        // Find or create chat for sender
+        const senderChatId = chatId || `chat_${req.clerkUserId}_${toUserId}`;
+        let senderChat = senderMessages.find(m => 
+            (m.id === chatId) || 
+            (m.startupId === toUserId && senderType === 'office') ||
+            (m.officeId === toUserId && senderType === 'startup')
+        );
+
+        if (!senderChat) {
+            senderChat = {
+                id: senderChatId,
+                startupId: senderType === 'startup' ? req.clerkUserId : toUserId,
+                officeId: senderType === 'office' ? req.clerkUserId : toUserId,
+                startupName: senderType === 'startup' ? senderName : recipientName,
+                officeName: senderType === 'office' ? senderName : recipientName,
+                messages: [],
+            };
+            senderMessages.push(senderChat);
+        }
+
+        // Add message to sender's chat
+        senderChat.messages.push(newMessage);
+
+        // Find or create chat for recipient
+        const recipientChatId = `chat_${toUserId}_${req.clerkUserId}`;
+        let recipientChat = recipientMessages.find(m => 
+            (m.id === recipientChatId) ||
+            (m.startupId === req.clerkUserId && recipientType === 'office') ||
+            (m.officeId === req.clerkUserId && recipientType === 'startup')
+        );
+
+        if (!recipientChat) {
+            recipientChat = {
+                id: recipientChatId,
+                startupId: recipientType === 'startup' ? toUserId : req.clerkUserId,
+                officeId: recipientType === 'office' ? toUserId : req.clerkUserId,
+                startupName: recipientType === 'startup' ? recipientName : senderName,
+                officeName: recipientType === 'office' ? recipientName : senderName,
+                messages: [],
+            };
+            recipientMessages.push(recipientChat);
+        }
+
+        // Add message to recipient's chat (as received, not sent)
+        recipientChat.messages.push({
+            ...newMessage,
+            isSent: false,
+        });
+
+        // Update sender's metadata
+        const senderPublicMetadata = { ...sender.publicMetadata };
+        senderPublicMetadata.messages = senderMessages;
+        await clerkClient.users.updateUser(req.clerkUserId, {
+            publicMetadata: senderPublicMetadata
+        });
+
+        // Update recipient's metadata
+        const recipientPublicMetadata = { ...recipient.publicMetadata };
+        recipientPublicMetadata.messages = recipientMessages;
+        await clerkClient.users.updateUser(toUserId, {
+            publicMetadata: recipientPublicMetadata
+        });
+
+        console.log('Message sent from', senderType, req.clerkUserId, 'to', recipientType, toUserId);
 
         res.json({ 
             message: 'Message sent successfully',
-            messageId: newMessage.id 
+            messageId: newMessage.id,
+            chat: senderChat
         });
     } catch (error) {
         console.error('Send message error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });
 
