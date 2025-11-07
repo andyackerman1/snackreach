@@ -213,9 +213,26 @@ export default function OfficeDashboard() {
               <div className="text-center py-12">
                 <i className="fas fa-store text-gray-300 text-5xl mb-4"></i>
                 <p className="text-gray-500 mb-4">No startups available yet</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-400 mb-4">
                   Food startups will appear here as they join the platform
                 </p>
+                <button
+                  onClick={async () => {
+                    try {
+                      const session = await getToken();
+                      const response = await fetch("/api/test-startups");
+                      const data = await response.json();
+                      console.log("🧪 Test endpoint result:", data);
+                      alert(`Test Results:\nTotal Users: ${data.totalUsers}\nStartup Users: ${data.startupUsers}\nCheck console for details.`);
+                    } catch (error) {
+                      console.error("Test error:", error);
+                      alert("Test failed - check console");
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                >
+                  🧪 Test API Connection
+                </button>
               </div>
             ) : (
               <div className="space-y-4">

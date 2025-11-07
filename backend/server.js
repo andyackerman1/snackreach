@@ -1220,6 +1220,42 @@ app.get('/api/offices', authenticateToken, async (req, res) => {
     }
 });
 
+// Test endpoint to check if API is working (no auth required for testing)
+app.get('/api/test-startups', async (req, res) => {
+    try {
+        if (!clerkConfigured) {
+            return res.json({ error: 'Clerk not configured', clerkConfigured: false });
+        }
+        
+        const response = await clerkClient.users.getUserList({ limit: 500 });
+        const allUsers = response.data || response || [];
+        
+        const startupUsers = allUsers.filter(u => {
+            const userType = u.publicMetadata?.userType;
+            return userType === 'startup';
+        });
+        
+        return res.json({
+            success: true,
+            totalUsers: allUsers.length,
+            startupUsers: startupUsers.length,
+            sampleStartup: startupUsers[0] ? {
+                id: startupUsers[0].id,
+                email: startupUsers[0].emailAddresses[0]?.emailAddress,
+                userType: startupUsers[0].publicMetadata?.userType,
+                companyName: startupUsers[0].publicMetadata?.companyName
+            } : null,
+            allUserTypes: allUsers.map(u => ({
+                id: u.id,
+                email: u.emailAddresses[0]?.emailAddress,
+                userType: u.publicMetadata?.userType
+            }))
+        });
+    } catch (error) {
+        return res.json({ error: error.message, stack: error.stack });
+    }
+});
+
 // Get list of startups (for offices to view)
 app.get('/api/startups', authenticateToken, async (req, res) => {
     try {
