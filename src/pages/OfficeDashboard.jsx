@@ -41,13 +41,16 @@ export default function OfficeDashboard() {
 
   const companyName = user.publicMetadata?.companyName || "";
 
-  // Initialize profile data
+  // Initialize profile data and load messages
   useEffect(() => {
     setProfileData({
       email: user.emailAddresses[0]?.emailAddress || "",
       companyName: user.publicMetadata?.companyName || "",
       phone: user.privateMetadata?.phone || "",
     });
+    // Load messages from Clerk metadata
+    const savedMessages = user.publicMetadata?.messages || [];
+    setMessages(savedMessages);
   }, [user]);
 
   // Fetch startups from API
@@ -125,20 +128,38 @@ export default function OfficeDashboard() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement API call to update profile
-      console.log("Profile data:", profileData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const session = await getToken();
+      
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${session}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          companyName: profileData.companyName,
+          phone: profileData.phone,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(errorData.error || "Failed to update profile");
+      }
+
       alert("Profile updated successfully!");
       handleCloseEditProfile();
+      // Reload user data to reflect changes
+      window.location.reload();
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Failed to update profile. Please try again.");
+      alert("Failed to update profile: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChat) return;
 
     const message = {
@@ -155,21 +176,57 @@ export default function OfficeDashboard() {
       messages: [...selectedChat.messages, message],
     };
 
-    setMessages(messages.map(m => m.id === selectedChat.id ? updatedChat : m));
+    const updatedMessages = messages.map(m => m.id === selectedChat.id ? updatedChat : m);
+    setMessages(updatedMessages);
     setSelectedChat(updatedChat);
     setNewMessage("");
+
+    // Save messages to Clerk metadata
+    try {
+      const session = await getToken();
+      await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${session}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: updatedMessages,
+        }),
+      });
+    } catch (error) {
+      console.error("Error saving messages:", error);
+    }
   };
 
-  const handleDeleteChat = (chatId) => {
+  const handleDeleteChat = async (chatId) => {
     if (window.confirm("Are you sure you want to delete this conversation?")) {
-      setMessages(messages.filter(m => m.id !== chatId));
+      const updatedMessages = messages.filter(m => m.id !== chatId);
+      setMessages(updatedMessages);
       if (selectedChat?.id === chatId) {
         setSelectedChat(null);
+      }
+
+      // Save messages to Clerk metadata
+      try {
+        const session = await getToken();
+        await fetch("/api/profile", {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${session}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: updatedMessages,
+          }),
+        });
+      } catch (error) {
+        console.error("Error saving messages:", error);
       }
     }
   };
 
-  const handleMessageStartup = (startup) => {
+  const handleMessageStartup = async (startup) => {
     // Find or create chat with this startup
     const existingChat = messages.find(m => m.startupId === startup.id);
     if (existingChat) {
@@ -186,9 +243,27 @@ export default function OfficeDashboard() {
         productName: startup.productName || null,
         messages: [],
       };
-      setMessages([...messages, newChat]);
+      const updatedMessages = [...messages, newChat];
+      setMessages(updatedMessages);
       setSelectedChat(newChat);
       setActiveView("messages");
+
+      // Save new chat to Clerk metadata
+      try {
+        const session = await getToken();
+        await fetch("/api/profile", {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${session}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: updatedMessages,
+          }),
+        });
+      } catch (error) {
+        console.error("Error saving new chat:", error);
+      }
     }
   };
 

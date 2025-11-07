@@ -884,7 +884,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
             return res.status(401).json({ error: 'Clerk authentication required' });
         }
 
-        const { name, companyName, phone } = req.body;
+        const { name, companyName, phone, description, logo, messages, products } = req.body;
         
         // Get current user data
         const currentUser = await clerkClient.users.getUser(req.clerkUserId);
@@ -901,12 +901,24 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
             updateData.lastName = nameParts.slice(1).join(' ') || '';
         }
         
-        // Update metadata
+        // Update metadata - preserve existing data, only update what's provided
         const publicMetadata = { ...currentPublicMetadata };
         const privateMetadata = { ...currentPrivateMetadata };
         
-        if (companyName) publicMetadata.companyName = companyName;
+        if (companyName !== undefined) publicMetadata.companyName = companyName;
         if (phone !== undefined) privateMetadata.phone = phone;
+        if (description !== undefined) publicMetadata.description = description;
+        if (logo !== undefined) publicMetadata.logo = logo;
+        if (messages !== undefined) publicMetadata.messages = messages;
+        if (products !== undefined) publicMetadata.products = products;
+        
+        // Preserve existing data if not being updated
+        if (messages === undefined && currentPublicMetadata.messages) {
+            publicMetadata.messages = currentPublicMetadata.messages;
+        }
+        if (products === undefined && currentPublicMetadata.products) {
+            publicMetadata.products = currentPublicMetadata.products;
+        }
         
         updateData.publicMetadata = publicMetadata;
         updateData.privateMetadata = privateMetadata;

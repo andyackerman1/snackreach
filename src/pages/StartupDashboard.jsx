@@ -282,14 +282,44 @@ export default function StartupDashboard() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement API call to update company info
-      console.log("Company info data:", companyInfo);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const session = await getToken();
+      
+      // Convert logo file to base64 for storage (or upload to a service)
+      let logoData = companyInfo.logoPreview;
+      if (companyInfo.logo && !companyInfo.logoPreview.startsWith('data:')) {
+        // Convert file to base64
+        const reader = new FileReader();
+        logoData = await new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(companyInfo.logo);
+        });
+      }
+
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${session}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          description: companyInfo.description,
+          logo: logoData,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(errorData.error || "Failed to update company info");
+      }
+
       alert("Company information updated successfully!");
       handleCloseCompanyInfo();
+      // Reload user data to reflect changes
+      window.location.reload();
     } catch (error) {
       console.error("Error updating company info:", error);
-      alert("Failed to update company information. Please try again.");
+      alert("Failed to update company information: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -406,14 +436,32 @@ export default function StartupDashboard() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement API call to update profile
-      console.log("Profile data:", profileData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const session = await getToken();
+      
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${session}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          companyName: profileData.companyName,
+          phone: profileData.phone,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(errorData.error || "Failed to update profile");
+      }
+
       alert("Profile updated successfully!");
       handleCloseEditProfile();
+      // Reload user data to reflect changes
+      window.location.reload();
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Failed to update profile. Please try again.");
+      alert("Failed to update profile: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -770,7 +818,7 @@ export default function StartupDashboard() {
                         </div>
                       </div>
                       <button 
-                        onClick={() => {
+                        onClick={async () => {
                           // Find or create chat with this office
                           const existingChat = messages.find(m => m.officeId === office.id);
                           if (existingChat) {
@@ -785,9 +833,27 @@ export default function StartupDashboard() {
                               officeEmail: office.contactEmail,
                               messages: [],
                             };
-                            setMessages([...messages, newChat]);
+                            const updatedMessages = [...messages, newChat];
+                            setMessages(updatedMessages);
                             setSelectedChat(newChat);
                             setActiveView("messages");
+
+                            // Save new chat to Clerk metadata
+                            try {
+                              const session = await getToken();
+                              await fetch("/api/profile", {
+                                method: "PUT",
+                                headers: {
+                                  "Authorization": `Bearer ${session}`,
+                                  "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                  messages: updatedMessages,
+                                }),
+                              });
+                            } catch (error) {
+                              console.error("Error saving new chat:", error);
+                            }
                           }
                         }}
                         className="ml-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
@@ -806,7 +872,7 @@ export default function StartupDashboard() {
     }
 
     if (activeView === "messages") {
-      const handleSendMessage = () => {
+      const handleSendMessage = async () => {
         if (!newMessage.trim() || !selectedChat) return;
 
         const message = {
@@ -823,16 +889,52 @@ export default function StartupDashboard() {
           messages: [...selectedChat.messages, message],
         };
 
-        setMessages(messages.map(m => m.id === selectedChat.id ? updatedChat : m));
+        const updatedMessages = messages.map(m => m.id === selectedChat.id ? updatedChat : m);
+        setMessages(updatedMessages);
         setSelectedChat(updatedChat);
         setNewMessage("");
+
+        // Save messages to Clerk metadata
+        try {
+          const session = await getToken();
+          await fetch("/api/profile", {
+            method: "PUT",
+            headers: {
+              "Authorization": `Bearer ${session}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              messages: updatedMessages,
+            }),
+          });
+        } catch (error) {
+          console.error("Error saving messages:", error);
+        }
       };
 
-      const handleDeleteChat = (chatId) => {
+      const handleDeleteChat = async (chatId) => {
         if (window.confirm("Are you sure you want to delete this conversation?")) {
-          setMessages(messages.filter(m => m.id !== chatId));
+          const updatedMessages = messages.filter(m => m.id !== chatId);
+          setMessages(updatedMessages);
           if (selectedChat?.id === chatId) {
             setSelectedChat(null);
+          }
+
+          // Save messages to Clerk metadata
+          try {
+            const session = await getToken();
+            await fetch("/api/profile", {
+              method: "PUT",
+              headers: {
+                "Authorization": `Bearer ${session}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                messages: updatedMessages,
+              }),
+            });
+          } catch (error) {
+            console.error("Error saving messages:", error);
           }
         }
       };
