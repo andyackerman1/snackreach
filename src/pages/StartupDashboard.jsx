@@ -334,34 +334,67 @@ export default function StartupDashboard() {
   // Helper function to compress/resize image - works with any size photo
   const compressImage = (file) => {
     const MAX_BYTES = 450000;
-    const ATTEMPTS = [
-      { maxWidth: 1600, maxHeight: 1600, quality: 0.9, type: "image/jpeg" },
-      { maxWidth: 1400, maxHeight: 1400, quality: 0.8, type: "image/jpeg" },
-      { maxWidth: 1200, maxHeight: 1200, quality: 0.7, type: "image/jpeg" },
-      { maxWidth: 1000, maxHeight: 1000, quality: 0.6, type: "image/jpeg" },
-      { maxWidth: 800, maxHeight: 800, quality: 0.55, type: "image/jpeg" },
-      { maxWidth: 600, maxHeight: 600, quality: 0.5, type: "image/jpeg" },
-      { maxWidth: 450, maxHeight: 450, quality: 0.45, type: "image/jpeg" },
-      { maxWidth: 360, maxHeight: 360, quality: 0.4, type: "image/jpeg" },
-      { maxWidth: 320, maxHeight: 320, quality: 0.35, type: "image/webp" },
-      { maxWidth: 260, maxHeight: 260, quality: 0.3, type: "image/webp" },
-      { maxWidth: 220, maxHeight: 220, quality: 0.28, type: "image/webp" },
-      { maxWidth: 180, maxHeight: 180, quality: 0.25, type: "image/webp" },
+    const OUTPUT_TYPES = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    const BASE_ATTEMPTS = [
+      { maxWidth: 1600, maxHeight: 1600, quality: 0.9 },
+      { maxWidth: 1400, maxHeight: 1400, quality: 0.8 },
+      { maxWidth: 1200, maxHeight: 1200, quality: 0.7 },
+      { maxWidth: 1000, maxHeight: 1000, quality: 0.6 },
+      { maxWidth: 800, maxHeight: 800, quality: 0.5 },
+      { maxWidth: 600, maxHeight: 600, quality: 0.45 },
+      { maxWidth: 480, maxHeight: 480, quality: 0.4 },
+      { maxWidth: 360, maxHeight: 360, quality: 0.35 },
+      { maxWidth: 300, maxHeight: 300, quality: 0.32 },
+      { maxWidth: 240, maxHeight: 240, quality: 0.3 },
+      { maxWidth: 200, maxHeight: 200, quality: 0.28 },
+      { maxWidth: 160, maxHeight: 160, quality: 0.26 },
     ];
 
     const getScaledDimensions = (width, height, maxWidth, maxHeight) => {
+      const aspectRatio = width / height;
       let newWidth = width;
       let newHeight = height;
 
-      if (newWidth > maxWidth || newHeight > maxHeight) {
-        const widthRatio = maxWidth / newWidth;
-        const heightRatio = maxHeight / newHeight;
-        const scale = Math.min(widthRatio, heightRatio);
-        newWidth = Math.max(1, Math.floor(newWidth * scale));
-        newHeight = Math.max(1, Math.floor(newHeight * scale));
+      if (width > maxWidth || height > maxHeight) {
+        if (aspectRatio > 1) {
+          newWidth = maxWidth;
+          newHeight = Math.max(1, Math.round(maxWidth / aspectRatio));
+          if (newHeight > maxHeight) {
+            newHeight = maxHeight;
+            newWidth = Math.max(1, Math.round(maxHeight * aspectRatio));
+          }
+        } else {
+          newHeight = maxHeight;
+          newWidth = Math.max(1, Math.round(maxHeight * aspectRatio));
+          if (newWidth > maxWidth) {
+            newWidth = maxWidth;
+            newHeight = Math.max(1, Math.round(maxWidth / aspectRatio));
+          }
+        }
       }
 
-      return { width: newWidth, height: newHeight };
+      return { width: Math.max(1, newWidth), height: Math.max(1, newHeight) };
+    };
+
+    const getBestOutputType = (inputType) => {
+      if (inputType === "image/webp") return "image/webp";
+      if (inputType === "image/png") return "image/png";
+      return "image/jpeg";
+    };
+
+    const isAlphaSupported = (type) => type !== "image/jpeg";
+
+    const ensureCanvasContext = (canvas) => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Unable to access canvas context for image compression.");
+      }
+      return ctx;
     };
 
     return new Promise((resolve, reject) => {
@@ -374,26 +407,35 @@ export default function StartupDashboard() {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
+          const attempts = BASE_ATTEMPTS.flatMap((attempt) =>
+            OUTPUT_TYPES.map((type) => ({ ...attempt, type }))
+          );
+
           const tryAttempt = (index) => {
-            if (index >= ATTEMPTS.length) {
-              reject(new Error("Unable to compress image below 500KB. Please choose an image with smaller dimensions or less detail."));
+            if (index >= attempts.length) {
+              reject(
+                new Error(
+                  "Unable to compress image below 500KB. Please choose an image with smaller dimensions or less detail."
+                )
+              );
               return;
             }
 
-            const { maxWidth, maxHeight, quality, type } = ATTEMPTS[index];
-            const { width, height } = getScaledDimensions(img.width, img.height, maxWidth, maxHeight);
+            const { maxWidth, maxHeight, quality, type } = attempts[index];
+            const { width, height } = getScaledDimensions(
+              img.width,
+              img.height,
+              maxWidth,
+              maxHeight
+            );
 
             const canvas = document.createElement("canvas");
             canvas.width = width;
             canvas.height = height;
 
-            const ctx = canvas.getContext("2d");
-            if (!ctx) {
-              reject(new Error("Unable to access canvas for image compression."));
-              return;
-            }
+            const ctx = ensureCanvasContext(canvas);
 
-            if (type === "image/jpeg") {
+            if (!isAlphaSupported(type)) {
               ctx.fillStyle = "#ffffff";
               ctx.fillRect(0, 0, width, height);
             }
@@ -402,7 +444,11 @@ export default function StartupDashboard() {
 
             let dataUrl;
             try {
-              dataUrl = canvas.toDataURL(type, quality);
+              const outputType = type === "image/png" && !isAlphaSupported(file.type)
+                ? getBestOutputType(file.type)
+                : type;
+
+              dataUrl = canvas.toDataURL(outputType, quality);
             } catch (canvasError) {
               reject(new Error("Failed to process image. Please try a different file."));
               return;
