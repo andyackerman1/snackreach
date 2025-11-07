@@ -284,63 +284,106 @@ export default function StartupDashboard() {
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
 
-          // Calculate new dimensions to fit within max dimensions
-          if (width > height) {
-            if (width > maxWidth) {
-              height = (height * maxWidth) / width;
-              width = maxWidth;
-            }
-          } else {
-            if (height > maxHeight) {
-              width = (width * maxHeight) / height;
-              height = maxHeight;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Convert to base64 with compression
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-          
-          // Check size (Clerk metadata limit is ~500KB, base64 is ~33% larger than binary)
-          // So we want to keep base64 under ~450KB to be safe
-          const base64Size = (compressedDataUrl.length * 3) / 4;
-          
-          if (base64Size > 450000) {
-            // If still too large, compress more aggressively
-            // Reduce dimensions and quality progressively
-            const newMaxWidth = Math.max(400, maxWidth * 0.75);
-            const newMaxHeight = Math.max(400, maxHeight * 0.75);
-            const newQuality = Math.max(0.3, quality * 0.85);
-            
-            // Prevent infinite recursion (max 10 attempts)
-            if (attempt < 10) {
-              resolve(compressImage(file, newMaxWidth, newMaxHeight, newQuality, attempt + 1));
+            // Calculate new dimensions to fit within max dimensions
+            if (width > height) {
+              if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+              }
             } else {
-              // Last attempt - use minimum settings
+              if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+              }
+            }
+
+            // Ensure minimum dimensions
+            width = Math.max(1, Math.round(width));
+            height = Math.max(1, Math.round(height));
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Convert to base64 with compression
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            
+            // Check size (Clerk metadata limit is ~500KB, base64 is ~33% larger than binary)
+            // So we want to keep base64 under ~450KB to be safe
+            const base64Size = (compressedDataUrl.length * 3) / 4;
+            
+            if (base64Size > 450000 && attempt < 10) {
+              // If still too large, compress more aggressively
+              // Reduce dimensions and quality progressively
+              const newMaxWidth = Math.max(400, maxWidth * 0.75);
+              const newMaxHeight = Math.max(400, maxHeight * 0.75);
+              const newQuality = Math.max(0.3, quality * 0.85);
+              
+              // Recursively compress with new settings, using the same image
+              const compressRecursive = (imgElement, w, h, q, att) => {
+                const newCanvas = document.createElement('canvas');
+                let newWidth = imgElement.width;
+                let newHeight = imgElement.height;
+
+                if (newWidth > newHeight) {
+                  if (newWidth > w) {
+                    newHeight = (newHeight * w) / newWidth;
+                    newWidth = w;
+                  }
+                } else {
+                  if (newHeight > h) {
+                    newWidth = (newWidth * h) / newHeight;
+                    newHeight = h;
+                  }
+                }
+
+                newWidth = Math.max(1, Math.round(newWidth));
+                newHeight = Math.max(1, Math.round(newHeight));
+
+                newCanvas.width = newWidth;
+                newCanvas.height = newHeight;
+
+                const newCtx = newCanvas.getContext('2d');
+                newCtx.drawImage(imgElement, 0, 0, newWidth, newHeight);
+
+                const newDataUrl = newCanvas.toDataURL('image/jpeg', q);
+                const newSize = (newDataUrl.length * 3) / 4;
+
+                if (newSize > 450000 && att < 10) {
+                  return compressRecursive(imgElement, w * 0.75, h * 0.75, q * 0.85, att + 1);
+                } else {
+                  return newDataUrl;
+                }
+              };
+
+              const finalDataUrl = compressRecursive(img, newMaxWidth, newMaxHeight, newQuality, attempt + 1);
+              resolve(finalDataUrl);
+            } else if (base64Size > 450000) {
+              // Last resort - force to minimum size
               const finalCanvas = document.createElement('canvas');
               finalCanvas.width = 400;
               finalCanvas.height = 400;
               const finalCtx = finalCanvas.getContext('2d');
               finalCtx.drawImage(img, 0, 0, 400, 400);
               resolve(finalCanvas.toDataURL('image/jpeg', 0.3));
+            } else {
+              resolve(compressedDataUrl);
             }
-          } else {
-            resolve(compressedDataUrl);
+          } catch (error) {
+            reject(new Error("Failed to compress image: " + error.message));
           }
         };
-        img.onerror = () => reject(new Error("Failed to load image"));
+        img.onerror = () => reject(new Error("Failed to load image. Please ensure the file is a valid image."));
         img.src = e.target.result;
       };
-      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.onerror = () => reject(new Error("Failed to read file. Please try a different image."));
       reader.readAsDataURL(file);
     });
   };
