@@ -632,11 +632,13 @@ app.post('/api/register', async (req, res) => {
         }
 
         try {
-            console.log('📝 Creating user in Clerk:', email);
+            const normalizedEmail = email.toLowerCase().trim();
+            console.log('📝 Creating user in Clerk:', normalizedEmail);
             
-            // Create user in Clerk with ALL data stored in metadata
+            // Try to find existing user by email (Clerk doesn't have direct email lookup, so we'll catch the error)
+            // Create new user in Clerk with ALL data stored in metadata
             const clerkUser = await createClerkUser({
-                email: email.toLowerCase().trim(),
+                email: normalizedEmail,
                 password: password,
                 name: name,
                 userType: userType || 'office',
@@ -696,12 +698,48 @@ app.post('/api/register', async (req, res) => {
                 });
             }
             
-            // If Clerk fails, check if it's a duplicate email
-            if (error.errors && error.errors.some(e => e.message && e.message.includes('already exists'))) {
-                return res.status(400).json({ error: 'Email already registered' });
+            // Check for duplicate email errors from Clerk
+            const errorMessage = (error.message || '').toLowerCase();
+            const errorString = JSON.stringify(error.errors || error.clerkErrors || []).toLowerCase();
+            const clerkErrorCode = error.statusCode || error.status;
+            
+            // Check various ways Clerk might indicate duplicate email
+            const isDuplicateEmail = 
+                errorMessage.includes('already exists') || 
+                errorMessage.includes('already registered') ||
+                errorMessage.includes('email address is already') ||
+                errorMessage.includes('identifier already exists') ||
+                errorString.includes('already exists') ||
+                errorString.includes('already registered') ||
+                errorString.includes('email address is already') ||
+                errorString.includes('identifier already exists') ||
+                (error.errors && error.errors.some(e => {
+                    const msg = (e.message || '').toLowerCase();
+                    const code = (e.code || '').toLowerCase();
+                    return msg.includes('already exists') || 
+                           msg.includes('already registered') ||
+                           msg.includes('email address is already') ||
+                           code.includes('duplicate') ||
+                           code.includes('already_exists');
+                })) ||
+                clerkErrorCode === 422 && errorMessage.includes('email');
+            
+            if (isDuplicateEmail) {
+                return res.status(400).json({ 
+                    error: 'This email address is already registered. Please try signing in instead.',
+                    suggestion: 'If you already have an account, please use the login page.',
+                    clerkError: error.errors?.[0]?.message || error.message
+                });
             }
             
-            return res.status(500).json({ error: 'Failed to create account: ' + (error.message || 'Unknown error') });
+            // Return more detailed error message for debugging
+            const detailedError = error.errors?.[0]?.message || error.message || 'Unknown error';
+            console.error('Full Clerk error object:', JSON.stringify(error, null, 2));
+            return res.status(500).json({ 
+                error: 'Failed to create account: ' + detailedError,
+                details: error.errors || error.clerkErrors,
+                statusCode: clerkErrorCode
+            });
         }
     } catch (error) {
         console.error('Registration error:', error);

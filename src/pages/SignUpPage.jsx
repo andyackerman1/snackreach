@@ -103,7 +103,17 @@ export default function SignUpPage() {
           setError(signInError.errors?.[0]?.message || "Account created but sign-in failed. Please try logging in.");
         }
       } else {
-        setError(data.error || "Registration failed. Please try again.");
+        // Show detailed error message from backend
+        const errorMsg = data.error || "Registration failed. Please try again.";
+        const suggestion = data.suggestion ? ` ${data.suggestion}` : "";
+        setError(errorMsg + suggestion);
+        
+        // If email already exists, suggest logging in
+        if (errorMsg.includes("already registered") || errorMsg.includes("already exists")) {
+          setTimeout(() => {
+            navigate("/login");
+          }, 3000);
+        }
       }
     } catch (err) {
       console.error(err);
