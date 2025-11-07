@@ -18,6 +18,7 @@ export default function StartupDashboard() {
     imagePreview: null,
   });
   const [profileData, setProfileData] = useState({
+    email: "",
     companyName: "",
     phone: "",
     bankName: "",
@@ -58,6 +59,7 @@ export default function StartupDashboard() {
   // Initialize profile data
   useEffect(() => {
     setProfileData({
+      email: user.emailAddresses[0]?.emailAddress || "",
       companyName: user.publicMetadata?.companyName || "",
       phone: user.publicMetadata?.phone || "",
       bankName: user.publicMetadata?.bankName || "",
@@ -112,6 +114,7 @@ export default function StartupDashboard() {
 
   const handleOpenEditProfile = () => {
     setProfileData({
+      email: user.emailAddresses[0]?.emailAddress || "",
       companyName: user.publicMetadata?.companyName || "",
       phone: user.publicMetadata?.phone || "",
       bankName: user.publicMetadata?.bankName || "",
@@ -1000,6 +1003,21 @@ export default function StartupDashboard() {
                 />
               </div>
               <div className="mb-6">
+                <label htmlFor="profile-email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="profile-email"
+                  name="email"
+                  value={profileData.email}
+                  onChange={handleProfileInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div className="mb-6">
                 <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700 mb-2">
                   Phone Number
                 </label>
@@ -1012,18 +1030,6 @@ export default function StartupDashboard() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
                   placeholder="Enter phone number"
                 />
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={user.emailAddresses[0]?.emailAddress}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
               </div>
 
               {/* Banking Information Section */}
