@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useSignUp } from "@clerk/clerk-react";
+import { useSignIn } from "@clerk/clerk-react";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function SignUpPage() {
-  const { signUp, setActive, isLoaded } = useSignUp();
+  const { signIn, setActive, isLoaded } = useSignIn();
   const navigate = useNavigate();
   const [selectedUserType, setSelectedUserType] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -20,7 +20,7 @@ export default function SignUpPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPaymentDisclaimer, setShowPaymentDisclaimer] = useState(false);
 
-  if (!isLoaded) {
+  if (!isLoaded || !signIn) {
     return (
       <div className="signup-section">
         <div className="container">
@@ -82,18 +82,25 @@ export default function SignUpPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Sign in with Clerk
-        const result = await signUp.create({
-          emailAddress: formData.email,
-          password: formData.password,
-          firstName: formData.name.split(" ")[0],
-          lastName: formData.name.split(" ").slice(1).join(" ") || "",
-        });
+        // User is already created in Clerk by the backend
+        // Now sign them in with Clerk
+        try {
+          const signInResult = await signIn.create({
+            identifier: formData.email,
+            password: formData.password,
+          });
 
-        if (result.status === "complete") {
-          await setActive({ session: result.createdSessionId });
-          // Show payment disclaimer modal before navigating
-          setShowPaymentDisclaimer(true);
+          if (signInResult.status === "complete") {
+            await setActive({ session: signInResult.createdSessionId });
+            // Show payment disclaimer modal before navigating
+            setShowPaymentDisclaimer(true);
+          } else {
+            setError("Please complete the sign-in process.");
+          }
+        } catch (signInError) {
+          console.error("Sign-in error:", signInError);
+          // If sign-in fails, user might need to verify email or there's an issue
+          setError(signInError.errors?.[0]?.message || "Account created but sign-in failed. Please try logging in.");
         }
       } else {
         setError(data.error || "Registration failed. Please try again.");
