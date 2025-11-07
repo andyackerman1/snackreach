@@ -389,10 +389,10 @@ export default function SignUpPage() {
                 <i className="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
               </div>
               <p className="text-center text-lg mb-4" style={{ fontWeight: "600" }}>
-                Payments are not available via SnackReach.
+                SnackReach does not have payment integrations.
               </p>
               <p className="text-center text-gray-700">
-                These must be agreed upon and initiated outside of the platform by the two parties.
+                Payments must be initiated by the two parties independently.
               </p>
             </div>
             <div className="modal-footer" style={{ justifyContent: "center" }}>
