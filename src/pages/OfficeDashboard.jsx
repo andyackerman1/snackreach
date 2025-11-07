@@ -70,11 +70,22 @@ export default function OfficeDashboard() {
         
         if (response.ok) {
           const data = await response.json();
-          console.log("✅ Received startups:", data.length);
-          setStartups(data);
+          console.log("✅ Received startups:", data.length, data);
+          if (Array.isArray(data)) {
+            setStartups(data);
+          } else {
+            console.error("❌ Data is not an array:", data);
+            setStartups([]);
+          }
         } else {
-          const errorData = await response.json().catch(() => ({ error: response.statusText }));
-          console.error("❌ Failed to fetch startups:", response.status, errorData);
+          const errorText = await response.text();
+          console.error("❌ Failed to fetch startups:", response.status, errorText);
+          try {
+            const errorData = JSON.parse(errorText);
+            console.error("❌ Error details:", errorData);
+          } catch (e) {
+            console.error("❌ Error response is not JSON:", errorText);
+          }
         }
       } catch (error) {
         console.error("❌ Error fetching startups:", error);

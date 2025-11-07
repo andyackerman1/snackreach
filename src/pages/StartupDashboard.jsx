@@ -89,11 +89,22 @@ export default function StartupDashboard() {
         
         if (response.ok) {
           const data = await response.json();
-          console.log("✅ Received offices:", data.length);
-          setAllOffices(data);
+          console.log("✅ Received offices:", data.length, data);
+          if (Array.isArray(data)) {
+            setAllOffices(data);
+          } else {
+            console.error("❌ Data is not an array:", data);
+            setAllOffices([]);
+          }
         } else {
-          const errorData = await response.json().catch(() => ({ error: response.statusText }));
-          console.error("❌ Failed to fetch offices:", response.status, errorData);
+          const errorText = await response.text();
+          console.error("❌ Failed to fetch offices:", response.status, errorText);
+          try {
+            const errorData = JSON.parse(errorText);
+            console.error("❌ Error details:", errorData);
+          } catch (e) {
+            console.error("❌ Error response is not JSON:", errorText);
+          }
         }
       } catch (error) {
         console.error("❌ Error fetching offices:", error);

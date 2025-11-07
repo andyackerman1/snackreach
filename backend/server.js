@@ -1173,31 +1173,18 @@ app.get('/api/offices', authenticateToken, async (req, res) => {
             return res.status(503).json({ error: 'Clerk is required but not configured.' });
         }
 
-        // Get all users from Clerk - handle pagination
-        let allUsers = [];
-        let hasMore = true;
-        let offset = 0;
-        const limit = 500;
-        
-        while (hasMore) {
-            const response = await clerkClient.users.getUserList({ 
-                limit: limit,
-                offset: offset 
-            });
-            
-            const users = response.data || [];
-            allUsers = allUsers.concat(users);
-            
-            hasMore = users.length === limit;
-            offset += limit;
-            
-            // Safety limit - don't fetch more than 2000 users
-            if (allUsers.length >= 2000) {
-                hasMore = false;
-            }
-        }
+        // Get all users from Clerk - fetch with high limit
+        const response = await clerkClient.users.getUserList({ limit: 500 });
+        const allUsers = response.data || response || [];
         
         console.log(`📊 Total users fetched from Clerk: ${allUsers.length}`);
+        if (allUsers.length > 0) {
+            console.log(`📊 Sample user metadata:`, {
+                id: allUsers[0].id,
+                userType: allUsers[0].publicMetadata?.userType,
+                email: allUsers[0].emailAddresses[0]?.emailAddress
+            });
+        }
         
         // Filter for office users - check both userType and default to office if not set
         // Exclude the current user from results
@@ -1242,37 +1229,24 @@ app.get('/api/startups', authenticateToken, async (req, res) => {
             return res.status(503).json({ error: 'Clerk is required but not configured.' });
         }
 
-        // Get all users from Clerk - handle pagination
-        let allUsers = [];
-        let hasMore = true;
-        let offset = 0;
-        const limit = 500;
-        
-        while (hasMore) {
-            const response = await clerkClient.users.getUserList({ 
-                limit: limit,
-                offset: offset 
-            });
-            
-            const users = response.data || [];
-            allUsers = allUsers.concat(users);
-            
-            hasMore = users.length === limit;
-            offset += limit;
-            
-            // Safety limit - don't fetch more than 2000 users
-            if (allUsers.length >= 2000) {
-                hasMore = false;
-            }
-        }
+        // Get all users from Clerk - fetch with high limit
+        const response = await clerkClient.users.getUserList({ limit: 500 });
+        const allUsers = response.data || response || [];
         
         console.log(`📊 Total users fetched from Clerk: ${allUsers.length}`);
+        if (allUsers.length > 0) {
+            console.log(`📊 Sample user metadata:`, {
+                id: allUsers[0].id,
+                userType: allUsers[0].publicMetadata?.userType,
+                email: allUsers[0].emailAddresses[0]?.emailAddress
+            });
+        }
         
-        // Filter for startup users - check both userType
+        // Filter for startup users
         const startupUsers = allUsers.filter(u => {
+            if (u.id === req.userId) return false; // Exclude current user
             const userType = u.publicMetadata?.userType;
-            // Include users with userType === 'startup'
-            return userType === 'startup' && u.id !== req.userId;
+            return userType === 'startup';
         });
         
         console.log(`✅ Found ${startupUsers.length} startup users (excluding current user)`);
