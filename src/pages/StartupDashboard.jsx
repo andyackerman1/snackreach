@@ -331,7 +331,7 @@ export default function StartupDashboard() {
     setShowCompanyInfoModal(false);
   };
 
-  // Helper function to compress/resize image - accepts uploads up to ~1.8MB and compresses them below ~420KB
+  // Helper function to compress/resize image and bring it under ~420KB before saving
   const compressImage = (file) => {
     const TARGET_BYTES = 420000; // Keep well under Clerk limit (~500KB)
 
@@ -496,7 +496,7 @@ export default function StartupDashboard() {
       // Handle logo: only convert if a new file was selected
       if (companyInfo.logo) {
         console.log("Processing logo file:", companyInfo.logo.name, companyInfo.logo.size, "bytes");
-        // Compress and convert to base64 - accepts uploads up to ~1.8MB and shrinks under ~420KB
+        // Compress and convert to base64
         try {
           const logoData = await compressImage(companyInfo.logo);
           console.log("Logo compressed successfully, size:", logoData.length, "characters");
@@ -1433,7 +1433,7 @@ export default function StartupDashboard() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (up to ~1.8MB; ensure final image is ~420KB or smaller)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (aim for ~420KB or smaller after compression)</p>
                     </div>
                     <input
                       type="file"
@@ -1565,7 +1565,7 @@ export default function StartupDashboard() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (up to ~1.8MB; ensure final image is ~420KB or smaller)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (aim for ~420KB or smaller after compression)</p>
                     </div>
                     <input
                       type="file"
@@ -1780,7 +1780,7 @@ export default function StartupDashboard() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (up to ~1.8MB; ensure final image is ~420KB or smaller)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (aim for ~420KB or smaller after compression)</p>
                     </div>
                     <input
                       type="file"
