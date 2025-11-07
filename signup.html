@@ -260,14 +260,7 @@
             const userType = localStorage.getItem('snackreach_user_type');
             
             if (token && userType) {
-                // User is already logged in - redirect to their dashboard
-                if (userType === 'owner') {
-                    window.location.href = 'owner-dashboard.html';
-                } else if (userType === 'startup') {
-                    window.location.href = 'snack-dashboard.html';
-                } else if (userType === 'office') {
-                    window.location.href = 'office-dashboard.html';
-                }
+                window.location.href = '/dashboard';
             }
         }
         
@@ -288,11 +281,11 @@
             if (userType === '1') {
                 // Store demo login info
                 storeLoginInfo('startup', 'Demo Startup', 'Crunchy Greens');
-                window.location.href = 'snack-dashboard.html';
+                window.location.href = '/dashboard';
             } else if (userType === '2') {
                 // Store demo login info
                 storeLoginInfo('office', 'Demo Office Manager', 'TechStart Inc.');
-                window.location.href = 'office-dashboard.html';
+                window.location.href = '/dashboard';
             }
         }
         
@@ -413,11 +406,7 @@
                                 localStorage.setItem('snackreach_company_name', data.user.companyName || company);
                                 
                                 // Redirect to appropriate dashboard
-                                if (selectedUserType === 'startup') {
-                                    window.location.href = 'snack-dashboard.html';
-                                } else {
-                                    window.location.href = 'office-dashboard.html';
-                                }
+                                window.location.href = '/dashboard';
                                 return;
                             }
                         }

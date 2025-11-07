@@ -23,12 +23,7 @@ function updateNavigationForLoggedInUser(userType) {
     const companyName = localStorage.getItem('snackreach_company_name') || '';
     
     // Determine dashboard URL based on user type
-    let dashboardUrl = 'snack-dashboard.html';
-    if (userType === 'office') {
-        dashboardUrl = 'office-dashboard.html';
-    } else if (userType === 'owner') {
-        dashboardUrl = 'owner-dashboard.html';
-    }
+    const dashboardUrl = '/dashboard';
     
     // Update navigation buttons
     navButtons.innerHTML = `

@@ -221,14 +221,7 @@
             const userType = localStorage.getItem('snackreach_user_type');
             
             if (token && userType) {
-                // User is already logged in - redirect to their dashboard
-                if (userType === 'owner') {
-                    window.location.href = 'owner-dashboard.html';
-                } else if (userType === 'startup') {
-                    window.location.href = 'snack-dashboard.html';
-                } else if (userType === 'office') {
-                    window.location.href = 'office-dashboard.html';
-                }
+                window.location.href = '/dashboard';
             }
         }
 
@@ -275,15 +268,7 @@
                     localStorage.setItem('snackreach_company_name', userData.companyName || '');
                     
                     // Redirect based on user type
-                    if (userData.userType === 'owner') {
-                        window.location.href = 'owner-dashboard.html';
-                    } else if (userData.userType === 'startup') {
-                        window.location.href = 'snack-dashboard.html';
-                    } else if (userData.userType === 'office') {
-                        window.location.href = 'office-dashboard.html';
-                    } else {
-                        window.location.href = 'snack-dashboard.html';
-                    }
+                    window.location.href = '/dashboard';
                 }
             } catch (error) {
                 console.error('Error handling Clerk sign-in:', error);
@@ -315,7 +300,7 @@
             localStorage.setItem('snackreach_company_name', 'Demo Snack Company');
             
             alert('Demo login activated! Redirecting to dashboard...');
-            window.location.href = 'snack-dashboard.html';
+            window.location.href = '/dashboard';
         }
 
         // Handle login form submission using Clerk
