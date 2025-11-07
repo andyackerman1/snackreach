@@ -21,10 +21,6 @@ export default function StartupDashboard() {
     email: "",
     companyName: "",
     phone: "",
-    bankName: "",
-    accountNumber: "",
-    routingNumber: "",
-    accountHolderName: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -62,10 +58,6 @@ export default function StartupDashboard() {
       email: user.emailAddresses[0]?.emailAddress || "",
       companyName: user.publicMetadata?.companyName || "",
       phone: user.publicMetadata?.phone || "",
-      bankName: user.publicMetadata?.bankName || "",
-      accountNumber: user.publicMetadata?.accountNumber || "",
-      routingNumber: user.publicMetadata?.routingNumber || "",
-      accountHolderName: user.publicMetadata?.accountHolderName || "",
     });
   }, [user]);
 
@@ -117,12 +109,14 @@ export default function StartupDashboard() {
       email: user.emailAddresses[0]?.emailAddress || "",
       companyName: user.publicMetadata?.companyName || "",
       phone: user.publicMetadata?.phone || "",
-      bankName: user.publicMetadata?.bankName || "",
-      accountNumber: user.publicMetadata?.accountNumber || "",
-      routingNumber: user.publicMetadata?.routingNumber || "",
-      accountHolderName: user.publicMetadata?.accountHolderName || "",
     });
     setShowEditProfileModal(true);
+  };
+
+  const handleConnectPlaid = () => {
+    // TODO: Implement Plaid connection
+    console.log("Connect to Plaid clicked");
+    alert("Plaid integration coming soon!");
   };
 
   const handleCloseEditProfile = () => {
@@ -709,23 +703,40 @@ export default function StartupDashboard() {
                   <p className="text-xs text-gray-500 uppercase mb-1">Account Type</p>
                   <p className="text-sm text-gray-900">Food Startup</p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase mb-1">Current Bank</p>
-                  {(user.publicMetadata?.bankName || user.publicMetadata?.accountNumber) ? (
-                    <div className="space-y-1">
-                      {user.publicMetadata?.bankName && (
-                        <p className="text-sm text-gray-900">{user.publicMetadata.bankName}</p>
-                      )}
-                      {user.publicMetadata?.accountNumber && (
-                        <p className="text-sm text-gray-900">
-                          ****{user.publicMetadata.accountNumber.slice(-4)}
-                        </p>
-                      )}
+              </div>
+
+              {/* Plaid Connection Section */}
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-xs text-gray-500 uppercase mb-3">Banking</p>
+                {user.publicMetadata?.plaidConnected ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <i className="fas fa-check-circle text-green-600 mr-2"></i>
+                        <span className="text-sm text-gray-900">Connected to Plaid</span>
+                      </div>
+                      <button
+                        onClick={handleConnectPlaid}
+                        className="text-xs text-red-600 hover:text-red-700"
+                      >
+                        Reconnect
+                      </button>
                     </div>
-                  ) : (
-                    <p className="text-sm text-gray-400">Not set</p>
-                  )}
-                </div>
+                    {user.publicMetadata?.plaidAccountName && (
+                      <p className="text-xs text-gray-500">
+                        Account: {user.publicMetadata.plaidAccountName}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleConnectPlaid}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center justify-center"
+                  >
+                    <i className="fas fa-link mr-2"></i>
+                    Connect to Plaid
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1032,73 +1043,47 @@ export default function StartupDashboard() {
                 />
               </div>
 
-              {/* Banking Information Section */}
+              {/* Plaid Connection Section */}
               <div className="mb-6 pt-6 border-t">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   <i className="fas fa-university mr-2 text-red-600"></i>
                   Banking Information
                 </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="profile-bank-name" className="block text-sm font-medium text-gray-700 mb-2">
-                      Bank Name
-                    </label>
-                    <input
-                      type="text"
-                      id="profile-bank-name"
-                      name="bankName"
-                      value={profileData.bankName}
-                      onChange={handleProfileInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                      placeholder="Enter bank name"
-                    />
+                {user.publicMetadata?.plaidConnected ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <i className="fas fa-check-circle text-green-600 mr-2"></i>
+                        <span className="text-sm font-medium text-gray-900">Connected to Plaid</span>
+                      </div>
+                      <button
+                        onClick={handleConnectPlaid}
+                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Reconnect
+                      </button>
+                    </div>
+                    {user.publicMetadata?.plaidAccountName && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        Account: {user.publicMetadata.plaidAccountName}
+                      </p>
+                    )}
                   </div>
-                  <div>
-                    <label htmlFor="profile-account-holder" className="block text-sm font-medium text-gray-700 mb-2">
-                      Account Holder Name
-                    </label>
-                    <input
-                      type="text"
-                      id="profile-account-holder"
-                      name="accountHolderName"
-                      value={profileData.accountHolderName}
-                      onChange={handleProfileInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                      placeholder="Enter account holder name"
-                    />
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                    <i className="fas fa-university text-gray-400 text-3xl mb-3"></i>
+                    <p className="text-sm text-gray-700 mb-4">
+                      Connect your bank account securely through Plaid
+                    </p>
+                    <button
+                      onClick={handleConnectPlaid}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                      <i className="fas fa-link mr-2"></i>
+                      Connect to Plaid
+                    </button>
                   </div>
-                  <div>
-                    <label htmlFor="profile-routing-number" className="block text-sm font-medium text-gray-700 mb-2">
-                      Routing Number
-                    </label>
-                    <input
-                      type="text"
-                      id="profile-routing-number"
-                      name="routingNumber"
-                      value={profileData.routingNumber}
-                      onChange={handleProfileInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                      placeholder="Enter routing number"
-                      maxLength="9"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">9-digit routing number</p>
-                  </div>
-                  <div>
-                    <label htmlFor="profile-account-number" className="block text-sm font-medium text-gray-700 mb-2">
-                      Account Number
-                    </label>
-                    <input
-                      type="text"
-                      id="profile-account-number"
-                      name="accountNumber"
-                      value={profileData.accountNumber}
-                      onChange={handleProfileInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                      placeholder="Enter account number"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">For security, only the last 4 digits will be displayed</p>
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-4 pt-4 border-t">
