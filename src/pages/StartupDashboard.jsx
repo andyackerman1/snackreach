@@ -277,8 +277,8 @@ export default function StartupDashboard() {
     setShowCompanyInfoModal(false);
   };
 
-  // Helper function to compress/resize image
-  const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.8) => {
+  // Helper function to compress/resize image - works with any size photo
+  const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.85, attempt = 1) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -288,7 +288,7 @@ export default function StartupDashboard() {
           let width = img.width;
           let height = img.height;
 
-          // Calculate new dimensions
+          // Calculate new dimensions to fit within max dimensions
           if (width > height) {
             if (width > maxWidth) {
               height = (height * maxWidth) / width;
@@ -311,14 +311,27 @@ export default function StartupDashboard() {
           const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
           
           // Check size (Clerk metadata limit is ~500KB, base64 is ~33% larger than binary)
-          // So we want to keep base64 under ~400KB to be safe
+          // So we want to keep base64 under ~450KB to be safe
           const base64Size = (compressedDataUrl.length * 3) / 4;
-          if (base64Size > 400000) {
+          
+          if (base64Size > 450000) {
             // If still too large, compress more aggressively
-            if (quality > 0.5) {
-              resolve(compressImage(file, maxWidth * 0.8, maxHeight * 0.8, quality * 0.8));
+            // Reduce dimensions and quality progressively
+            const newMaxWidth = Math.max(400, maxWidth * 0.75);
+            const newMaxHeight = Math.max(400, maxHeight * 0.75);
+            const newQuality = Math.max(0.3, quality * 0.85);
+            
+            // Prevent infinite recursion (max 10 attempts)
+            if (attempt < 10) {
+              resolve(compressImage(file, newMaxWidth, newMaxHeight, newQuality, attempt + 1));
             } else {
-              reject(new Error("Image is too large. Please use a smaller image file."));
+              // Last attempt - use minimum settings
+              const finalCanvas = document.createElement('canvas');
+              finalCanvas.width = 400;
+              finalCanvas.height = 400;
+              const finalCtx = finalCanvas.getContext('2d');
+              finalCtx.drawImage(img, 0, 0, 400, 400);
+              resolve(finalCanvas.toDataURL('image/jpeg', 0.3));
             }
           } else {
             resolve(compressedDataUrl);
@@ -346,13 +359,8 @@ export default function StartupDashboard() {
       
       // Handle logo: only convert if a new file was selected
       if (companyInfo.logo) {
-        // Check file size first (before compression)
-        const fileSizeMB = companyInfo.logo.size / (1024 * 1024);
-        if (fileSizeMB > 5) {
-          throw new Error("Image file is too large. Please use an image smaller than 5MB.");
-        }
-
-        // Compress and convert to base64
+        // Compress and convert to base64 - works with any size photo
+        // The compression function will automatically resize and compress to fit Clerk's limits
         try {
           const logoData = await compressImage(companyInfo.logo);
           requestBody.logo = logoData;
@@ -386,7 +394,7 @@ export default function StartupDashboard() {
         
         // Provide more helpful error messages
         if (response.status === 422 || errorMessage.includes('Unprocessable Entity')) {
-          throw new Error("The logo image is too large. Please use a smaller image (under 5MB) or try compressing it.");
+          throw new Error("Failed to upload logo. Please try again or use a different image.");
         }
         throw new Error(errorMessage);
       }
