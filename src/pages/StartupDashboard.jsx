@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 export default function StartupDashboard() {
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState("products"); // products, orders, offices
+  const [activeView, setActiveView] = useState("products"); // products, orders, offices, explore
   const [orderFilter, setOrderFilter] = useState("active"); // active, past
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
@@ -22,11 +22,44 @@ export default function StartupDashboard() {
     phone: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Explore search filters
+  const [searchFilters, setSearchFilters] = useState({
+    location: "",
+    name: "",
+    snackPreference: "",
+  });
 
   // Mock data - replace with API calls
   const [products] = useState([]);
   const [orders] = useState([]);
   const [offices] = useState([]);
+  const [allOffices] = useState([
+    {
+      id: 1,
+      name: "Tech Startup Hub",
+      location: "San Francisco, CA",
+      snackPreference: "Healthy snacks, protein bars",
+      companySize: "50-100 employees",
+      contactEmail: "office@techhub.com",
+    },
+    {
+      id: 2,
+      name: "Corporate Tower",
+      location: "New York, NY",
+      snackPreference: "Variety packs, chips, cookies",
+      companySize: "200+ employees",
+      contactEmail: "facilities@corptower.com",
+    },
+    {
+      id: 3,
+      name: "Creative Agency",
+      location: "Los Angeles, CA",
+      snackPreference: "Organic snacks, vegan options",
+      companySize: "20-50 employees",
+      contactEmail: "manager@creativeagency.com",
+    },
+  ]);
 
   if (!isLoaded) {
     return (
@@ -129,6 +162,14 @@ export default function StartupDashboard() {
     const { name, value } = e.target;
     setProfileData({
       ...profileData,
+      [name]: value,
+    });
+  };
+
+  const handleSearchFilterChange = (e) => {
+    const { name, value } = e.target;
+    setSearchFilters({
+      ...searchFilters,
       [name]: value,
     });
   };
@@ -388,6 +429,146 @@ export default function StartupDashboard() {
       );
     }
 
+    if (activeView === "explore") {
+      // Filter offices based on search criteria
+      const filteredOffices = allOffices.filter((office) => {
+        const matchesLocation = !searchFilters.location || 
+          office.location.toLowerCase().includes(searchFilters.location.toLowerCase());
+        const matchesName = !searchFilters.name || 
+          office.name.toLowerCase().includes(searchFilters.name.toLowerCase());
+        const matchesSnackPreference = !searchFilters.snackPreference || 
+          office.snackPreference.toLowerCase().includes(searchFilters.snackPreference.toLowerCase());
+        
+        return matchesLocation && matchesName && matchesSnackPreference;
+      });
+
+      return (
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                <i className="fas fa-search mr-2 text-red-600"></i>
+                Explore Office Spaces
+              </h2>
+              <p className="text-gray-600 text-sm mt-1">
+                Discover offices looking for snack partnerships
+              </p>
+            </div>
+          </div>
+          
+          {/* Search Filters */}
+          <div className="p-6 border-b bg-gray-50">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="search-location" className="block text-sm font-medium text-gray-700 mb-2">
+                  <i className="fas fa-map-marker-alt mr-1 text-red-600"></i>
+                  Location
+                </label>
+                <input
+                  type="text"
+                  id="search-location"
+                  name="location"
+                  value={searchFilters.location}
+                  onChange={handleSearchFilterChange}
+                  placeholder="e.g., San Francisco, CA"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label htmlFor="search-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <i className="fas fa-building mr-1 text-red-600"></i>
+                  Office Name
+                </label>
+                <input
+                  type="text"
+                  id="search-name"
+                  name="name"
+                  value={searchFilters.name}
+                  onChange={handleSearchFilterChange}
+                  placeholder="e.g., Tech Startup Hub"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label htmlFor="search-snack" className="block text-sm font-medium text-gray-700 mb-2">
+                  <i className="fas fa-utensils mr-1 text-red-600"></i>
+                  Snack Preference
+                </label>
+                <input
+                  type="text"
+                  id="search-snack"
+                  name="snackPreference"
+                  value={searchFilters.snackPreference}
+                  onChange={handleSearchFilterChange}
+                  placeholder="e.g., healthy snacks, protein bars"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                />
+              </div>
+            </div>
+            {(searchFilters.location || searchFilters.name || searchFilters.snackPreference) && (
+              <button
+                onClick={() => setSearchFilters({ location: "", name: "", snackPreference: "" })}
+                className="mt-4 text-sm text-red-600 hover:text-red-700"
+              >
+                <i className="fas fa-times mr-1"></i>
+                Clear Filters
+              </button>
+            )}
+          </div>
+
+          {/* Results */}
+          <div className="p-6">
+            {filteredOffices.length === 0 ? (
+              <div className="text-center py-12">
+                <i className="fas fa-search text-gray-300 text-5xl mb-4"></i>
+                <p className="text-gray-500 mb-4">No offices found</p>
+                <p className="text-sm text-gray-400">
+                  Try adjusting your search filters
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Found {filteredOffices.length} office{filteredOffices.length !== 1 ? 's' : ''}
+                </p>
+                {filteredOffices.map((office) => (
+                  <div key={office.id} className="border rounded-lg p-6 hover:shadow-lg transition">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-xl text-gray-900 mb-2">{office.name}</h3>
+                        <div className="space-y-2">
+                          <p className="text-gray-600">
+                            <i className="fas fa-map-marker-alt mr-2 text-red-600"></i>
+                            {office.location}
+                          </p>
+                          <p className="text-gray-600">
+                            <i className="fas fa-users mr-2 text-red-600"></i>
+                            {office.companySize}
+                          </p>
+                          <p className="text-gray-600">
+                            <i className="fas fa-utensils mr-2 text-red-600"></i>
+                            <span className="font-medium">Looking for:</span> {office.snackPreference}
+                          </p>
+                          <p className="text-gray-600">
+                            <i className="fas fa-envelope mr-2 text-red-600"></i>
+                            {office.contactEmail}
+                          </p>
+                        </div>
+                      </div>
+                      <button className="ml-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                        <i className="fas fa-paper-plane mr-2"></i>
+                        Contact
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -430,7 +611,7 @@ export default function StartupDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <button
             onClick={() => setActiveView("offices")}
             className={`bg-white rounded-lg shadow p-6 text-left hover:shadow-lg transition ${
@@ -478,6 +659,22 @@ export default function StartupDashboard() {
               </div>
               <div className="bg-purple-100 rounded-full p-3">
                 <i className="fas fa-box text-purple-600 text-xl"></i>
+              </div>
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveView("explore")}
+            className={`bg-white rounded-lg shadow p-6 text-left hover:shadow-lg transition ${
+              activeView === "explore" ? "ring-2 ring-red-600" : ""
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Explore</p>
+                <p className="text-2xl font-bold text-gray-900">{allOffices.length}</p>
+              </div>
+              <div className="bg-orange-100 rounded-full p-3">
+                <i className="fas fa-search text-orange-600 text-xl"></i>
               </div>
             </div>
           </button>
