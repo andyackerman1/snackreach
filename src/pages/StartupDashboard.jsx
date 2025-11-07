@@ -334,117 +334,100 @@ export default function StartupDashboard() {
   };
 
   // Helper function to compress/resize image - works with any size photo
-  const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.85, attempt = 1) => {
+  const compressImage = (file) => {
+    const MAX_BYTES = 450000;
+    const ATTEMPTS = [
+      { maxWidth: 1600, maxHeight: 1600, quality: 0.9, type: "image/jpeg" },
+      { maxWidth: 1400, maxHeight: 1400, quality: 0.8, type: "image/jpeg" },
+      { maxWidth: 1200, maxHeight: 1200, quality: 0.7, type: "image/jpeg" },
+      { maxWidth: 1000, maxHeight: 1000, quality: 0.6, type: "image/jpeg" },
+      { maxWidth: 800, maxHeight: 800, quality: 0.55, type: "image/jpeg" },
+      { maxWidth: 600, maxHeight: 600, quality: 0.5, type: "image/jpeg" },
+      { maxWidth: 450, maxHeight: 450, quality: 0.45, type: "image/jpeg" },
+      { maxWidth: 360, maxHeight: 360, quality: 0.4, type: "image/jpeg" },
+      { maxWidth: 320, maxHeight: 320, quality: 0.35, type: "image/webp" },
+      { maxWidth: 260, maxHeight: 260, quality: 0.3, type: "image/webp" },
+      { maxWidth: 220, maxHeight: 220, quality: 0.28, type: "image/webp" },
+      { maxWidth: 180, maxHeight: 180, quality: 0.25, type: "image/webp" },
+    ];
+
+    const getScaledDimensions = (width, height, maxWidth, maxHeight) => {
+      let newWidth = width;
+      let newHeight = height;
+
+      if (newWidth > maxWidth || newHeight > maxHeight) {
+        const widthRatio = maxWidth / newWidth;
+        const heightRatio = maxHeight / newHeight;
+        const scale = Math.min(widthRatio, heightRatio);
+        newWidth = Math.max(1, Math.floor(newWidth * scale));
+        newHeight = Math.max(1, Math.floor(newHeight * scale));
+      }
+
+      return { width: newWidth, height: newHeight };
+    };
+
     return new Promise((resolve, reject) => {
-      // Validate file type
-      if (!file || !file.type || !file.type.startsWith('image/')) {
+      if (!file || !file.type || !file.type.startsWith("image/")) {
         reject(new Error("Please select a valid image file (PNG, JPG, or GIF)"));
         return;
       }
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          try {
-            console.log("Compressing image:", img.width, "x", img.height, "attempt", attempt);
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-
-            // Calculate new dimensions to fit within max dimensions
-            if (width > height) {
-              if (width > maxWidth) {
-                height = (height * maxWidth) / width;
-                width = maxWidth;
-              }
-            } else {
-              if (height > maxHeight) {
-                width = (width * maxHeight) / height;
-                height = maxHeight;
-              }
+          const tryAttempt = (index) => {
+            if (index >= ATTEMPTS.length) {
+              reject(new Error("Unable to compress image below 500KB. Please choose an image with smaller dimensions or less detail."));
+              return;
             }
 
-            // Ensure minimum dimensions
-            width = Math.max(1, Math.round(width));
-            height = Math.max(1, Math.round(height));
+            const { maxWidth, maxHeight, quality, type } = ATTEMPTS[index];
+            const { width, height } = getScaledDimensions(img.width, img.height, maxWidth, maxHeight);
 
+            const canvas = document.createElement("canvas");
             canvas.width = width;
             canvas.height = height;
 
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              reject(new Error("Unable to access canvas for image compression."));
+              return;
+            }
+
+            if (type === "image/jpeg") {
+              ctx.fillStyle = "#ffffff";
+              ctx.fillRect(0, 0, width, height);
+            }
+
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Convert to base64 with compression
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-            
-            // Check size (Clerk metadata limit is ~500KB, base64 is ~33% larger than binary)
-            // So we want to keep base64 under ~450KB to be safe
-            const base64Size = (compressedDataUrl.length * 3) / 4;
-            
-            if (base64Size > 450000 && attempt < 10) {
-              // If still too large, compress more aggressively
-              // Reduce dimensions and quality progressively
-              const newMaxWidth = Math.max(400, maxWidth * 0.75);
-              const newMaxHeight = Math.max(400, maxHeight * 0.75);
-              const newQuality = Math.max(0.3, quality * 0.85);
-              
-              // Recursively compress with new settings, using the same image
-              const compressRecursive = (imgElement, w, h, q, att) => {
-                const newCanvas = document.createElement('canvas');
-                let newWidth = imgElement.width;
-                let newHeight = imgElement.height;
-
-                if (newWidth > newHeight) {
-                  if (newWidth > w) {
-                    newHeight = (newHeight * w) / newWidth;
-                    newWidth = w;
-                  }
-                } else {
-                  if (newHeight > h) {
-                    newWidth = (newWidth * h) / newHeight;
-                    newHeight = h;
-                  }
-                }
-
-                newWidth = Math.max(1, Math.round(newWidth));
-                newHeight = Math.max(1, Math.round(newHeight));
-
-                newCanvas.width = newWidth;
-                newCanvas.height = newHeight;
-
-                const newCtx = newCanvas.getContext('2d');
-                newCtx.drawImage(imgElement, 0, 0, newWidth, newHeight);
-
-                const newDataUrl = newCanvas.toDataURL('image/jpeg', q);
-                const newSize = (newDataUrl.length * 3) / 4;
-
-                if (newSize > 450000 && att < 10) {
-                  return compressRecursive(imgElement, w * 0.75, h * 0.75, q * 0.85, att + 1);
-                } else {
-                  return newDataUrl;
-                }
-              };
-
-              const finalDataUrl = compressRecursive(img, newMaxWidth, newMaxHeight, newQuality, attempt + 1);
-              resolve(finalDataUrl);
-            } else if (base64Size > 450000) {
-              // Last resort - force to minimum size
-              const finalCanvas = document.createElement('canvas');
-              finalCanvas.width = 400;
-              finalCanvas.height = 400;
-              const finalCtx = finalCanvas.getContext('2d');
-              finalCtx.drawImage(img, 0, 0, 400, 400);
-              resolve(finalCanvas.toDataURL('image/jpeg', 0.3));
-            } else {
-              resolve(compressedDataUrl);
+            let dataUrl;
+            try {
+              dataUrl = canvas.toDataURL(type, quality);
+            } catch (canvasError) {
+              reject(new Error("Failed to process image. Please try a different file."));
+              return;
             }
-          } catch (error) {
-            reject(new Error("Failed to compress image: " + error.message));
-          }
+
+            const base64Payload = dataUrl.split(",")[1] || "";
+            const base64Size = Math.ceil((base64Payload.length * 3) / 4);
+
+            console.log(
+              `Compression attempt ${index + 1}: ${width}x${height}, quality ${quality}, format ${type}, size ${base64Size} bytes`
+            );
+
+            if (base64Size <= MAX_BYTES) {
+              resolve(dataUrl);
+            } else {
+              tryAttempt(index + 1);
+            }
+          };
+
+          tryAttempt(0);
         };
         img.onerror = () => reject(new Error("Failed to load image. Please ensure the file is a valid image."));
-        img.src = e.target.result;
+        img.src = event.target.result;
       };
       reader.onerror = () => reject(new Error("Failed to read file. Please try a different image."));
       reader.readAsDataURL(file);
