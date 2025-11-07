@@ -23,6 +23,8 @@ export default function OfficeDashboard() {
   const [startups, setStartups] = useState([]);
   const [orders] = useState([]);
   const [isLoadingStartups, setIsLoadingStartups] = useState(false);
+  const [selectedStartup, setSelectedStartup] = useState(null);
+  const [startupProducts, setStartupProducts] = useState([]);
 
   if (!isLoaded) {
     return (
@@ -190,6 +192,14 @@ export default function OfficeDashboard() {
     }
   };
 
+  const handleViewStartup = async (startup) => {
+    setSelectedStartup(startup);
+    // TODO: Fetch products for this startup from API
+    // For now, products are stored locally in startup dashboard
+    // This will need to be implemented when products are stored in backend
+    setStartupProducts([]);
+  };
+
   const renderMainContent = () => {
     if (activeView === "startups") {
       return (
@@ -234,37 +244,119 @@ export default function OfficeDashboard() {
                   🧪 Test API Connection
                 </button>
               </div>
+            ) : selectedStartup ? (
+              <div>
+                <button
+                  onClick={() => setSelectedStartup(null)}
+                  className="mb-4 px-4 py-2 text-gray-600 hover:text-gray-900 transition"
+                >
+                  <i className="fas fa-arrow-left mr-2"></i>
+                  Back to Startups
+                </button>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-start gap-6 mb-6">
+                    {selectedStartup.logo && (
+                      <img
+                        src={selectedStartup.logo}
+                        alt={selectedStartup.companyName || selectedStartup.name}
+                        className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                        {selectedStartup.companyName || selectedStartup.name}
+                      </h2>
+                      {selectedStartup.description && (
+                        <p className="text-gray-600 mb-4">{selectedStartup.description}</p>
+                      )}
+                      {selectedStartup.email && (
+                        <p className="text-gray-600 text-sm">
+                          <i className="fas fa-envelope mr-2 text-red-600"></i>
+                          {selectedStartup.email}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleMessageStartup(selectedStartup)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                    >
+                      <i className="fas fa-comment mr-2"></i>
+                      Message
+                    </button>
+                  </div>
+                  
+                  <div className="border-t pt-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">Products</h3>
+                    {startupProducts.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">
+                        No products listed yet
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {startupProducts.map((product) => (
+                          <div key={product.id} className="border rounded-lg p-4 hover:shadow-md transition">
+                            {product.image && (
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="w-full h-48 object-cover rounded-lg mb-3"
+                              />
+                            )}
+                            <h4 className="font-bold text-lg mb-2">{product.name}</h4>
+                            {product.description && (
+                              <p className="text-gray-600 text-sm mb-2">{product.description}</p>
+                            )}
+                            {product.price && (
+                              <p className="text-red-600 font-semibold">{product.price}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="space-y-4">
                 {startups.map((startup) => (
-                  <div key={startup.id} className="border rounded-lg p-6 hover:shadow-lg transition">
+                  <div 
+                    key={startup.id} 
+                    className="border rounded-lg p-6 hover:shadow-lg transition cursor-pointer"
+                    onClick={() => handleViewStartup(startup)}
+                  >
                     <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-bold text-xl text-gray-900 mb-2">
-                          {startup.companyName || startup.name}
-                        </h3>
-                        {startup.companyName && startup.name && startup.name !== startup.companyName && (
-                          <p className="text-sm text-gray-500 mb-2">{startup.name}</p>
+                      <div className="flex gap-4 flex-1">
+                        {startup.logo && (
+                          <img
+                            src={startup.logo}
+                            alt={startup.companyName || startup.name}
+                            className="w-20 h-20 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+                          />
                         )}
-                        {startup.productName && (
-                          <p className="text-red-600 font-semibold mb-2">
-                            Product: {startup.productName}
-                            {startup.productPrice && ` - ${startup.productPrice}`}
-                          </p>
-                        )}
-                        {startup.description && (
-                          <p className="text-gray-600 text-sm mb-2">{startup.description}</p>
-                        )}
-                        {startup.email && (
-                          <p className="text-gray-600 text-sm">
-                            <i className="fas fa-envelope mr-2 text-red-600"></i>
-                            {startup.email}
-                          </p>
-                        )}
+                        <div className="flex-1">
+                          <h3 className="font-bold text-xl text-gray-900 mb-2">
+                            {startup.companyName || startup.name}
+                          </h3>
+                          {startup.companyName && startup.name && startup.name !== startup.companyName && (
+                            <p className="text-sm text-gray-500 mb-2">{startup.name}</p>
+                          )}
+                          {startup.description && (
+                            <p className="text-gray-600 text-sm mb-2 line-clamp-2">{startup.description}</p>
+                          )}
+                          {startup.email && (
+                            <p className="text-gray-600 text-sm">
+                              <i className="fas fa-envelope mr-2 text-red-600"></i>
+                              {startup.email}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <button
-                        onClick={() => handleMessageStartup(startup)}
-                        className="ml-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMessageStartup(startup);
+                        }}
+                        className="ml-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex-shrink-0"
                       >
                         <i className="fas fa-comment mr-2"></i>
                         Message

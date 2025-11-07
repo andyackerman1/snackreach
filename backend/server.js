@@ -1308,6 +1308,7 @@ app.get('/api/startups', authenticateToken, async (req, res) => {
             email: u.emailAddresses[0]?.emailAddress || '',
             phone: u.privateMetadata?.phone || '',
             description: u.publicMetadata?.description || '',
+            logo: u.publicMetadata?.logo || null,
             createdAt: u.createdAt || new Date().toISOString()
         }));
 

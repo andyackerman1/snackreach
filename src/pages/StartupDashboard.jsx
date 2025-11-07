@@ -24,6 +24,12 @@ export default function StartupDashboard() {
     companyName: "",
     phone: "",
   });
+  const [showCompanyInfoModal, setShowCompanyInfoModal] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState({
+    description: "",
+    logo: null,
+    logoPreview: null,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Explore search filters
@@ -64,6 +70,11 @@ export default function StartupDashboard() {
       email: user.emailAddresses[0]?.emailAddress || "",
       companyName: user.publicMetadata?.companyName || "",
       phone: user.publicMetadata?.phone || "",
+    });
+    setCompanyInfo({
+      description: user.publicMetadata?.description || "",
+      logo: null,
+      logoPreview: user.publicMetadata?.logo || null,
     });
   }, [user]);
 
@@ -203,6 +214,56 @@ export default function StartupDashboard() {
       ...profileData,
       [name]: value,
     });
+  };
+
+  const handleCompanyInfoChange = (e) => {
+    const { name, value } = e.target;
+    setCompanyInfo({
+      ...companyInfo,
+      [name]: value,
+    });
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCompanyInfo({
+        ...companyInfo,
+        logo: file,
+        logoPreview: URL.createObjectURL(file),
+      });
+    }
+  };
+
+  const handleOpenCompanyInfo = () => {
+    setCompanyInfo({
+      description: user.publicMetadata?.description || "",
+      logo: null,
+      logoPreview: user.publicMetadata?.logo || null,
+    });
+    setShowCompanyInfoModal(true);
+  };
+
+  const handleCloseCompanyInfo = () => {
+    setShowCompanyInfoModal(false);
+  };
+
+  const handleSubmitCompanyInfo = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // TODO: Implement API call to update company info
+      console.log("Company info data:", companyInfo);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      alert("Company information updated successfully!");
+      handleCloseCompanyInfo();
+    } catch (error) {
+      console.error("Error updating company info:", error);
+      alert("Failed to update company information. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSearchFilterChange = (e) => {
@@ -1021,6 +1082,41 @@ export default function StartupDashboard() {
                 </div>
               </div>
             </div>
+            
+            {/* Company Info Section */}
+            <div className="bg-white rounded-lg shadow p-6 mt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Company Info
+                </h3>
+                <button
+                  onClick={handleOpenCompanyInfo}
+                  className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                >
+                  <i className="fas fa-edit mr-1"></i>
+                  Edit
+                </button>
+              </div>
+              <div className="space-y-3">
+                {companyInfo.logoPreview && (
+                  <div className="mb-4">
+                    <img
+                      src={companyInfo.logoPreview}
+                      alt="Company logo"
+                      className="w-24 h-24 object-cover rounded-lg border border-gray-200"
+                    />
+                  </div>
+                )}
+                {companyInfo.description ? (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase mb-1">Description</p>
+                    <p className="text-sm text-gray-900">{companyInfo.description}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 italic">No description added yet</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -1378,6 +1474,107 @@ export default function StartupDashboard() {
                     <>
                       <i className="fas fa-check mr-2"></i>
                       Update Profile
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Company Info Modal */}
+      {showCompanyInfoModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={handleCloseCompanyInfo}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Edit Company Info
+              </h2>
+              <button
+                onClick={handleCloseCompanyInfo}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSubmitCompanyInfo} className="p-6">
+              <div className="mb-6">
+                <label htmlFor="company-logo" className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Logo
+                </label>
+                <div className="space-y-4">
+                  {companyInfo.logoPreview && (
+                    <div className="relative w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                      <img
+                        src={companyInfo.logoPreview}
+                        alt="Logo preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <i className="fas fa-image text-3xl text-gray-400 mb-2"></i>
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (MAX. 5MB)</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="company-logo"
+                      accept="image/*"
+                      onChange={handleLogoChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className="mb-6">
+                <label htmlFor="company-description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Description
+                </label>
+                <textarea
+                  id="company-description"
+                  name="description"
+                  value={companyInfo.description}
+                  onChange={handleCompanyInfoChange}
+                  rows={5}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="Tell offices about your company, your mission, and what makes you special..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-4 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={handleCloseCompanyInfo}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-check mr-2"></i>
+                      Save Company Info
                     </>
                   )}
                 </button>
