@@ -794,9 +794,18 @@ async function authenticateToken(req, res, next) {
                 
                 // Verify Clerk session token
                 try {
-                    // Clerk uses JWT tokens - verify the token
+                    // The token from frontend getToken() is a JWT session token
+                    // We need to verify it using Clerk's verifyToken
                     const { verifyToken } = require('@clerk/clerk-sdk-node');
+                    
+                    // verifyToken uses the CLERK_SECRET_KEY from environment automatically
                     const session = await verifyToken(token);
+                    
+                    console.log('🔍 Token verification result:', {
+                        hasSession: !!session,
+                        sub: session?.sub,
+                        sessionId: session?.sid
+                    });
                     
                     if (session && session.sub) {
                         // Get user from Clerk (all data lives in Clerk)
@@ -806,36 +815,38 @@ async function authenticateToken(req, res, next) {
                         req.userType = clerkUser.publicMetadata?.userType || 'office';
                         req.email = clerkUser.emailAddresses[0]?.emailAddress || '';
                         
+                        console.log(`✅ Authenticated user: ${req.userId}, type: ${req.userType}`);
                         // All user data is in Clerk - no Supabase needed
                         return next();
+                    } else {
+                        console.error('❌ Session verification returned no sub:', session);
+                        return res.status(403).json({ error: 'Invalid token: no user ID found' });
                     }
                 } catch (clerkError) {
-                    // Clerk token invalid, try JWT fallback
-                    console.log('Clerk token verification failed, trying JWT fallback:', clerkError.message);
+                    // Clerk token invalid - log the error for debugging
+                    console.error('❌ Clerk token verification failed:', clerkError.message);
+                    console.error('Error stack:', clerkError.stack);
+                    console.error('Token preview:', token ? token.substring(0, 30) + '...' : 'No token');
+                    
+                    // Return 403 with helpful error message
+                    return res.status(403).json({ 
+                        error: 'Invalid or expired token',
+                        details: clerkError.message,
+                        hint: 'Token from getToken() may need to be refreshed. Try logging out and back in.'
+                    });
                 }
+            } else {
+                // No authorization header
+                return res.status(401).json({ error: 'Authorization header required' });
             }
         } catch (error) {
             console.error('Clerk authentication error:', error);
-            // Fall through to JWT fallback
+            return res.status(500).json({ error: 'Authentication error: ' + error.message });
         }
+    } else {
+        // Clerk not configured - return error
+        return res.status(503).json({ error: 'Clerk is not configured' });
     }
-    
-    // Fallback to JWT authentication (for backward compatibility)
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ error: 'Access token required' });
-    }
-
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ error: 'Invalid or expired token' });
-        }
-        req.userId = user.userId;
-        req.userType = user.userType;
-        next();
-    });
 }
 
 // Get user profile - all data from Clerk
