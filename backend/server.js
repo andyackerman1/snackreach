@@ -1177,12 +1177,18 @@ app.get('/api/offices', authenticateToken, async (req, res) => {
         }
 
         // Get all users from Clerk and filter for offices
-        // Note: getUserList returns paginated results, we'll get up to 500 users
+        // Note: getUserList returns paginated results with a data property
         const allUsersResponse = await clerkClient.users.getUserList({ limit: 500 });
-        const allUsers = allUsersResponse.data || allUsersResponse; // Handle both response formats
-        const officeUsers = Array.isArray(allUsers) 
-          ? allUsers.filter(u => u.publicMetadata?.userType === 'office')
-          : [];
+        const allUsers = allUsersResponse.data || [];
+        
+        console.log(`📊 Total users fetched from Clerk: ${allUsers.length}`);
+        
+        const officeUsers = allUsers.filter(u => {
+            const userType = u.publicMetadata?.userType;
+            return userType === 'office';
+        });
+        
+        console.log(`✅ Found ${officeUsers.length} office users`);
         
         const offices = officeUsers.map(u => ({
             id: u.id,
@@ -1197,7 +1203,7 @@ app.get('/api/offices', authenticateToken, async (req, res) => {
             createdAt: u.createdAt || new Date().toISOString()
         }));
 
-        console.log('Returning', offices.length, 'offices for startup:', req.userId);
+        console.log(`📤 Returning ${offices.length} offices for startup: ${req.userId}`);
         res.json(offices);
     } catch (error) {
         console.error('Get offices error:', error);
@@ -1218,12 +1224,18 @@ app.get('/api/startups', authenticateToken, async (req, res) => {
         }
 
         // Get all users from Clerk and filter for startups
-        // Note: getUserList returns paginated results, we'll get up to 500 users
+        // Note: getUserList returns paginated results with a data property
         const allUsersResponse = await clerkClient.users.getUserList({ limit: 500 });
-        const allUsers = allUsersResponse.data || allUsersResponse; // Handle both response formats
-        const startupUsers = Array.isArray(allUsers) 
-          ? allUsers.filter(u => u.publicMetadata?.userType === 'startup')
-          : [];
+        const allUsers = allUsersResponse.data || [];
+        
+        console.log(`📊 Total users fetched from Clerk: ${allUsers.length}`);
+        
+        const startupUsers = allUsers.filter(u => {
+            const userType = u.publicMetadata?.userType;
+            return userType === 'startup';
+        });
+        
+        console.log(`✅ Found ${startupUsers.length} startup users`);
         
         const startups = startupUsers.map(u => ({
             id: u.id,
@@ -1235,7 +1247,7 @@ app.get('/api/startups', authenticateToken, async (req, res) => {
             createdAt: u.createdAt || new Date().toISOString()
         }));
 
-        console.log('Returning', startups.length, 'startups for office:', req.userId);
+        console.log(`📤 Returning ${startups.length} startups for office: ${req.userId}`);
         res.json(startups);
     } catch (error) {
         console.error('Get startups error:', error);

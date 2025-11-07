@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useUser, SignOutButton } from "@clerk/clerk-react";
+import { useUser, useAuth, SignOutButton } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
 export default function StartupDashboard() {
   const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState("products"); // products, orders, offices, explore, messages
   const [orderFilter, setOrderFilter] = useState("active"); // active, past
@@ -74,7 +75,8 @@ export default function StartupDashboard() {
       setIsLoadingOffices(true);
       try {
         // Get Clerk session token
-        const session = await user.getToken();
+        const session = await getToken();
+        console.log("🔑 Fetching offices with token:", session ? "Token received" : "No token");
         
         const response = await fetch("/api/offices", {
           headers: {
@@ -83,14 +85,18 @@ export default function StartupDashboard() {
           },
         });
 
+        console.log("📡 Response status:", response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log("✅ Received offices:", data.length);
           setAllOffices(data);
         } else {
-          console.error("Failed to fetch offices:", response.statusText);
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          console.error("❌ Failed to fetch offices:", response.status, errorData);
         }
       } catch (error) {
-        console.error("Error fetching offices:", error);
+        console.error("❌ Error fetching offices:", error);
       } finally {
         setIsLoadingOffices(false);
       }

@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useUser, SignOutButton } from "@clerk/clerk-react";
+import { useUser, useAuth, SignOutButton } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
 export default function OfficeDashboard() {
   const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState("startups"); // startups, orders, messages
   const [orderFilter, setOrderFilter] = useState("active"); // active, past
@@ -55,7 +56,8 @@ export default function OfficeDashboard() {
       setIsLoadingStartups(true);
       try {
         // Get Clerk session token
-        const session = await user.getToken();
+        const session = await getToken();
+        console.log("🔑 Fetching startups with token:", session ? "Token received" : "No token");
         
         const response = await fetch("/api/startups", {
           headers: {
@@ -64,14 +66,18 @@ export default function OfficeDashboard() {
           },
         });
 
+        console.log("📡 Response status:", response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log("✅ Received startups:", data.length);
           setStartups(data);
         } else {
-          console.error("Failed to fetch startups:", response.statusText);
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          console.error("❌ Failed to fetch startups:", response.status, errorData);
         }
       } catch (error) {
-        console.error("Error fetching startups:", error);
+        console.error("❌ Error fetching startups:", error);
       } finally {
         setIsLoadingStartups(false);
       }
