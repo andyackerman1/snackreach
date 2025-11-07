@@ -828,7 +828,7 @@ export default function StartupDashboard() {
               </div>
               <div className="mb-6">
                 <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-2">
-                  Price per Unit
+                  Price or Price Range per Unit
                 </label>
                 <input
                   type="text"
@@ -837,9 +837,9 @@ export default function StartupDashboard() {
                   value={productData.price}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                  placeholder="e.g., $10.99"
+                  placeholder="e.g., $10.99 or $5-$15"
                 />
-                <p className="text-xs text-gray-500 mt-1">Enter the price per unit</p>
+                <p className="text-xs text-gray-500 mt-1">Enter a single price or price range per unit</p>
               </div>
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
@@ -959,7 +959,7 @@ export default function StartupDashboard() {
               </div>
               <div className="mb-6">
                 <label htmlFor="edit-product-price" className="block text-sm font-medium text-gray-700 mb-2">
-                  Price per Unit
+                  Price or Price Range per Unit
                 </label>
                 <input
                   type="text"
@@ -968,9 +968,9 @@ export default function StartupDashboard() {
                   value={productData.price}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                  placeholder="e.g., $10.99"
+                  placeholder="e.g., $10.99 or $5-$15"
                 />
-                <p className="text-xs text-gray-500 mt-1">Enter the price per unit</p>
+                <p className="text-xs text-gray-500 mt-1">Enter a single price or price range per unit</p>
               </div>
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
