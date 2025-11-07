@@ -706,31 +706,23 @@ export default function StartupDashboard() {
                   <p className="text-xs text-gray-500 uppercase mb-1">Account Type</p>
                   <p className="text-sm text-gray-900">Food Startup</p>
                 </div>
-                {(user.publicMetadata?.bankName || user.publicMetadata?.accountNumber) && (
-                  <div className="mt-4 pt-4 border-t">
-                    <p className="text-xs text-gray-500 uppercase mb-2">Banking Information</p>
-                    {user.publicMetadata?.bankName && (
-                      <div className="mb-2">
-                        <p className="text-xs text-gray-500">Bank Name</p>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase mb-1">Current Bank</p>
+                  {(user.publicMetadata?.bankName || user.publicMetadata?.accountNumber) ? (
+                    <div className="space-y-1">
+                      {user.publicMetadata?.bankName && (
                         <p className="text-sm text-gray-900">{user.publicMetadata.bankName}</p>
-                      </div>
-                    )}
-                    {user.publicMetadata?.accountNumber && (
-                      <div className="mb-2">
-                        <p className="text-xs text-gray-500">Account Number</p>
+                      )}
+                      {user.publicMetadata?.accountNumber && (
                         <p className="text-sm text-gray-900">
                           ****{user.publicMetadata.accountNumber.slice(-4)}
                         </p>
-                      </div>
-                    )}
-                    {user.publicMetadata?.accountHolderName && (
-                      <div className="mb-2">
-                        <p className="text-xs text-gray-500">Account Holder</p>
-                        <p className="text-sm text-gray-900">{user.publicMetadata.accountHolderName}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">Not set</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
