@@ -164,6 +164,11 @@ async function getClerkUserData(userId) {
             companyName: user.publicMetadata?.companyName || '',
             userType: user.publicMetadata?.userType || 'office',
             phone: user.privateMetadata?.phone || '',
+            description: user.publicMetadata?.description || '',
+            logo: user.publicMetadata?.logo || null,
+            snackPreference: user.publicMetadata?.snackPreference || '',
+            messages: user.publicMetadata?.messages || [],
+            products: user.publicMetadata?.products || [],
             subscription: user.publicMetadata?.subscription || {
                 status: 'active',
                 plan: 'premium',
@@ -172,6 +177,8 @@ async function getClerkUserData(userId) {
             },
             cardInfo: user.privateMetadata?.cardInfo || {},
             paymentMethods: user.privateMetadata?.paymentMethods || [],
+            publicMetadata: user.publicMetadata || {},
+            privateMetadata: user.privateMetadata || {},
             createdAt: user.createdAt || new Date().toISOString()
         };
     } catch (error) {

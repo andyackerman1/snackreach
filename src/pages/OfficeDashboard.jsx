@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser, useAuth, SignOutButton } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
@@ -25,6 +25,49 @@ export default function OfficeDashboard() {
   const [isLoadingStartups, setIsLoadingStartups] = useState(false);
   const [selectedStartup, setSelectedStartup] = useState(null);
   const [startupProducts, setStartupProducts] = useState([]);
+
+  const loadMessages = useCallback(
+    async (preserveChatId) => {
+      if (!user) return;
+
+      try {
+        const session = await getToken();
+        if (!session) {
+          console.warn("Unable to load messages: missing session token");
+          return;
+        }
+
+        const response = await fetch("/api/profile", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Failed to load messages:", response.status, errorText);
+          return;
+        }
+
+        const data = await response.json();
+        const latestMessages = data?.user?.publicMetadata?.messages || [];
+        setMessages(latestMessages);
+
+        const targetChatId = preserveChatId || selectedChat?.id;
+        if (targetChatId) {
+          const refreshedChat = latestMessages.find((chat) => chat.id === targetChatId);
+          setSelectedChat(refreshedChat || null);
+        } else if (!latestMessages.length) {
+          setSelectedChat(null);
+        }
+      } catch (error) {
+        console.error("Error loading messages:", error);
+      }
+    },
+    [getToken, user?.id, selectedChat?.id]
+  );
 
   if (!isLoaded) {
     return (
@@ -53,6 +96,18 @@ export default function OfficeDashboard() {
     const savedMessages = user.publicMetadata?.messages || [];
     setMessages(savedMessages);
   }, [user]);
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      loadMessages();
+    }
+  }, [isLoaded, user?.id, loadMessages]);
+
+  useEffect(() => {
+    if (activeView === "messages" && user) {
+      loadMessages(selectedChat?.id);
+    }
+  }, [activeView, user?.id, loadMessages, selectedChat?.id]);
 
   // Fetch startups from API
   useEffect(() => {
@@ -195,28 +250,19 @@ export default function OfficeDashboard() {
       }
 
       const data = await response.json();
+      const chatId = selectedChat.id;
       
       // Update local state with the returned chat
       if (data.chat) {
         const updatedMessages = messages.map(m => 
-          m.id === selectedChat.id ? data.chat : m
+          m.id === chatId ? data.chat : m
         );
         setMessages(updatedMessages);
         setSelectedChat(data.chat);
       }
       
       setNewMessage("");
-      
-      // Refresh user data to get updated messages from Clerk
-      // Instead of full reload, just refresh the user object
-      await user.reload();
-      const updatedUserMessages = user.publicMetadata?.messages || [];
-      setMessages(updatedUserMessages);
-      // Update selected chat if it still exists
-      const updatedSelectedChat = updatedUserMessages.find(m => m.id === selectedChat.id);
-      if (updatedSelectedChat) {
-        setSelectedChat(updatedSelectedChat);
-      }
+      await loadMessages(chatId);
     } catch (error) {
       console.error("Error sending message:", error);
       alert("Failed to send message: " + error.message);
@@ -244,6 +290,7 @@ export default function OfficeDashboard() {
             messages: updatedMessages,
           }),
         });
+        await loadMessages();
       } catch (error) {
         console.error("Error saving messages:", error);
       }
@@ -259,6 +306,7 @@ export default function OfficeDashboard() {
     if (existingChat) {
       setSelectedChat(existingChat);
       setActiveView("messages");
+      await loadMessages(existingChat.id);
     } else {
       // Create new chat with proper structure
       const chatId = `chat_${user.id}_${startup.id}`;
@@ -291,6 +339,7 @@ export default function OfficeDashboard() {
             messages: updatedMessages,
           }),
         });
+        await loadMessages(chatId);
       } catch (error) {
         console.error("Error saving new chat:", error);
       }
