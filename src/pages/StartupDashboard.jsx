@@ -113,12 +113,6 @@ export default function StartupDashboard() {
     setShowEditProfileModal(true);
   };
 
-  const handleConnectPlaid = () => {
-    // TODO: Implement Plaid connection
-    console.log("Connect to Plaid clicked");
-    alert("Plaid integration coming soon!");
-  };
-
   const handleCloseEditProfile = () => {
     setShowEditProfileModal(false);
   };
@@ -704,40 +698,6 @@ export default function StartupDashboard() {
                   <p className="text-sm text-gray-900">Food Startup</p>
                 </div>
               </div>
-
-              {/* Plaid Connection Section */}
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-xs text-gray-500 uppercase mb-3">Banking</p>
-                {user.publicMetadata?.plaidConnected ? (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <i className="fas fa-check-circle text-green-600 mr-2"></i>
-                        <span className="text-sm text-gray-900">Connected to Plaid</span>
-                      </div>
-                      <button
-                        onClick={handleConnectPlaid}
-                        className="text-xs text-red-600 hover:text-red-700"
-                      >
-                        Reconnect
-                      </button>
-                    </div>
-                    {user.publicMetadata?.plaidAccountName && (
-                      <p className="text-xs text-gray-500">
-                        Account: {user.publicMetadata.plaidAccountName}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleConnectPlaid}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center justify-center"
-                  >
-                    <i className="fas fa-link mr-2"></i>
-                    Connect to Plaid
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </div>
@@ -1041,49 +1001,6 @@ export default function StartupDashboard() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
                   placeholder="Enter phone number"
                 />
-              </div>
-
-              {/* Plaid Connection Section */}
-              <div className="mb-6 pt-6 border-t">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  <i className="fas fa-university mr-2 text-red-600"></i>
-                  Banking Information
-                </h3>
-                {user.publicMetadata?.plaidConnected ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <i className="fas fa-check-circle text-green-600 mr-2"></i>
-                        <span className="text-sm font-medium text-gray-900">Connected to Plaid</span>
-                      </div>
-                      <button
-                        onClick={handleConnectPlaid}
-                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        Reconnect
-                      </button>
-                    </div>
-                    {user.publicMetadata?.plaidAccountName && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        Account: {user.publicMetadata.plaidAccountName}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-                    <i className="fas fa-university text-gray-400 text-3xl mb-3"></i>
-                    <p className="text-sm text-gray-700 mb-4">
-                      Connect your bank account securely through Plaid
-                    </p>
-                    <button
-                      onClick={handleConnectPlaid}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                      <i className="fas fa-link mr-2"></i>
-                      Connect to Plaid
-                    </button>
-                  </div>
-                )}
               </div>
 
               <div className="flex justify-end gap-4 pt-4 border-t">
