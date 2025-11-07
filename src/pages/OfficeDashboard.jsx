@@ -18,9 +18,10 @@ export default function OfficeDashboard() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Mock data - replace with API calls
-  const [startups] = useState([]);
+  // State for data
+  const [startups, setStartups] = useState([]);
   const [orders] = useState([]);
+  const [isLoadingStartups, setIsLoadingStartups] = useState(false);
 
   if (!isLoaded) {
     return (
@@ -45,6 +46,39 @@ export default function OfficeDashboard() {
       phone: user.privateMetadata?.phone || "",
     });
   }, [user]);
+
+  // Fetch startups from API
+  useEffect(() => {
+    const fetchStartups = async () => {
+      if (!user || !isLoaded) return;
+      
+      setIsLoadingStartups(true);
+      try {
+        // Get Clerk session token
+        const session = await user.getToken();
+        
+        const response = await fetch("/api/startups", {
+          headers: {
+            "Authorization": `Bearer ${session}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setStartups(data);
+        } else {
+          console.error("Failed to fetch startups:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching startups:", error);
+      } finally {
+        setIsLoadingStartups(false);
+      }
+    };
+
+    fetchStartups();
+  }, [user, isLoaded]);
 
   const handleOpenEditProfile = () => {
     setProfileData({
@@ -153,7 +187,12 @@ export default function OfficeDashboard() {
             </p>
           </div>
           <div className="p-6">
-            {startups.length === 0 ? (
+            {isLoadingStartups ? (
+              <div className="text-center py-12">
+                <i className="fas fa-spinner fa-spin text-gray-400 text-5xl mb-4"></i>
+                <p className="text-gray-500 mb-4">Loading startups...</p>
+              </div>
+            ) : startups.length === 0 ? (
               <div className="text-center py-12">
                 <i className="fas fa-store text-gray-300 text-5xl mb-4"></i>
                 <p className="text-gray-500 mb-4">No startups available yet</p>

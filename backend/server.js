@@ -1199,24 +1199,33 @@ app.get('/api/startups', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Only offices can view startups' });
         }
 
-        const db = await readDB();
-        // Get all startup users
-        const startups = db.users
-            .filter(u => u.userType === 'startup')
-            .map(u => ({
-                id: u.id,
-                name: u.name,
-                companyName: u.companyName,
-                email: u.email,
-                phone: u.phone || '',
-                createdAt: u.createdAt
-            }));
+        // Clerk is required - all data lives in Clerk
+        if (!clerkConfigured) {
+            return res.status(503).json({ error: 'Clerk is required but not configured.' });
+        }
+
+        // Get all users from Clerk and filter for startups
+        // Note: getUserList returns paginated results, we'll get up to 500 users
+        const allUsersResponse = await clerkClient.users.getUserList({ limit: 500 });
+        const allUsers = allUsersResponse.data || allUsersResponse; // Handle both response formats
+        const startupUsers = Array.isArray(allUsers) 
+          ? allUsers.filter(u => u.publicMetadata?.userType === 'startup')
+          : [];
+        
+        const startups = startupUsers.map(u => ({
+            id: u.id,
+            name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.emailAddresses[0]?.emailAddress || 'User',
+            companyName: u.publicMetadata?.companyName || '',
+            email: u.emailAddresses[0]?.emailAddress || '',
+            phone: u.privateMetadata?.phone || '',
+            createdAt: u.createdAt || new Date().toISOString()
+        }));
 
         console.log('Returning', startups.length, 'startups for office:', req.userId);
         res.json(startups);
     } catch (error) {
         console.error('Get startups error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });
 
