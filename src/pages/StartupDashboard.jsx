@@ -277,6 +277,61 @@ export default function StartupDashboard() {
     setShowCompanyInfoModal(false);
   };
 
+  // Helper function to compress/resize image
+  const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.8) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Calculate new dimensions
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to base64 with compression
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          
+          // Check size (Clerk metadata limit is ~500KB, base64 is ~33% larger than binary)
+          // So we want to keep base64 under ~400KB to be safe
+          const base64Size = (compressedDataUrl.length * 3) / 4;
+          if (base64Size > 400000) {
+            // If still too large, compress more aggressively
+            if (quality > 0.5) {
+              resolve(compressImage(file, maxWidth * 0.8, maxHeight * 0.8, quality * 0.8));
+            } else {
+              reject(new Error("Image is too large. Please use a smaller image file."));
+            }
+          } else {
+            resolve(compressedDataUrl);
+          }
+        };
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleSubmitCompanyInfo = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -291,16 +346,26 @@ export default function StartupDashboard() {
       
       // Handle logo: only convert if a new file was selected
       if (companyInfo.logo) {
-        // New logo file selected - convert to base64
-        const reader = new FileReader();
-        const logoData = await new Promise((resolve, reject) => {
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = (error) => reject(new Error("Failed to read logo file: " + error.message));
-          reader.readAsDataURL(companyInfo.logo);
-        });
-        requestBody.logo = logoData;
+        // Check file size first (before compression)
+        const fileSizeMB = companyInfo.logo.size / (1024 * 1024);
+        if (fileSizeMB > 5) {
+          throw new Error("Image file is too large. Please use an image smaller than 5MB.");
+        }
+
+        // Compress and convert to base64
+        try {
+          const logoData = await compressImage(companyInfo.logo);
+          requestBody.logo = logoData;
+        } catch (compressError) {
+          throw new Error(compressError.message || "Failed to process image. Please try a different image.");
+        }
       } else if (companyInfo.logoPreview && typeof companyInfo.logoPreview === 'string' && companyInfo.logoPreview.startsWith('data:')) {
         // No new file, but there's an existing base64 logo - keep it
+        // Check if it's not too large
+        const existingSize = (companyInfo.logoPreview.length * 3) / 4;
+        if (existingSize > 500000) {
+          console.warn("Existing logo is large, but keeping it");
+        }
         requestBody.logo = companyInfo.logoPreview;
       }
       // If logoPreview is a blob URL or null/undefined, don't include logo in request
@@ -317,7 +382,13 @@ export default function StartupDashboard() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(errorData.error || "Failed to update company info");
+        const errorMessage = errorData.error || "Failed to update company info";
+        
+        // Provide more helpful error messages
+        if (response.status === 422 || errorMessage.includes('Unprocessable Entity')) {
+          throw new Error("The logo image is too large. Please use a smaller image (under 5MB) or try compressing it.");
+        }
+        throw new Error(errorMessage);
       }
 
       alert("Company information updated successfully!");
