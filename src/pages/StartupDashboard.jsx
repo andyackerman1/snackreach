@@ -14,6 +14,7 @@ export default function StartupDashboard() {
   const [productData, setProductData] = useState({
     name: "",
     description: "",
+    price: "",
     image: null,
     imagePreview: null,
   });
@@ -70,6 +71,7 @@ export default function StartupDashboard() {
     setProductData({
       name: "",
       description: "",
+      price: "",
       image: null,
       imagePreview: null,
     });
@@ -80,6 +82,7 @@ export default function StartupDashboard() {
     setProductData({
       name: product.name || "",
       description: product.description || "",
+      price: product.price || "",
       image: null,
       imagePreview: product.image || null,
     });
@@ -92,6 +95,7 @@ export default function StartupDashboard() {
     setProductData({
       name: "",
       description: "",
+      price: "",
       image: null,
       imagePreview: null,
     });
@@ -788,6 +792,21 @@ export default function StartupDashboard() {
                   placeholder="Describe your product, ingredients, flavors, etc."
                 />
               </div>
+              <div className="mb-6">
+                <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-2">
+                  Price or Price Range
+                </label>
+                <input
+                  type="text"
+                  id="product-price"
+                  name="price"
+                  value={productData.price}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="e.g., $10.99 or $5-$15"
+                />
+                <p className="text-xs text-gray-500 mt-1">Enter a single price or a price range</p>
+              </div>
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
                   type="button"
@@ -903,6 +922,21 @@ export default function StartupDashboard() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
                   placeholder="Describe your product, ingredients, flavors, etc."
                 />
+              </div>
+              <div className="mb-6">
+                <label htmlFor="edit-product-price" className="block text-sm font-medium text-gray-700 mb-2">
+                  Price or Price Range
+                </label>
+                <input
+                  type="text"
+                  id="edit-product-price"
+                  name="price"
+                  value={productData.price}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="e.g., $10.99 or $5-$15"
+                />
+                <p className="text-xs text-gray-500 mt-1">Enter a single price or a price range</p>
               </div>
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
