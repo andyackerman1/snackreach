@@ -827,15 +827,21 @@ export default function StartupDashboard() {
                       <button 
                         onClick={async () => {
                           // Find or create chat with this office
-                          const existingChat = messages.find(m => m.officeId === office.id);
+                          const existingChat = messages.find(m => 
+                            m.officeId === office.id || 
+                            (m.officeId === office.id && m.startupId === user.id)
+                          );
                           if (existingChat) {
                             setSelectedChat(existingChat);
                             setActiveView("messages");
                           } else {
-                            // Create new chat
+                            // Create new chat with proper structure
+                            const chatId = `chat_${user.id}_${office.id}`;
                             const newChat = {
-                              id: Date.now(),
+                              id: chatId,
+                              startupId: user.id,
                               officeId: office.id,
+                              startupName: companyName || user.firstName,
                               officeName: office.name,
                               officeEmail: office.contactEmail,
                               messages: [],
@@ -885,8 +891,8 @@ export default function StartupDashboard() {
         try {
           const session = await getToken();
           
-          // Determine recipient ID based on chat type
-          const recipientId = selectedChat.officeId || selectedChat.startupId;
+          // Determine recipient ID - for startups, recipient is the office
+          const recipientId = selectedChat.officeId;
           if (!recipientId || recipientId === user.id) {
             alert("Cannot determine recipient. Please try again.");
             return;
@@ -924,8 +930,16 @@ export default function StartupDashboard() {
           
           setNewMessage("");
           
-          // Reload user data to get updated messages
-          window.location.reload();
+          // Refresh user data to get updated messages from Clerk
+          // Instead of full reload, just refresh the user object
+          await user.reload();
+          const updatedUserMessages = user.publicMetadata?.messages || [];
+          setMessages(updatedUserMessages);
+          // Update selected chat if it still exists
+          const updatedSelectedChat = updatedUserMessages.find(m => m.id === selectedChat.id);
+          if (updatedSelectedChat) {
+            setSelectedChat(updatedSelectedChat);
+          }
         } catch (error) {
           console.error("Error sending message:", error);
           alert("Failed to send message: " + error.message);

@@ -169,8 +169,8 @@ export default function OfficeDashboard() {
     try {
       const session = await getToken();
       
-      // Determine recipient ID based on chat type
-      const recipientId = selectedChat.startupId || selectedChat.officeId;
+      // Determine recipient ID - for offices, recipient is the startup
+      const recipientId = selectedChat.startupId;
       if (!recipientId || recipientId === user.id) {
         alert("Cannot determine recipient. Please try again.");
         return;
@@ -208,8 +208,16 @@ export default function OfficeDashboard() {
       
       setNewMessage("");
       
-      // Reload user data to get updated messages
-      window.location.reload();
+      // Refresh user data to get updated messages from Clerk
+      // Instead of full reload, just refresh the user object
+      await user.reload();
+      const updatedUserMessages = user.publicMetadata?.messages || [];
+      setMessages(updatedUserMessages);
+      // Update selected chat if it still exists
+      const updatedSelectedChat = updatedUserMessages.find(m => m.id === selectedChat.id);
+      if (updatedSelectedChat) {
+        setSelectedChat(updatedSelectedChat);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       alert("Failed to send message: " + error.message);
@@ -245,16 +253,22 @@ export default function OfficeDashboard() {
 
   const handleMessageStartup = async (startup) => {
     // Find or create chat with this startup
-    const existingChat = messages.find(m => m.startupId === startup.id);
+    const existingChat = messages.find(m => 
+      m.startupId === startup.id || 
+      (m.startupId === startup.id && m.officeId === user.id)
+    );
     if (existingChat) {
       setSelectedChat(existingChat);
       setActiveView("messages");
     } else {
-      // Create new chat
+      // Create new chat with proper structure
+      const chatId = `chat_${user.id}_${startup.id}`;
       const newChat = {
-        id: Date.now(),
+        id: chatId,
         startupId: startup.id,
+        officeId: user.id,
         startupName: startup.name || startup.companyName,
+        officeName: companyName || user.firstName,
         startupEmail: startup.email,
         productId: startup.productId || null,
         productName: startup.productName || null,
