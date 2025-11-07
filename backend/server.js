@@ -928,9 +928,9 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
         if (logo !== undefined && logo) {
             // Base64 is ~33% larger than binary, so check the base64 string length
             const logoSize = (logo.length * 3) / 4; // Approximate binary size
-            if (logoSize > 500000) {
+            if (logoSize > 1000000) {
                 return res.status(422).json({ 
-                    error: 'Logo image is too large. Please use an image smaller than 500KB. Try compressing or resizing the image.' 
+                    error: 'Logo image is too large. Please use an image smaller than 1MB. Try compressing or resizing the image.' 
                 });
             }
         }
@@ -954,7 +954,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
                 const errorMsg = clerkError.errors?.[0]?.message || clerkError.message || 'Invalid data format';
                 if (errorMsg.includes('metadata') || errorMsg.includes('size') || logo !== undefined) {
                     return res.status(422).json({ 
-                        error: 'Logo image is too large or invalid. Please use a smaller image (under 500KB) or try compressing it.',
+                        error: 'Logo image is too large or invalid. Please use a smaller image (under 1MB) or try compressing it.',
                         details: errorMsg
                     });
                 }

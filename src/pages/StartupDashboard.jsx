@@ -333,7 +333,7 @@ export default function StartupDashboard() {
 
   // Helper function to compress/resize image - works with any size photo
   const compressImage = (file) => {
-    const MAX_BYTES = 450000;
+    const MAX_BYTES = 950000;
     const OUTPUT_TYPES = [
       "image/jpeg",
       "image/png",
@@ -341,18 +341,20 @@ export default function StartupDashboard() {
     ];
 
     const BASE_ATTEMPTS = [
-      { maxWidth: 1600, maxHeight: 1600, quality: 0.9 },
+      { maxWidth: 2000, maxHeight: 2000, quality: 0.92 },
+      { maxWidth: 1800, maxHeight: 1800, quality: 0.88 },
+      { maxWidth: 1600, maxHeight: 1600, quality: 0.84 },
       { maxWidth: 1400, maxHeight: 1400, quality: 0.8 },
-      { maxWidth: 1200, maxHeight: 1200, quality: 0.7 },
-      { maxWidth: 1000, maxHeight: 1000, quality: 0.6 },
-      { maxWidth: 800, maxHeight: 800, quality: 0.5 },
-      { maxWidth: 600, maxHeight: 600, quality: 0.45 },
-      { maxWidth: 480, maxHeight: 480, quality: 0.4 },
-      { maxWidth: 360, maxHeight: 360, quality: 0.35 },
-      { maxWidth: 300, maxHeight: 300, quality: 0.32 },
+      { maxWidth: 1200, maxHeight: 1200, quality: 0.75 },
+      { maxWidth: 1000, maxHeight: 1000, quality: 0.68 },
+      { maxWidth: 850, maxHeight: 850, quality: 0.6 },
+      { maxWidth: 700, maxHeight: 700, quality: 0.55 },
+      { maxWidth: 560, maxHeight: 560, quality: 0.48 },
+      { maxWidth: 420, maxHeight: 420, quality: 0.42 },
+      { maxWidth: 320, maxHeight: 320, quality: 0.36 },
       { maxWidth: 240, maxHeight: 240, quality: 0.3 },
-      { maxWidth: 200, maxHeight: 200, quality: 0.28 },
-      { maxWidth: 160, maxHeight: 160, quality: 0.26 },
+      { maxWidth: 180, maxHeight: 180, quality: 0.26 },
+      { maxWidth: 140, maxHeight: 140, quality: 0.24 },
     ];
 
     const getScaledDimensions = (width, height, maxWidth, maxHeight) => {
@@ -415,7 +417,7 @@ export default function StartupDashboard() {
             if (index >= attempts.length) {
               reject(
                 new Error(
-                  "Unable to compress image below 500KB. Please choose an image with smaller dimensions or less detail."
+                  "Unable to compress image below 1MB. Please choose an image with smaller dimensions or less detail."
                 )
               );
               return;
@@ -458,7 +460,7 @@ export default function StartupDashboard() {
             const base64Size = Math.ceil((base64Payload.length * 3) / 4);
 
             console.log(
-              `Compression attempt ${index + 1}: ${width}x${height}, quality ${quality}, format ${type}, size ${base64Size} bytes`
+              `Compression attempt ${index + 1}: ${width}x${height}, quality ${quality}, format ${type}, size ${base64Size} bytes (limit ${MAX_BYTES})`
             );
 
             if (base64Size <= MAX_BYTES) {
@@ -536,7 +538,7 @@ export default function StartupDashboard() {
         
         // Provide more helpful error messages
         if (response.status === 422 || errorMessage.includes('Unprocessable Entity')) {
-          throw new Error("The logo image is too large or invalid. Please try a different image.");
+          throw new Error("The logo image is too large or invalid. Please keep it under 1MB or try a different image.");
         }
         throw new Error(errorMessage);
       }
