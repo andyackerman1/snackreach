@@ -6,8 +6,7 @@ export default function OfficeDashboard() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState("startups"); // startups, orders, messages
-  const [orderFilter, setOrderFilter] = useState("active"); // active, past
+  const [activeView, setActiveView] = useState("startups"); // startups, messages
   const [messages, setMessages] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [newMessage, setNewMessage] = useState("");
@@ -495,87 +494,6 @@ export default function OfficeDashboard() {
       );
     }
 
-    if (activeView === "orders") {
-      const filteredOrders = orderFilter === "active" 
-        ? orders.filter(order => order.status === "active")
-        : orders.filter(order => order.status === "completed" || order.status === "cancelled" || order.status === "past");
-
-      return (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  <i className="fas fa-shopping-cart mr-2 text-red-600"></i>
-                  Orders
-                </h2>
-                <p className="text-gray-600 text-sm mt-1">
-                  View your order history
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setOrderFilter("active")}
-                  className={`px-4 py-2 rounded transition text-sm ${
-                    orderFilter === "active"
-                      ? "bg-red-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  Active Orders
-                </button>
-                <button
-                  onClick={() => setOrderFilter("past")}
-                  className={`px-4 py-2 rounded transition text-sm ${
-                    orderFilter === "past"
-                      ? "bg-red-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  Past Orders
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="p-6">
-            {filteredOrders.length === 0 ? (
-              <div className="text-center py-12">
-                <i className="fas fa-shopping-cart text-gray-300 text-5xl mb-4"></i>
-                <p className="text-gray-500 mb-4">
-                  No {orderFilter === "active" ? "active" : "past"} orders yet
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredOrders.map((order) => (
-                  <div key={order.id} className="border rounded-lg p-4 hover:shadow-md transition">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-bold text-lg">Order #{order.id}</h3>
-                        <p className="text-gray-600 text-sm mt-1">From: {order.startupName}</p>
-                        <p className="text-gray-600 text-sm">Date: {order.date}</p>
-                        <p className="text-gray-600 text-sm">Total: ${order.total}</p>
-                        {order.status && (
-                          <p className="text-sm mt-2">
-                            <span className={`px-2 py-1 rounded ${
-                              order.status === "active" 
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}>
-                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                            </span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
 
     if (activeView === "messages") {
       return (
@@ -787,24 +705,6 @@ export default function OfficeDashboard() {
               </div>
               <div className="bg-blue-100 rounded-full p-3">
                 <i className="fas fa-store text-blue-600 text-xl"></i>
-              </div>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveView("orders")}
-            className={`bg-white rounded-lg shadow p-6 text-left hover:shadow-lg transition ${
-              activeView === "orders" ? "ring-2 ring-red-600" : ""
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Orders</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {orders.length}
-                </p>
-              </div>
-              <div className="bg-green-100 rounded-full p-3">
-                <i className="fas fa-shopping-cart text-green-600 text-xl"></i>
               </div>
             </div>
           </button>

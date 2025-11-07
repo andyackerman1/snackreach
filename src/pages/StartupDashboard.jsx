@@ -6,8 +6,7 @@ export default function StartupDashboard() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState("products"); // products, orders, offices, explore, messages
-  const [orderFilter, setOrderFilter] = useState("active"); // active, past
+  const [activeView, setActiveView] = useState("products"); // products, explore, messages
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -1294,40 +1293,6 @@ export default function StartupDashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <button
-            onClick={() => setActiveView("offices")}
-            className={`bg-white rounded-lg shadow p-6 text-left hover:shadow-lg transition ${
-              activeView === "offices" ? "ring-2 ring-red-600" : ""
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Office Connections</p>
-                <p className="text-2xl font-bold text-gray-900">{offices.length}</p>
-              </div>
-              <div className="bg-blue-100 rounded-full p-3">
-                <i className="fas fa-building text-blue-600 text-xl"></i>
-              </div>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveView("orders")}
-            className={`bg-white rounded-lg shadow p-6 text-left hover:shadow-lg transition ${
-              activeView === "orders" ? "ring-2 ring-red-600" : ""
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Active Orders</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {orders.filter(o => o.status === "active").length}
-                </p>
-              </div>
-              <div className="bg-green-100 rounded-full p-3">
-                <i className="fas fa-shopping-cart text-green-600 text-xl"></i>
-              </div>
-            </div>
-          </button>
           <button
             onClick={() => setActiveView("products")}
             className={`bg-white rounded-lg shadow p-6 text-left hover:shadow-lg transition ${
