@@ -280,11 +280,18 @@ export default function StartupDashboard() {
   // Helper function to compress/resize image - works with any size photo
   const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.85, attempt = 1) => {
     return new Promise((resolve, reject) => {
+      // Validate file type
+      if (!file || !file.type || !file.type.startsWith('image/')) {
+        reject(new Error("Please select a valid image file (PNG, JPG, or GIF)"));
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
           try {
+            console.log("Compressing image:", img.width, "x", img.height, "attempt", attempt);
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
