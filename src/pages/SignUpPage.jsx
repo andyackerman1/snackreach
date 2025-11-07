@@ -18,6 +18,7 @@ export default function SignUpPage() {
   });
   const [error, setError] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showPaymentDisclaimer, setShowPaymentDisclaimer] = useState(false);
 
   if (!isLoaded) {
     return (
@@ -91,7 +92,8 @@ export default function SignUpPage() {
 
         if (result.status === "complete") {
           await setActive({ session: result.createdSessionId });
-          navigate("/dashboard");
+          // Show payment disclaimer modal before navigating
+          setShowPaymentDisclaimer(true);
         }
       } else {
         setError(data.error || "Registration failed. Please try again.");
@@ -101,6 +103,13 @@ export default function SignUpPage() {
       setError(err.message || "Registration failed. Please try again.");
     }
   }
+
+  const handleAcceptPaymentDisclaimer = () => {
+    // Mark disclaimer as seen in localStorage
+    localStorage.setItem("paymentDisclaimerSeen", "true");
+    setShowPaymentDisclaimer(false);
+    navigate("/dashboard");
+  };
 
   const formTitle = selectedUserType === "startup" 
     ? "Join as a Food Startup" 
@@ -345,6 +354,37 @@ export default function SignUpPage() {
               </button>
               <button className="btn btn-outline" onClick={() => setShowTerms(false)}>
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Disclaimer Modal */}
+      {showPaymentDisclaimer && (
+        <div className="modal" style={{ display: "flex" }}>
+          <div className="modal-content" style={{ maxWidth: "600px" }}>
+            <div className="modal-header">
+              <h2>Important Payment Information</h2>
+            </div>
+            <div className="modal-body">
+              <div className="text-center mb-4">
+                <i className="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
+              </div>
+              <p className="text-center text-lg mb-4" style={{ fontWeight: "600" }}>
+                Payments are not available via SnackReach.
+              </p>
+              <p className="text-center text-gray-700">
+                These must be agreed upon and initiated outside of the platform by the two parties.
+              </p>
+            </div>
+            <div className="modal-footer" style={{ justifyContent: "center" }}>
+              <button 
+                className="btn btn-primary btn-large" 
+                onClick={handleAcceptPaymentDisclaimer}
+                style={{ minWidth: "200px" }}
+              >
+                I Understand
               </button>
             </div>
           </div>
