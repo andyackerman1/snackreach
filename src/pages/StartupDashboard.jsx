@@ -333,32 +333,26 @@ export default function StartupDashboard() {
 
   // Helper function to compress/resize image - works with any size photo
   const compressImage = (file) => {
-    const MAX_BYTES = 1700000;
-    const OUTPUT_TYPES = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
+    const TARGET_BYTES = 420000; // Keep well under Clerk limit (~500KB)
 
-    const BASE_ATTEMPTS = [
-      { maxWidth: 2200, maxHeight: 2200, quality: 0.94 },
-      { maxWidth: 2000, maxHeight: 2000, quality: 0.92 },
-      { maxWidth: 1800, maxHeight: 1800, quality: 0.88 },
-      { maxWidth: 1600, maxHeight: 1600, quality: 0.84 },
-      { maxWidth: 1400, maxHeight: 1400, quality: 0.8 },
-      { maxWidth: 1200, maxHeight: 1200, quality: 0.75 },
-      { maxWidth: 1000, maxHeight: 1000, quality: 0.7 },
-      { maxWidth: 850, maxHeight: 850, quality: 0.64 },
-      { maxWidth: 720, maxHeight: 720, quality: 0.58 },
-      { maxWidth: 580, maxHeight: 580, quality: 0.5 },
+    const ATTEMPTS = [
+      { maxWidth: 2000, maxHeight: 2000, quality: 0.86 },
+      { maxWidth: 1800, maxHeight: 1800, quality: 0.82 },
+      { maxWidth: 1600, maxHeight: 1600, quality: 0.78 },
+      { maxWidth: 1400, maxHeight: 1400, quality: 0.74 },
+      { maxWidth: 1200, maxHeight: 1200, quality: 0.7 },
+      { maxWidth: 1000, maxHeight: 1000, quality: 0.64 },
+      { maxWidth: 850, maxHeight: 850, quality: 0.58 },
+      { maxWidth: 720, maxHeight: 720, quality: 0.52 },
+      { maxWidth: 580, maxHeight: 580, quality: 0.48 },
       { maxWidth: 460, maxHeight: 460, quality: 0.44 },
       { maxWidth: 360, maxHeight: 360, quality: 0.38 },
       { maxWidth: 280, maxHeight: 280, quality: 0.32 },
       { maxWidth: 220, maxHeight: 220, quality: 0.28 },
-      { maxWidth: 180, maxHeight: 180, quality: 0.25 },
-      { maxWidth: 140, maxHeight: 140, quality: 0.22 },
-      { maxWidth: 110, maxHeight: 110, quality: 0.2 },
-      { maxWidth: 90, maxHeight: 90, quality: 0.18 },
+      { maxWidth: 180, maxHeight: 180, quality: 0.24 },
+      { maxWidth: 140, maxHeight: 140, quality: 0.2 },
+      { maxWidth: 110, maxHeight: 110, quality: 0.18 },
+      { maxWidth: 90, maxHeight: 90, quality: 0.16 },
     ];
 
     const getScaledDimensions = (width, height, maxWidth, maxHeight) => {
@@ -387,14 +381,6 @@ export default function StartupDashboard() {
       return { width: Math.max(1, newWidth), height: Math.max(1, newHeight) };
     };
 
-    const getBestOutputType = (inputType) => {
-      if (inputType === "image/webp") return "image/webp";
-      if (inputType === "image/png") return "image/png";
-      return "image/jpeg";
-    };
-
-    const isAlphaSupported = (type) => type !== "image/jpeg";
-
     const ensureCanvasContext = (canvas) => {
       const ctx = canvas.getContext("2d");
       if (!ctx) {
@@ -413,21 +399,33 @@ export default function StartupDashboard() {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          const attempts = BASE_ATTEMPTS.flatMap((attempt) =>
-            OUTPUT_TYPES.map((type) => ({ ...attempt, type }))
-          );
-
           const tryAttempt = (index) => {
-            if (index >= attempts.length) {
-              reject(
-                new Error(
-                  "Unable to compress image below 1.8MB. Please choose an image with smaller dimensions or less detail."
-                )
-              );
+            if (index >= ATTEMPTS.length) {
+              // Final hard fallback - force very small JPEG
+              const finalCanvas = document.createElement("canvas");
+              finalCanvas.width = 120;
+              finalCanvas.height = 120;
+              const finalCtx = ensureCanvasContext(finalCanvas);
+              finalCtx.fillStyle = "#ffffff";
+              finalCtx.fillRect(0, 0, 120, 120);
+              finalCtx.drawImage(img, 0, 0, 120, 120);
+              const finalDataUrl = finalCanvas.toDataURL("image/jpeg", 0.12);
+              const finalPayload = finalDataUrl.split(",")[1] || "";
+              const finalSize = Math.ceil((finalPayload.length * 3) / 4);
+              if (finalSize <= TARGET_BYTES) {
+                console.log(`Compression final fallback: 120x120, quality 0.12, size ${finalSize} bytes (limit ${TARGET_BYTES})`);
+                resolve(finalDataUrl);
+              } else {
+                reject(
+                  new Error(
+                    "Unable to compress image below 420KB. Please choose an image with smaller dimensions or less detail."
+                  )
+                );
+              }
               return;
             }
 
-            const { maxWidth, maxHeight, quality, type } = attempts[index];
+            const { maxWidth, maxHeight, quality } = ATTEMPTS[index];
             const { width, height } = getScaledDimensions(
               img.width,
               img.height,
@@ -441,20 +439,19 @@ export default function StartupDashboard() {
 
             const ctx = ensureCanvasContext(canvas);
 
-            if (!isAlphaSupported(type)) {
-              ctx.fillStyle = "#ffffff";
-              ctx.fillRect(0, 0, width, height);
-            }
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, width, height);
 
             ctx.drawImage(img, 0, 0, width, height);
 
             let dataUrl;
             try {
-              const outputType = type === "image/png" && !isAlphaSupported(file.type)
-                ? getBestOutputType(file.type)
-                : type;
-
-              dataUrl = canvas.toDataURL(outputType, quality);
+              const supportsTransparency = file.type && file.type !== "image/jpeg" && file.type !== "image/jpg";
+              if (supportsTransparency && quality >= 0.4) {
+                dataUrl = canvas.toDataURL("image/png");
+              } else {
+                dataUrl = canvas.toDataURL("image/jpeg", quality);
+              }
             } catch (canvasError) {
               reject(new Error("Failed to process image. Please try a different file."));
               return;
@@ -464,10 +461,10 @@ export default function StartupDashboard() {
             const base64Size = Math.ceil((base64Payload.length * 3) / 4);
 
             console.log(
-              `Compression attempt ${index + 1}: ${width}x${height}, quality ${quality}, format ${type}, size ${base64Size} bytes (limit ${MAX_BYTES})`
+              `Compression attempt ${index + 1}: ${width}x${height}, quality ${quality}, size ${base64Size} bytes (target ${TARGET_BYTES})`
             );
 
-            if (base64Size <= MAX_BYTES) {
+            if (base64Size <= TARGET_BYTES) {
               resolve(dataUrl);
             } else {
               tryAttempt(index + 1);
@@ -542,7 +539,7 @@ export default function StartupDashboard() {
         
         // Provide more helpful error messages
         if (response.status === 422 || errorMessage.includes('Unprocessable Entity')) {
-          throw new Error("The logo image is too large or invalid. Please keep it under 1.8MB or try a different image.");
+          throw new Error("The logo image is too large or invalid. Please keep it under ~420KB after compression or try a different image.");
         }
         throw new Error(errorMessage);
       }
