@@ -55,9 +55,9 @@ export default function OfficeDashboard() {
       
       setIsLoadingStartups(true);
       try {
-        // Get Clerk session token
-        const session = await getToken();
-        console.log("🔑 Fetching startups with token:", session ? "Token received" : "No token");
+        // Get Clerk session token - use empty template to get the raw JWT
+        const session = await getToken({ template: null });
+        console.log("🔑 Fetching startups with token:", session ? `Token received (${session.substring(0, 20)}...)` : "No token");
         
         const response = await fetch("/api/startups", {
           headers: {
