@@ -33,7 +33,7 @@ export default function StartupDashboard() {
   });
 
   // Mock data - replace with API calls
-  const [products] = useState([]);
+  const [products, setProducts] = useState([]);
   const [orders] = useState([]);
   const [offices] = useState([]);
   const [allOffices] = useState([]);
@@ -105,6 +105,9 @@ export default function StartupDashboard() {
     if (window.confirm("Are you sure you want to delete this product?")) {
       // TODO: Implement API call to delete product
       console.log("Deleting product:", productId);
+      
+      // Remove product from local state (temporary until API is implemented)
+      setProducts(products.filter(product => product.id !== productId));
     }
   };
 
@@ -163,6 +166,19 @@ export default function StartupDashboard() {
     try {
       // TODO: Implement API call to save product
       console.log("Product data:", productData);
+      
+      // Create product object with image URL (for now using preview, in production this would be from upload)
+      const newProduct = {
+        id: Date.now(), // Temporary ID, replace with API response
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        image: productData.imagePreview || null,
+      };
+
+      // Add product to local state (temporary until API is implemented)
+      setProducts([...products, newProduct]);
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       alert("Product saved successfully!");
       handleCloseAddProduct();
@@ -181,6 +197,21 @@ export default function StartupDashboard() {
     try {
       // TODO: Implement API call to update product
       console.log("Updating product:", editingProduct.id, productData);
+      
+      // Update product in local state (temporary until API is implemented)
+      const updatedProducts = products.map(product =>
+        product.id === editingProduct.id
+          ? {
+              ...product,
+              name: productData.name,
+              description: productData.description,
+              price: productData.price,
+              image: productData.imagePreview || product.image,
+            }
+          : product
+      );
+      setProducts(updatedProducts);
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       alert("Product updated successfully!");
       handleCloseEditProduct();
@@ -256,6 +287,9 @@ export default function StartupDashboard() {
                     )}
                     <div className="p-4">
                       <h3 className="font-bold text-lg mb-2">{product.name}</h3>
+                      {product.price && (
+                        <p className="text-red-600 font-semibold mb-2">{product.price}</p>
+                      )}
                       <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
                       <div className="flex gap-2">
                         <button
@@ -794,7 +828,7 @@ export default function StartupDashboard() {
               </div>
               <div className="mb-6">
                 <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-2">
-                  Price or Price Range
+                  Price per Unit
                 </label>
                 <input
                   type="text"
@@ -803,9 +837,9 @@ export default function StartupDashboard() {
                   value={productData.price}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                  placeholder="e.g., $10.99 or $5-$15"
+                  placeholder="e.g., $10.99"
                 />
-                <p className="text-xs text-gray-500 mt-1">Enter a single price or a price range</p>
+                <p className="text-xs text-gray-500 mt-1">Enter the price per unit</p>
               </div>
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
@@ -925,7 +959,7 @@ export default function StartupDashboard() {
               </div>
               <div className="mb-6">
                 <label htmlFor="edit-product-price" className="block text-sm font-medium text-gray-700 mb-2">
-                  Price or Price Range
+                  Price per Unit
                 </label>
                 <input
                   type="text"
@@ -934,9 +968,9 @@ export default function StartupDashboard() {
                   value={productData.price}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                  placeholder="e.g., $10.99 or $5-$15"
+                  placeholder="e.g., $10.99"
                 />
-                <p className="text-xs text-gray-500 mt-1">Enter a single price or a price range</p>
+                <p className="text-xs text-gray-500 mt-1">Enter the price per unit</p>
               </div>
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
