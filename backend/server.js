@@ -153,6 +153,9 @@ app.get('/signup.html', (req, res) => {
     res.redirect('/signup');
 });
 
+app.get(['/snack-dashboard.html', '/office-dashboard.html', '/owner-dashboard.html'], (req, res) => {
+    res.redirect('/dashboard');
+});
 
 app.get('/reset-password.html', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'reset-password.html'));
