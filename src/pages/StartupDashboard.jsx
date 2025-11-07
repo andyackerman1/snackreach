@@ -20,6 +20,10 @@ export default function StartupDashboard() {
   const [profileData, setProfileData] = useState({
     companyName: "",
     phone: "",
+    bankName: "",
+    accountNumber: "",
+    routingNumber: "",
+    accountHolderName: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -56,6 +60,10 @@ export default function StartupDashboard() {
     setProfileData({
       companyName: user.publicMetadata?.companyName || "",
       phone: user.publicMetadata?.phone || "",
+      bankName: user.publicMetadata?.bankName || "",
+      accountNumber: user.publicMetadata?.accountNumber || "",
+      routingNumber: user.publicMetadata?.routingNumber || "",
+      accountHolderName: user.publicMetadata?.accountHolderName || "",
     });
   }, [user]);
 
@@ -106,6 +114,10 @@ export default function StartupDashboard() {
     setProfileData({
       companyName: user.publicMetadata?.companyName || "",
       phone: user.publicMetadata?.phone || "",
+      bankName: user.publicMetadata?.bankName || "",
+      accountNumber: user.publicMetadata?.accountNumber || "",
+      routingNumber: user.publicMetadata?.routingNumber || "",
+      accountHolderName: user.publicMetadata?.accountHolderName || "",
     });
     setShowEditProfileModal(true);
   };
@@ -694,6 +706,31 @@ export default function StartupDashboard() {
                   <p className="text-xs text-gray-500 uppercase mb-1">Account Type</p>
                   <p className="text-sm text-gray-900">Food Startup</p>
                 </div>
+                {(user.publicMetadata?.bankName || user.publicMetadata?.accountNumber) && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-xs text-gray-500 uppercase mb-2">Banking Information</p>
+                    {user.publicMetadata?.bankName && (
+                      <div className="mb-2">
+                        <p className="text-xs text-gray-500">Bank Name</p>
+                        <p className="text-sm text-gray-900">{user.publicMetadata.bankName}</p>
+                      </div>
+                    )}
+                    {user.publicMetadata?.accountNumber && (
+                      <div className="mb-2">
+                        <p className="text-xs text-gray-500">Account Number</p>
+                        <p className="text-sm text-gray-900">
+                          ****{user.publicMetadata.accountNumber.slice(-4)}
+                        </p>
+                      </div>
+                    )}
+                    {user.publicMetadata?.accountHolderName && (
+                      <div className="mb-2">
+                        <p className="text-xs text-gray-500">Account Holder</p>
+                        <p className="text-sm text-gray-900">{user.publicMetadata.accountHolderName}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -996,6 +1033,76 @@ export default function StartupDashboard() {
                 />
                 <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
               </div>
+
+              {/* Banking Information Section */}
+              <div className="mb-6 pt-6 border-t">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <i className="fas fa-university mr-2 text-red-600"></i>
+                  Banking Information
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="profile-bank-name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Bank Name
+                    </label>
+                    <input
+                      type="text"
+                      id="profile-bank-name"
+                      name="bankName"
+                      value={profileData.bankName}
+                      onChange={handleProfileInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                      placeholder="Enter bank name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="profile-account-holder" className="block text-sm font-medium text-gray-700 mb-2">
+                      Account Holder Name
+                    </label>
+                    <input
+                      type="text"
+                      id="profile-account-holder"
+                      name="accountHolderName"
+                      value={profileData.accountHolderName}
+                      onChange={handleProfileInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                      placeholder="Enter account holder name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="profile-routing-number" className="block text-sm font-medium text-gray-700 mb-2">
+                      Routing Number
+                    </label>
+                    <input
+                      type="text"
+                      id="profile-routing-number"
+                      name="routingNumber"
+                      value={profileData.routingNumber}
+                      onChange={handleProfileInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                      placeholder="Enter routing number"
+                      maxLength="9"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">9-digit routing number</p>
+                  </div>
+                  <div>
+                    <label htmlFor="profile-account-number" className="block text-sm font-medium text-gray-700 mb-2">
+                      Account Number
+                    </label>
+                    <input
+                      type="text"
+                      id="profile-account-number"
+                      name="accountNumber"
+                      value={profileData.accountNumber}
+                      onChange={handleProfileInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                      placeholder="Enter account number"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">For security, only the last 4 digits will be displayed</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
                   type="button"
