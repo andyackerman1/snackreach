@@ -866,6 +866,57 @@ body {
     min-height: 100vh;
 }
 
+.signup-form button[type="submit"] {
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+    .signup-section {
+        padding: 95px 0 60px;
+    }
+
+    .signup-container {
+        padding: 0 18px;
+    }
+
+    .signup-form {
+        padding: 1.5rem;
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+    }
+
+    .signup-header h1 {
+        font-size: 2.2rem;
+    }
+
+    .form-header h2 {
+        font-size: 1.6rem;
+    }
+
+    .form-header p {
+        font-size: 0.95rem;
+    }
+
+    .signup-form .form-group label {
+        font-size: 0.9rem;
+    }
+
+    .signup-form .form-group input {
+        padding: 14px;
+        font-size: 1rem;
+    }
+
+    .signup-form .checkbox-group {
+        align-items: flex-start;
+    }
+
+    .signup-form .btn.btn-primary {
+        font-size: 1rem;
+        padding: 14px 18px;
+        width: 100%;
+    }
+}
+
 .signup-container {
     max-width: 800px;
     margin: 0 auto;
@@ -2045,11 +2096,19 @@ body {
     .modal form {
         padding: 1.5rem;
     }
-    
+
+    .signup-container {
+        padding: 0 16px;
+    }
+
+    .signup-form {
+        padding: 1.35rem;
+    }
+
     .user-type-selection {
         grid-template-columns: 1fr;
     }
-    
+
     .form-row {
         grid-template-columns: 1fr;
     }
