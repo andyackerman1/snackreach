@@ -16,6 +16,7 @@ export default function OfficeDashboard() {
     email: "",
     companyName: "",
     phone: "",
+    snackPreference: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -47,6 +48,7 @@ export default function OfficeDashboard() {
       email: user.emailAddresses[0]?.emailAddress || "",
       companyName: user.publicMetadata?.companyName || "",
       phone: user.privateMetadata?.phone || "",
+      snackPreference: user.publicMetadata?.snackPreference || "",
     });
     // Load messages from Clerk metadata
     const savedMessages = user.publicMetadata?.messages || [];
@@ -107,6 +109,7 @@ export default function OfficeDashboard() {
       email: user.emailAddresses[0]?.emailAddress || "",
       companyName: user.publicMetadata?.companyName || "",
       phone: user.privateMetadata?.phone || "",
+      snackPreference: user.publicMetadata?.snackPreference || "",
     });
     setShowEditProfileModal(true);
   };
@@ -139,6 +142,7 @@ export default function OfficeDashboard() {
         body: JSON.stringify({
           companyName: profileData.companyName,
           phone: profileData.phone,
+          snackPreference: profileData.snackPreference,
         }),
       });
 
@@ -843,6 +847,12 @@ export default function OfficeDashboard() {
                     <p className="text-sm text-gray-900">{companyName}</p>
                   </div>
                 )}
+                {user.publicMetadata?.snackPreference && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase mb-1">Snack Preferences</p>
+                    <p className="text-sm text-gray-900">{user.publicMetadata.snackPreference}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-xs text-gray-500 uppercase mb-1">Account Type</p>
                   <p className="text-sm text-gray-900">Office Manager</p>
@@ -918,6 +928,23 @@ export default function OfficeDashboard() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
                   placeholder="Enter phone number"
                 />
+              </div>
+              <div className="mb-6">
+                <label htmlFor="profile-snack-preference" className="block text-sm font-medium text-gray-700 mb-2">
+                  Snack Preferences
+                </label>
+                <input
+                  type="text"
+                  id="profile-snack-preference"
+                  name="snackPreference"
+                  value={profileData.snackPreference}
+                  onChange={handleProfileInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  placeholder="e.g., Healthy, Organic, Gluten-free, Vegan, Protein-rich, etc."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Describe the types of snacks you're looking for. This helps food startups find you when searching.
+                </p>
               </div>
 
               <div className="flex justify-end gap-4 pt-4 border-t">

@@ -884,7 +884,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
             return res.status(401).json({ error: 'Clerk authentication required' });
         }
 
-        const { name, companyName, phone, description, logo, messages, products } = req.body;
+        const { name, companyName, phone, description, logo, messages, products, snackPreference } = req.body;
         
         // Get current user data
         const currentUser = await clerkClient.users.getUser(req.clerkUserId);
@@ -911,6 +911,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
         if (logo !== undefined) publicMetadata.logo = logo;
         if (messages !== undefined) publicMetadata.messages = messages;
         if (products !== undefined) publicMetadata.products = products;
+        if (snackPreference !== undefined) publicMetadata.snackPreference = snackPreference;
         
         // Preserve existing data if not being updated
         if (messages === undefined && currentPublicMetadata.messages) {
