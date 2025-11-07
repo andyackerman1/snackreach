@@ -1167,30 +1167,52 @@ app.delete('/api/account', authenticateToken, async (req, res) => {
 // Get list of offices (for startups to message)
 app.get('/api/offices', authenticateToken, async (req, res) => {
     try {
-        if (req.userType !== 'startup') {
-            return res.status(403).json({ error: 'Only startups can view offices' });
-        }
-
+        // Allow any authenticated user to view offices (for discoverability)
         // Clerk is required - all data lives in Clerk
         if (!clerkConfigured) {
             return res.status(503).json({ error: 'Clerk is required but not configured.' });
         }
 
-        // Get all users from Clerk and filter for offices
-        // Note: getUserList returns paginated results with a data property
-        const allUsersResponse = await clerkClient.users.getUserList({ limit: 500 });
-        const allUsers = allUsersResponse.data || [];
+        // Get all users from Clerk - handle pagination
+        let allUsers = [];
+        let hasMore = true;
+        let offset = 0;
+        const limit = 500;
+        
+        while (hasMore) {
+            const response = await clerkClient.users.getUserList({ 
+                limit: limit,
+                offset: offset 
+            });
+            
+            const users = response.data || [];
+            allUsers = allUsers.concat(users);
+            
+            hasMore = users.length === limit;
+            offset += limit;
+            
+            // Safety limit - don't fetch more than 2000 users
+            if (allUsers.length >= 2000) {
+                hasMore = false;
+            }
+        }
         
         console.log(`📊 Total users fetched from Clerk: ${allUsers.length}`);
         
+        // Filter for office users - check both userType and default to office if not set
+        // Exclude the current user from results
         const officeUsers = allUsers.filter(u => {
+            if (u.id === req.userId) return false; // Exclude current user
             const userType = u.publicMetadata?.userType;
-            return userType === 'office';
+            // Include users with userType === 'office' OR users without userType set (default to office)
+            return userType === 'office' || !userType;
         });
         
-        console.log(`✅ Found ${officeUsers.length} office users`);
+        console.log(`✅ Found ${officeUsers.length} office users (excluding current user)`);
         
-        const offices = officeUsers.map(u => ({
+        const filteredOffices = officeUsers;
+        
+        const offices = filteredOffices.map(u => ({
             id: u.id,
             name: u.publicMetadata?.companyName || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.emailAddresses[0]?.emailAddress || 'Office',
             companyName: u.publicMetadata?.companyName || '',
@@ -1203,7 +1225,7 @@ app.get('/api/offices', authenticateToken, async (req, res) => {
             createdAt: u.createdAt || new Date().toISOString()
         }));
 
-        console.log(`📤 Returning ${offices.length} offices for startup: ${req.userId}`);
+        console.log(`📤 Returning ${offices.length} offices for user: ${req.userId}`);
         res.json(offices);
     } catch (error) {
         console.error('Get offices error:', error);
@@ -1214,28 +1236,46 @@ app.get('/api/offices', authenticateToken, async (req, res) => {
 // Get list of startups (for offices to view)
 app.get('/api/startups', authenticateToken, async (req, res) => {
     try {
-        if (req.userType !== 'office') {
-            return res.status(403).json({ error: 'Only offices can view startups' });
-        }
-
+        // Allow any authenticated user to view startups (for discoverability)
         // Clerk is required - all data lives in Clerk
         if (!clerkConfigured) {
             return res.status(503).json({ error: 'Clerk is required but not configured.' });
         }
 
-        // Get all users from Clerk and filter for startups
-        // Note: getUserList returns paginated results with a data property
-        const allUsersResponse = await clerkClient.users.getUserList({ limit: 500 });
-        const allUsers = allUsersResponse.data || [];
+        // Get all users from Clerk - handle pagination
+        let allUsers = [];
+        let hasMore = true;
+        let offset = 0;
+        const limit = 500;
+        
+        while (hasMore) {
+            const response = await clerkClient.users.getUserList({ 
+                limit: limit,
+                offset: offset 
+            });
+            
+            const users = response.data || [];
+            allUsers = allUsers.concat(users);
+            
+            hasMore = users.length === limit;
+            offset += limit;
+            
+            // Safety limit - don't fetch more than 2000 users
+            if (allUsers.length >= 2000) {
+                hasMore = false;
+            }
+        }
         
         console.log(`📊 Total users fetched from Clerk: ${allUsers.length}`);
         
+        // Filter for startup users - check both userType
         const startupUsers = allUsers.filter(u => {
             const userType = u.publicMetadata?.userType;
-            return userType === 'startup';
+            // Include users with userType === 'startup'
+            return userType === 'startup' && u.id !== req.userId;
         });
         
-        console.log(`✅ Found ${startupUsers.length} startup users`);
+        console.log(`✅ Found ${startupUsers.length} startup users (excluding current user)`);
         
         const startups = startupUsers.map(u => ({
             id: u.id,
@@ -1247,7 +1287,7 @@ app.get('/api/startups', authenticateToken, async (req, res) => {
             createdAt: u.createdAt || new Date().toISOString()
         }));
 
-        console.log(`📤 Returning ${startups.length} startups for office: ${req.userId}`);
+        console.log(`📤 Returning ${startups.length} startups for user: ${req.userId}`);
         res.json(startups);
     } catch (error) {
         console.error('Get startups error:', error);
