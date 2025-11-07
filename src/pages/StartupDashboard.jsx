@@ -64,7 +64,7 @@ export default function StartupDashboard() {
 
   const companyName = user.publicMetadata?.companyName || "";
 
-  // Initialize profile data
+  // Initialize profile data and load products
   useEffect(() => {
     setProfileData({
       email: user.emailAddresses[0]?.emailAddress || "",
@@ -76,6 +76,9 @@ export default function StartupDashboard() {
       logo: null,
       logoPreview: user.publicMetadata?.logo || null,
     });
+    // Load products from Clerk metadata
+    const savedProducts = user.publicMetadata?.products || [];
+    setProducts(savedProducts);
   }, [user]);
 
   // Fetch offices from API
@@ -168,11 +171,37 @@ export default function StartupDashboard() {
 
   const handleDeleteProduct = async (productId) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
-      // TODO: Implement API call to delete product
-      console.log("Deleting product:", productId);
-      
-      // Remove product from local state (temporary until API is implemented)
-      setProducts(products.filter(product => product.id !== productId));
+      try {
+        // Get Clerk session token
+        const session = await getToken();
+        
+        // Remove product from local state first for immediate UI update
+        const oldProducts = [...products];
+        const updatedProducts = products.filter(product => product.id !== productId);
+        setProducts(updatedProducts);
+
+        // Save to backend/Clerk metadata
+        const response = await fetch("/api/products", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ products: updatedProducts }),
+        });
+
+        if (!response.ok) {
+          // Revert local state if save failed
+          setProducts(oldProducts);
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          throw new Error(errorData.error || "Failed to delete product");
+        }
+
+        alert("Product deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        alert("Failed to delete product: " + error.message);
+      }
     }
   };
 
@@ -279,27 +308,44 @@ export default function StartupDashboard() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement API call to save product
-      console.log("Product data:", productData);
+      // Get Clerk session token
+      const session = await getToken();
       
       // Create product object with image URL (for now using preview, in production this would be from upload)
       const newProduct = {
-        id: Date.now(), // Temporary ID, replace with API response
+        id: Date.now(), // Temporary ID
         name: productData.name,
         description: productData.description,
         price: productData.price,
         image: productData.imagePreview || null,
       };
 
-      // Add product to local state (temporary until API is implemented)
-      setProducts([...products, newProduct]);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Add product to local state first for immediate UI update
+      const updatedProducts = [...products, newProduct];
+      setProducts(updatedProducts);
+
+      // Save to backend/Clerk metadata
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ products: updatedProducts }),
+      });
+
+      if (!response.ok) {
+        // Revert local state if save failed
+        setProducts(products);
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(errorData.error || "Failed to save product");
+      }
+
       alert("Product saved successfully!");
       handleCloseAddProduct();
     } catch (error) {
       console.error("Error saving product:", error);
-      alert("Failed to save product. Please try again.");
+      alert("Failed to save product: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -310,10 +356,11 @@ export default function StartupDashboard() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement API call to update product
-      console.log("Updating product:", editingProduct.id, productData);
+      // Get Clerk session token
+      const session = await getToken();
       
-      // Update product in local state (temporary until API is implemented)
+      // Update product in local state first for immediate UI update
+      const oldProducts = [...products];
       const updatedProducts = products.map(product =>
         product.id === editingProduct.id
           ? {
@@ -326,13 +373,29 @@ export default function StartupDashboard() {
           : product
       );
       setProducts(updatedProducts);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Save to backend/Clerk metadata
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ products: updatedProducts }),
+      });
+
+      if (!response.ok) {
+        // Revert local state if save failed
+        setProducts(oldProducts);
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(errorData.error || "Failed to update product");
+      }
+
       alert("Product updated successfully!");
       handleCloseEditProduct();
     } catch (error) {
       console.error("Error updating product:", error);
-      alert("Failed to update product. Please try again.");
+      alert("Failed to update product: " + error.message);
     } finally {
       setIsSubmitting(false);
     }

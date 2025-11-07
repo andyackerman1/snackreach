@@ -1320,6 +1320,69 @@ app.get('/api/startups', authenticateToken, async (req, res) => {
     }
 });
 
+// Get products for a startup
+app.get('/api/products/:startupId?', authenticateToken, async (req, res) => {
+    try {
+        const startupId = req.params.startupId || req.userId;
+        
+        // Only allow users to get their own products, or offices to get any startup's products
+        if (startupId !== req.userId && req.userType !== 'office') {
+            return res.status(403).json({ error: 'Not authorized to view these products' });
+        }
+
+        if (!clerkConfigured) {
+            return res.status(503).json({ error: 'Clerk is required but not configured.' });
+        }
+
+        const startupUser = await clerkClient.users.getUser(startupId);
+        const products = startupUser.publicMetadata?.products || [];
+
+        res.json(products);
+    } catch (error) {
+        console.error('Get products error:', error);
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
+    }
+});
+
+// Save/update products for a startup
+app.post('/api/products', authenticateToken, async (req, res) => {
+    try {
+        if (req.userType !== 'startup') {
+            return res.status(403).json({ error: 'Only startups can manage products' });
+        }
+
+        if (!clerkConfigured) {
+            return res.status(503).json({ error: 'Clerk is required but not configured.' });
+        }
+
+        const { products } = req.body;
+        
+        if (!Array.isArray(products)) {
+            return res.status(400).json({ error: 'Products must be an array' });
+        }
+
+        // Get current user data
+        const currentUser = await clerkClient.users.getUser(req.clerkUserId);
+        const currentPublicMetadata = currentUser.publicMetadata || {};
+        
+        // Update products in metadata
+        const publicMetadata = {
+            ...currentPublicMetadata,
+            products: products
+        };
+        
+        // Update user in Clerk
+        await clerkClient.users.updateUser(req.clerkUserId, {
+            publicMetadata: publicMetadata
+        });
+
+        res.json({ message: 'Products saved successfully', products });
+    } catch (error) {
+        console.error('Save products error:', error);
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
+    }
+});
+
 // Send a message
 app.post('/api/messages', authenticateToken, async (req, res) => {
     try {

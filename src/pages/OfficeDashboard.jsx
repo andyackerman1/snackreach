@@ -194,10 +194,28 @@ export default function OfficeDashboard() {
 
   const handleViewStartup = async (startup) => {
     setSelectedStartup(startup);
-    // TODO: Fetch products for this startup from API
-    // For now, products are stored locally in startup dashboard
-    // This will need to be implemented when products are stored in backend
-    setStartupProducts([]);
+    
+    // Fetch products for this startup
+    try {
+      const session = await getToken();
+      const response = await fetch(`/api/products/${startup.id}`, {
+        headers: {
+          "Authorization": `Bearer ${session}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const products = await response.json();
+        setStartupProducts(products);
+      } else {
+        console.error("Failed to fetch products:", response.statusText);
+        setStartupProducts([]);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setStartupProducts([]);
+    }
   };
 
   const renderMainContent = () => {
