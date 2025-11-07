@@ -1171,24 +1171,37 @@ app.get('/api/offices', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Only startups can view offices' });
         }
 
-        const db = await readDB();
-        // Get all office users
-        const offices = db.users
-            .filter(u => u.userType === 'office')
-            .map(u => ({
-                id: u.id,
-                name: u.name,
-                companyName: u.companyName,
-                email: u.email,
-                phone: u.phone || '',
-                createdAt: u.createdAt
-            }));
+        // Clerk is required - all data lives in Clerk
+        if (!clerkConfigured) {
+            return res.status(503).json({ error: 'Clerk is required but not configured.' });
+        }
+
+        // Get all users from Clerk and filter for offices
+        // Note: getUserList returns paginated results, we'll get up to 500 users
+        const allUsersResponse = await clerkClient.users.getUserList({ limit: 500 });
+        const allUsers = allUsersResponse.data || allUsersResponse; // Handle both response formats
+        const officeUsers = Array.isArray(allUsers) 
+          ? allUsers.filter(u => u.publicMetadata?.userType === 'office')
+          : [];
+        
+        const offices = officeUsers.map(u => ({
+            id: u.id,
+            name: u.publicMetadata?.companyName || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.emailAddresses[0]?.emailAddress || 'Office',
+            companyName: u.publicMetadata?.companyName || '',
+            email: u.emailAddresses[0]?.emailAddress || '',
+            contactEmail: u.emailAddresses[0]?.emailAddress || '',
+            phone: u.privateMetadata?.phone || '',
+            location: u.publicMetadata?.location || 'Not specified',
+            companySize: u.publicMetadata?.companySize || 'Not specified',
+            snackPreference: u.publicMetadata?.snackPreference || 'Not specified',
+            createdAt: u.createdAt || new Date().toISOString()
+        }));
 
         console.log('Returning', offices.length, 'offices for startup:', req.userId);
         res.json(offices);
     } catch (error) {
         console.error('Get offices error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });
 
@@ -1218,6 +1231,7 @@ app.get('/api/startups', authenticateToken, async (req, res) => {
             companyName: u.publicMetadata?.companyName || '',
             email: u.emailAddresses[0]?.emailAddress || '',
             phone: u.privateMetadata?.phone || '',
+            description: u.publicMetadata?.description || '',
             createdAt: u.createdAt || new Date().toISOString()
         }));
 

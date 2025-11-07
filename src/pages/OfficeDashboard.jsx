@@ -207,15 +207,20 @@ export default function OfficeDashboard() {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <h3 className="font-bold text-xl text-gray-900 mb-2">
-                          {startup.name || startup.companyName}
+                          {startup.companyName || startup.name}
                         </h3>
+                        {startup.companyName && startup.name && startup.name !== startup.companyName && (
+                          <p className="text-sm text-gray-500 mb-2">{startup.name}</p>
+                        )}
                         {startup.productName && (
                           <p className="text-red-600 font-semibold mb-2">
                             Product: {startup.productName}
                             {startup.productPrice && ` - ${startup.productPrice}`}
                           </p>
                         )}
-                        <p className="text-gray-600 text-sm mb-2">{startup.description}</p>
+                        {startup.description && (
+                          <p className="text-gray-600 text-sm mb-2">{startup.description}</p>
+                        )}
                         {startup.email && (
                           <p className="text-gray-600 text-sm">
                             <i className="fas fa-envelope mr-2 text-red-600"></i>

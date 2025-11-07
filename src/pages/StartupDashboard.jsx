@@ -36,7 +36,8 @@ export default function StartupDashboard() {
   const [products, setProducts] = useState([]);
   const [orders] = useState([]);
   const [offices] = useState([]);
-  const [allOffices] = useState([]);
+  const [allOffices, setAllOffices] = useState([]);
+  const [isLoadingOffices, setIsLoadingOffices] = useState(false);
   const [messages, setMessages] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [newMessage, setNewMessage] = useState("");
@@ -64,6 +65,39 @@ export default function StartupDashboard() {
       phone: user.publicMetadata?.phone || "",
     });
   }, [user]);
+
+  // Fetch offices from API
+  useEffect(() => {
+    const fetchOffices = async () => {
+      if (!user || !isLoaded) return;
+      
+      setIsLoadingOffices(true);
+      try {
+        // Get Clerk session token
+        const session = await user.getToken();
+        
+        const response = await fetch("/api/offices", {
+          headers: {
+            "Authorization": `Bearer ${session}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setAllOffices(data);
+        } else {
+          console.error("Failed to fetch offices:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching offices:", error);
+      } finally {
+        setIsLoadingOffices(false);
+      }
+    };
+
+    fetchOffices();
+  }, [user, isLoaded]);
 
   const handleOpenAddProduct = () => {
     setShowAddProductModal(true);
@@ -537,12 +571,19 @@ export default function StartupDashboard() {
 
           {/* Results */}
           <div className="p-6">
-            {filteredOffices.length === 0 ? (
+            {isLoadingOffices ? (
+              <div className="text-center py-12">
+                <i className="fas fa-spinner fa-spin text-gray-400 text-5xl mb-4"></i>
+                <p className="text-gray-500 mb-4">Loading offices...</p>
+              </div>
+            ) : filteredOffices.length === 0 ? (
               <div className="text-center py-12">
                 <i className="fas fa-search text-gray-300 text-5xl mb-4"></i>
                 <p className="text-gray-500 mb-4">No offices found</p>
                 <p className="text-sm text-gray-400">
-                  Try adjusting your search filters
+                  {allOffices.length === 0 
+                    ? "No offices have joined the platform yet"
+                    : "Try adjusting your search filters"}
                 </p>
               </div>
             ) : (
@@ -554,24 +595,37 @@ export default function StartupDashboard() {
                   <div key={office.id} className="border rounded-lg p-6 hover:shadow-lg transition">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-bold text-xl text-gray-900 mb-2">{office.name}</h3>
+                        <h3 className="font-bold text-xl text-gray-900 mb-2">
+                          {office.companyName || office.name}
+                        </h3>
+                        {office.companyName && office.name !== office.companyName && (
+                          <p className="text-sm text-gray-500 mb-2">{office.name}</p>
+                        )}
                         <div className="space-y-2">
-                          <p className="text-gray-600">
-                            <i className="fas fa-map-marker-alt mr-2 text-red-600"></i>
-                            {office.location}
-                          </p>
-                          <p className="text-gray-600">
-                            <i className="fas fa-users mr-2 text-red-600"></i>
-                            {office.companySize}
-                          </p>
-                          <p className="text-gray-600">
-                            <i className="fas fa-utensils mr-2 text-red-600"></i>
-                            <span className="font-medium">Looking for:</span> {office.snackPreference}
-                          </p>
-                          <p className="text-gray-600">
-                            <i className="fas fa-envelope mr-2 text-red-600"></i>
-                            {office.contactEmail}
-                          </p>
+                          {office.location && office.location !== 'Not specified' && (
+                            <p className="text-gray-600">
+                              <i className="fas fa-map-marker-alt mr-2 text-red-600"></i>
+                              {office.location}
+                            </p>
+                          )}
+                          {office.companySize && office.companySize !== 'Not specified' && (
+                            <p className="text-gray-600">
+                              <i className="fas fa-users mr-2 text-red-600"></i>
+                              {office.companySize}
+                            </p>
+                          )}
+                          {office.snackPreference && office.snackPreference !== 'Not specified' && (
+                            <p className="text-gray-600">
+                              <i className="fas fa-utensils mr-2 text-red-600"></i>
+                              <span className="font-medium">Looking for:</span> {office.snackPreference}
+                            </p>
+                          )}
+                          {office.contactEmail && (
+                            <p className="text-gray-600">
+                              <i className="fas fa-envelope mr-2 text-red-600"></i>
+                              {office.contactEmail}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <button 
