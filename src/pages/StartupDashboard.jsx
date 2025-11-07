@@ -34,32 +34,7 @@ export default function StartupDashboard() {
   const [products] = useState([]);
   const [orders] = useState([]);
   const [offices] = useState([]);
-  const [allOffices] = useState([
-    {
-      id: 1,
-      name: "Tech Startup Hub",
-      location: "San Francisco, CA",
-      snackPreference: "Healthy snacks, protein bars",
-      companySize: "50-100 employees",
-      contactEmail: "office@techhub.com",
-    },
-    {
-      id: 2,
-      name: "Corporate Tower",
-      location: "New York, NY",
-      snackPreference: "Variety packs, chips, cookies",
-      companySize: "200+ employees",
-      contactEmail: "facilities@corptower.com",
-    },
-    {
-      id: 3,
-      name: "Creative Agency",
-      location: "Los Angeles, CA",
-      snackPreference: "Organic snacks, vegan options",
-      companySize: "20-50 employees",
-      contactEmail: "manager@creativeagency.com",
-    },
-  ]);
+  const [allOffices] = useState([]);
 
   if (!isLoaded) {
     return (
