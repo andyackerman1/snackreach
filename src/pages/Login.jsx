@@ -116,7 +116,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
+    <div
+      className="bg-slate-100 flex flex-col"
+      style={{ minHeight: "100dvh" }}
+    >
       {/* Navigation */}
       <header className="sticky top-0 z-20 backdrop-blur bg-white/90 border-b border-slate-200">
         <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
@@ -133,7 +136,10 @@ export default function LoginPage() {
       </header>
 
       {/* Login Content */}
-      <main className="flex-1 px-4 py-10 pb-16 sm:py-12 sm:pb-20 lg:flex lg:items-center lg:justify-center">
+      <main
+        className="flex-1 px-4 py-10 pb-24 sm:py-12 sm:pb-28 lg:flex lg:items-center lg:justify-center overflow-y-auto"
+        style={{ paddingBottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <div className="w-full max-w-md mx-auto">
           <div className="rounded-2xl bg-white p-6 shadow-xl shadow-rose-100/50 sm:p-8">
             <div className="mb-8 text-center">
