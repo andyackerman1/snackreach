@@ -133,8 +133,8 @@ export default function LoginPage() {
       </header>
 
       {/* Login Content */}
-      <main className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
+      <main className="flex-1 px-4 py-10 pb-16 sm:py-12 sm:pb-20 lg:flex lg:items-center lg:justify-center">
+        <div className="w-full max-w-md mx-auto">
           <div className="rounded-2xl bg-white p-6 shadow-xl shadow-rose-100/50 sm:p-8">
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold text-slate-900">Welcome Back</h1>
