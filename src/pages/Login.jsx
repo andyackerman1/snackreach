@@ -24,31 +24,21 @@ export default function LoginPage() {
 
   if (!isLoaded) {
     return (
-      <div className="signup-section">
-        <div className="container">
-          <div className="signup-container">
-            <div className="text-center">
-              <p>Loading...</p>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-100">
+        <p className="text-slate-600">Loading...</p>
       </div>
     );
   }
 
   if (!signIn) {
     return (
-      <div className="signup-section">
-        <div className="container">
-          <div className="signup-container">
-            <div className="signup-form">
-              <div className="error-message">
-                <h2>Configuration Error</h2>
-                <p>
-                  Clerk is not properly configured. Please check that VITE_CLERK_PUBLISHABLE_KEY is set correctly.
-                </p>
-              </div>
-            </div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
+        <div className="max-w-md w-full bg-white shadow-xl rounded-xl p-8">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-rose-600 mb-2">Configuration Error</h2>
+            <p className="text-slate-600">
+              Clerk is not properly configured. Please check that VITE_CLERK_PUBLISHABLE_KEY is set correctly.
+            </p>
           </div>
         </div>
       </div>
@@ -70,8 +60,10 @@ export default function LoginPage() {
           navigate("/dashboard");
         } catch (sessionError) {
           // If session already exists, just navigate to dashboard
-          if (sessionError.errors?.[0]?.message?.includes("Session already exists") || 
-              sessionError.errors?.[0]?.code === "session_exists") {
+          if (
+            sessionError.errors?.[0]?.message?.includes("Session already exists") ||
+            sessionError.errors?.[0]?.code === "session_exists"
+          ) {
             navigate("/dashboard");
           } else {
             throw sessionError;
@@ -83,8 +75,10 @@ export default function LoginPage() {
     } catch (err) {
       console.error(err);
       // Handle "Session already exists" error gracefully
-      if (err.errors?.[0]?.message?.includes("Session already exists") || 
-          err.errors?.[0]?.code === "session_exists") {
+      if (
+        err.errors?.[0]?.message?.includes("Session already exists") ||
+        err.errors?.[0]?.code === "session_exists"
+      ) {
         navigate("/dashboard");
       } else {
         setError(err.errors?.[0]?.message || "Invalid email or password. Please try again.");
@@ -96,16 +90,16 @@ export default function LoginPage() {
     e.preventDefault();
     setForgotError("");
     setForgotSuccess("");
-    
+
     try {
       const response = await fetch("/api/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         setForgotSuccess(data.message || "Password reset link sent! Check your email.");
         setForgotEmail("");
@@ -122,43 +116,42 @@ export default function LoginPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* Navigation */}
-      <nav className="navbar">
-        <div className="nav-container">
-          <div className="nav-logo">
-            <i className="fas fa-utensils"></i>
-            <span>SnackReach</span>
-          </div>
-          <div className="nav-menu">
-            <Link to="/" className="nav-link">Back to Home</Link>
-          </div>
+      <header className="sticky top-0 z-20 backdrop-blur bg-white/90 border-b border-slate-200">
+        <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
+          <Link to="/" className="flex items-center gap-2 text-lg font-semibold text-rose-600">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+              <i className="fas fa-utensils"></i>
+            </span>
+            SnackReach
+          </Link>
+          <Link to="/" className="text-sm font-medium text-slate-700 hover:text-rose-600">
+            Back to Home
+          </Link>
         </div>
-      </nav>
+      </header>
 
-      {/* Login Section */}
-      <section className="signup-section">
-        <div className="container">
-          <div className="signup-container">
-            <div className="signup-header">
-              <h1>Welcome Back</h1>
-              <p>Sign in to your SnackReach account</p>
+      {/* Login Content */}
+      <main className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="rounded-2xl bg-white p-6 shadow-xl shadow-rose-100/50 sm:p-8">
+            <div className="mb-8 text-center">
+              <h1 className="text-3xl font-bold text-slate-900">Welcome Back</h1>
+              <p className="mt-2 text-sm text-slate-600">Sign in to your SnackReach account</p>
             </div>
 
-            <form onSubmit={handleLogin} className="signup-form">
-              <div className="form-header">
-                <h2>Login to Your Account</h2>
-                <p>Enter your credentials to access your dashboard</p>
-              </div>
-              
+            <form onSubmit={handleLogin} className="space-y-6">
               {error && (
-                <div className="error-message" style={{ display: "block", marginBottom: "1rem" }}>
+                <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                   {error}
                 </div>
               )}
-              
-              <div className="form-group">
-                <label htmlFor="login-email">Email</label>
+
+              <div className="space-y-1.5">
+                <label htmlFor="login-email" className="text-sm font-semibold text-slate-700">
+                  Email
+                </label>
                 <input
                   type="email"
                   id="login-email"
@@ -166,12 +159,26 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base shadow-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                  inputMode="email"
+                  autoComplete="email"
                 />
               </div>
-              
-              <div className="form-group">
-                <label htmlFor="login-password">Password</label>
-                <div style={{ position: "relative" }}>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="login-password" className="text-sm font-semibold text-slate-700">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-rose-600 hover:text-rose-500"
+                    onClick={() => setShowForgotPassword(true)}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     id="login-password"
@@ -179,96 +186,106 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base shadow-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                    autoComplete="current-password"
                   />
-                  <div
-                    className="password-toggle"
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-rose-500"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: "absolute",
-                      right: "12px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      cursor: "pointer",
-                      color: "#6b7280"
-                    }}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-                  </div>
+                  </button>
                 </div>
               </div>
-              
-              <div className="form-group" style={{ textAlign: "right", marginTop: "-10px" }}>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setShowForgotPassword(true);
-                  }}
-                  style={{ color: "#667eea", textDecoration: "none", fontSize: "0.9rem" }}
-                >
-                  Forgot Password?
-                </a>
-              </div>
-              
-              <div className="form-group checkbox-group">
-                <input type="checkbox" id="remember-me" />
-                <label htmlFor="remember-me">Remember me</label>
-              </div>
-              
-              <button type="submit" className="btn btn-primary btn-large btn-full">
-                <i className="fas fa-sign-in-alt"></i>
+
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500" />
+                Remember me
+              </label>
+
+              <button
+                type="submit"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-rose-200 transition focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2"
+              >
+                <i className="fas fa-sign-in-alt transition-transform group-hover:translate-x-0.5"></i>
                 Sign In
               </button>
-              
-              <div className="form-footer">
-                <p>Don't have an account? <Link to="/signup">Sign up here</Link></p>
-              </div>
             </form>
+
+            <p className="mt-8 text-center text-sm text-slate-600">
+              Don't have an account? {" "}
+              <Link to="/signup" className="font-semibold text-rose-600 hover:text-rose-500">
+                Sign up here
+              </Link>
+            </p>
           </div>
         </div>
-      </section>
+      </main>
 
       {/* Forgot Password Modal */}
       {showForgotPassword && (
-        <div className="modal" style={{ display: "flex" }} onClick={() => setShowForgotPassword(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Reset Password</h2>
-              <button className="modal-close" onClick={() => setShowForgotPassword(false)}>&times;</button>
+        <div
+          className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 px-4"
+          onClick={() => setShowForgotPassword(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">Reset Password</h2>
+              <button
+                className="text-2xl leading-none text-slate-400 hover:text-rose-500"
+                onClick={() => setShowForgotPassword(false)}
+                aria-label="Close reset password modal"
+              >
+                &times;
+              </button>
             </div>
-            <div className="modal-body">
-              <p>Enter your email address and we'll send you a link to reset your password.</p>
-              {forgotError && (
-                <div className="error-message" style={{ display: "block", marginBottom: "15px" }}>
-                  {forgotError}
-                </div>
-              )}
-              {forgotSuccess && (
-                <div className="success-message" style={{ display: "block", marginBottom: "15px" }}>
-                  <i className="fas fa-check-circle"></i> {forgotSuccess}
-                </div>
-              )}
-              <form onSubmit={handleForgotPassword}>
-                <div className="form-group">
-                  <label htmlFor="forgot-email">Email Address</label>
-                  <input
-                    type="email"
-                    id="forgot-email"
-                    placeholder="Enter your email"
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary btn-large">
-                  <i className="fas fa-paper-plane"></i>
-                  Send Reset Link
-                </button>
-              </form>
-            </div>
+            <p className="mb-4 text-sm text-slate-600">
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+            {forgotError && (
+              <div className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+                {forgotError}
+              </div>
+            )}
+            {forgotSuccess && (
+              <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+                <i className="fas fa-check-circle mr-1"></i>
+                {forgotSuccess}
+              </div>
+            )}
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="forgot-email" className="text-sm font-semibold text-slate-700">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="forgot-email"
+                  placeholder="Enter your email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                  inputMode="email"
+                  autoComplete="email"
+                />
+              </div>
+              <button
+                type="submit"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-3 text-base font-semibold text-white shadow"
+              >
+                <i className="fas fa-paper-plane"></i>
+                Send Reset Link
+              </button>
+            </form>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
