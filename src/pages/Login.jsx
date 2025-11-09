@@ -137,17 +137,20 @@ export default function LoginPage() {
 
       {/* Login Content */}
       <main
-        className="flex-1 px-4 py-10 pb-24 sm:py-12 sm:pb-28 lg:flex lg:items-center lg:justify-center overflow-y-auto"
-        style={{ paddingBottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}
+        className="flex-1 overflow-y-auto px-4 py-8 pb-36 sm:py-12 sm:pb-32 lg:flex lg:items-center lg:justify-center"
+        style={{
+          paddingBottom: "calc(7rem + env(safe-area-inset-bottom, 0px))",
+          WebkitOverflowScrolling: "touch",
+        }}
       >
-        <div className="w-full max-w-md mx-auto">
-          <div className="rounded-2xl bg-white p-6 shadow-xl shadow-rose-100/50 sm:p-8">
+        <div className="mx-auto w-full max-w-md">
+          <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-xl shadow-rose-100/50 sm:p-8">
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold text-slate-900">Welcome Back</h1>
               <p className="mt-2 text-sm text-slate-600">Sign in to your SnackReach account</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleLogin} className="flex flex-col gap-6 pb-4">
               {error && (
                 <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                   {error}
@@ -207,17 +210,25 @@ export default function LoginPage() {
               </div>
 
               <label className="flex items-center gap-2 text-sm text-slate-600">
-                <input type="checkbox" className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500" />
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                />
                 Remember me
               </label>
 
-              <button
-                type="submit"
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-rose-200 transition focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2"
+              <div
+                className="-mx-6 sticky bottom-0 left-0 right-0 bg-white/95 px-6 pb-2 pt-3 shadow-[0_-12px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:-mx-8 sm:px-8 sm:pb-3 sm:pt-4"
+                style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
               >
-                <i className="fas fa-sign-in-alt transition-transform group-hover:translate-x-0.5"></i>
-                Sign In
-              </button>
+                <button
+                  type="submit"
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-rose-200 transition focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2"
+                >
+                  <i className="fas fa-sign-in-alt transition-transform group-hover:translate-x-0.5"></i>
+                  Sign In
+                </button>
+              </div>
             </form>
 
             <p className="mt-8 text-center text-sm text-slate-600">
