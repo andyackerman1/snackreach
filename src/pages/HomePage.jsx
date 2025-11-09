@@ -10,28 +10,24 @@ export default function HomePage() {
             <i className="fas fa-utensils"></i>
             <span>SnackReach</span>
           </div>
-          <div className="nav-menu">
-            <Link to="/login" className="nav-link">Sign In</Link>
-            <Link to="/signup" className="btn btn-outline">Get Started</Link>
-          </div>
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="hero" style={{ padding: "100px 0 60px" }}>
         <div className="container">
-          <div style={{ 
-            maxWidth: "1100px", 
-            margin: "0 auto", 
+          <div style={{
+            maxWidth: "1100px",
+            margin: "0 auto",
             padding: "0 40px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             textAlign: "center"
           }}>
-            <h1 className="hero-title" style={{ 
-              fontSize: "3.2rem", 
-              lineHeight: "1.2", 
+            <h1 className="hero-title" style={{
+              fontSize: "3.2rem",
+              lineHeight: "1.2",
               letterSpacing: "0.01em",
               marginBottom: "2rem",
               textAlign: "center",
@@ -40,9 +36,9 @@ export default function HomePage() {
             }}>
               Connect <span className="highlight">Food Startups</span> with <span className="highlight">Office Spaces</span>
             </h1>
-            <p className="hero-description" style={{ 
-              fontSize: "1.15rem", 
-              lineHeight: "1.7", 
+            <p className="hero-description" style={{
+              fontSize: "1.15rem",
+              lineHeight: "1.7",
               textAlign: "center",
               margin: "0",
               maxWidth: "800px"
@@ -51,6 +47,16 @@ export default function HomePage() {
               looking for the perfect snacks. Discover unique products, support emerging brands, 
               and keep your team happy with delicious, exciting, new options.
             </p>
+            <div style={{
+              marginTop: "2.5rem",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "1rem",
+              justifyContent: "center"
+            }}>
+              <Link to="/signup" className="btn btn-primary btn-large">Get Started</Link>
+              <Link to="/login" className="btn btn-outline btn-large">Sign In</Link>
+            </div>
           </div>
         </div>
       </section>
