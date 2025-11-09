@@ -137,10 +137,9 @@ export default function LoginPage() {
 
       {/* Login Content */}
       <main
-        className="flex-1 overflow-y-auto px-4 py-8 pb-36 sm:py-12 sm:pb-32 lg:flex lg:items-center lg:justify-center"
+        className="flex-1 px-4 py-8 pb-36 sm:py-12 sm:pb-32 lg:flex lg:items-center lg:justify-center"
         style={{
           paddingBottom: "calc(7rem + env(safe-area-inset-bottom, 0px))",
-          WebkitOverflowScrolling: "touch",
         }}
       >
         <div className="mx-auto w-full max-w-md">
@@ -219,7 +218,7 @@ export default function LoginPage() {
 
               <div
                 className="-mx-6 sticky bottom-0 left-0 right-0 bg-white/95 px-6 pb-2 pt-3 shadow-[0_-12px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:-mx-8 sm:px-8 sm:pb-3 sm:pt-4"
-                style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+                style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
               >
                 <button
                   type="submit"
