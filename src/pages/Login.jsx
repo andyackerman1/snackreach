@@ -122,18 +122,21 @@ export default function LoginPage() {
     >
       {/* Navigation */}
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:flex-nowrap sm:px-6">
+        <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2 text-base font-semibold text-rose-600 sm:text-lg">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-rose-600 sm:h-9 sm:w-9">
               <i className="fas fa-utensils"></i>
             </span>
             SnackReach
           </Link>
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
+            B2B logistics to connect office managers with emerging snack brands.
+          </p>
           <Link
-            to="/"
-            className="inline-flex w-full items-center justify-center rounded-lg border border-rose-200 px-3 py-2 text-sm font-medium text-rose-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 sm:w-auto"
+            to="/signup"
+            className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md sm:w-auto"
           >
-            Back to Home
+            Get Started
           </Link>
         </div>
       </header>
