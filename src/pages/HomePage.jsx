@@ -54,8 +54,20 @@ export default function HomePage() {
               gap: "1rem",
               justifyContent: "center"
             }}>
-              <Link to="/signup" className="btn btn-primary btn-large" style={{ color: "#fb923c" }}>Get Started</Link>
-              <Link to="/login" className="btn btn-outline btn-large" style={{ color: "#fb923c", borderColor: "#fb923c" }}>Sign In</Link>
+              <Link
+                to="/signup"
+                className="btn btn-outline btn-large"
+                style={{ color: "#fb923c", borderColor: "#fb923c" }}
+              >
+                Get Started
+              </Link>
+              <Link
+                to="/login"
+                className="btn btn-outline btn-large"
+                style={{ color: "#fb923c", borderColor: "#fb923c" }}
+              >
+                Sign In
+              </Link>
             </div>
           </div>
         </div>
