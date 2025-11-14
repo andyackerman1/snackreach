@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -33,18 +32,27 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      await axios.post(`${apiUrl}/auth/reset-password`, {
-        email,
-        token,
-        password
+      const response = await fetch("https://snackreach-production.up.railway.app/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          token,
+          password
+        }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to reset password");
+      }
       setSuccess(true);
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.error || "Link invalid or expired");
+      setError(err.message || "Link invalid or expired");
     } finally {
       setLoading(false);
     }
@@ -129,3 +137,4 @@ export default function ResetPassword() {
     </div>
   );
 }
+

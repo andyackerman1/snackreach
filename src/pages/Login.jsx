@@ -92,7 +92,7 @@ export default function LoginPage() {
     setForgotSuccess("");
 
     try {
-      const response = await fetch("/api/forgot-password", {
+      const response = await fetch("https://snackreach-production.up.railway.app/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),

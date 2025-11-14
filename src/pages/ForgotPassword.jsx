@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios from "axios";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -13,16 +12,22 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      console.log("Sending forgot password request to:", `${apiUrl}/auth/forgot-password`);
-      const response = await axios.post(`${apiUrl}/auth/forgot-password`, { email });
-      console.log("Response:", response.data);
-      setSent(true);
+      const response = await fetch("https://snackreach-production.up.railway.app/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSent(true);
+      } else {
+        setError(data.error || "Failed to send reset link. Please try again.");
+      }
     } catch (err) {
       console.error("Forgot password error:", err);
-      console.error("Error response:", err.response?.data);
-      console.error("Error status:", err.response?.status);
-      setError(err.response?.data?.error || err.message || "Failed to send reset link. Please try again.");
+      setError(err.message || "Failed to send reset link. Please try again.");
     } finally {
       setLoading(false);
     }
