@@ -6,7 +6,10 @@ nixPkgs = ["nodejs-18_x", "npm-9_x"]
 cmds = ["cd backend && npm install"]
 
 [phases.build]
-cmds = ["echo 'Build complete'"]
+cmds = [
+  "cd backend && npx prisma generate",
+  "cd backend && npx prisma migrate deploy || echo 'Migration skipped (no database URL or migrations already applied)'"
+]
 
 [start]
 cmd = "cd backend && node server.js"

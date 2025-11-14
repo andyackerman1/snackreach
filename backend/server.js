@@ -552,6 +552,18 @@ async function writeDB(data) {
     console.log('⚠️  writeDB called but data is stored in Clerk, not JSON file');
 }
 
+// Mount password reset routes (ES modules)
+(async () => {
+    try {
+        const resetRoutes = await import('./src/routes/reset.js');
+        app.use('/auth', resetRoutes.default);
+        console.log('✅ Password reset routes mounted at /auth');
+    } catch (error) {
+        console.error('⚠️  Failed to load password reset routes:', error.message);
+        console.warn('   Password reset functionality may not be available');
+    }
+})();
+
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'SnackReach API is running' });
