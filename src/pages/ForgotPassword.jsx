@@ -14,10 +14,15 @@ export default function ForgotPassword() {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      await axios.post(`${apiUrl}/auth/forgot-password`, { email });
+      console.log("Sending forgot password request to:", `${apiUrl}/auth/forgot-password`);
+      const response = await axios.post(`${apiUrl}/auth/forgot-password`, { email });
+      console.log("Response:", response.data);
       setSent(true);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to send reset link. Please try again.");
+      console.error("Forgot password error:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      setError(err.response?.data?.error || err.message || "Failed to send reset link. Please try again.");
     } finally {
       setLoading(false);
     }

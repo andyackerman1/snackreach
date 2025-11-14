@@ -13,14 +13,20 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendPasswordResetEmail(to, resetLink) {
-  await transporter.sendMail({
-    from: "no-reply@yourdomain.com",
-    to,
-    subject: "Reset your password",
-    html: `
-      <p>Click below to reset your password:</p>
-      <a href="${resetLink}">${resetLink}</a>
-      <p>This link expires in 60 minutes.</p>
-    `
-  });
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || "no-reply@yourdomain.com",
+      to,
+      subject: "Reset your password",
+      html: `
+        <p>Click below to reset your password:</p>
+        <a href="${resetLink}">${resetLink}</a>
+        <p>This link expires in 60 minutes.</p>
+      `
+    });
+    console.log(`✅ Password reset email sent to ${to}`);
+  } catch (error) {
+    console.error(`❌ Failed to send password reset email to ${to}:`, error.message);
+    throw error;
+  }
 }
