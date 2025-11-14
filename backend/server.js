@@ -120,7 +120,12 @@ const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? 8080 :
 const JWT_SECRET = process.env.JWT_SECRET || 'snackreach_secret_key_2024';
 
 // Middleware
-app.use(cors({ origin: "http://localhost:3000", credentials: false }));
+app.use(cors({
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false
+}));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
