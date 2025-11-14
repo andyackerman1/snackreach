@@ -187,7 +187,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     className="text-xs font-semibold text-rose-600 hover:text-rose-500"
-                    onClick={() => setShowForgotPassword(true)}
+                    onClick={() => navigate("/forgot-password")}
                   >
                     Forgot password?
                   </button>
