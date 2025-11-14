@@ -115,17 +115,22 @@ try {
 }
 
 const app = express();
-// Use 3000 for local development, 8080 for Railway production
-const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? 8080 : 3000);
+// Use PORT from environment or default to 4000
+const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'snackreach_secret_key_2024';
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: false
 }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -1941,7 +1946,8 @@ async function startServer() {
         console.log('📊 All user data stored in Clerk');
         
         console.log('🔧 Starting server...');
-        const server = app.listen(PORT, '0.0.0.0', () => {
+        app.listen(PORT, () => {
+            console.log(`Server running on ${PORT}`);
             console.log(`🚀 SnackReach API server running on port ${PORT}`);
             console.log(`📡 API endpoints available at /api`);
             console.log(`🌐 Frontend files served from: ${path.join(__dirname, '..')}`);
@@ -1960,16 +1966,6 @@ async function startServer() {
                 console.log(`   Get your keys at: https://dashboard.plaid.com/developers/keys`);
                 console.log(`   See PLAID-STRIPE-SETUP.md for detailed instructions`);
             }
-        });
-        
-        // Handle server errors
-        server.on('error', (err) => {
-            if (err.code === 'EADDRINUSE') {
-                console.error(`❌ Port ${PORT} is already in use`);
-            } else {
-                console.error('❌ Server error:', err);
-            }
-            process.exit(1);
         });
         
     } catch (error) {
