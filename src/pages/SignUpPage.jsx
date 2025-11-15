@@ -120,11 +120,11 @@ export default function SignUpPage() {
   }
 
   const formTitle = selectedUserType === "startup" 
-    ? "Join as a Food Startup" 
+    ? "Join as a Snack Company" 
     : "Join as a Snacker";
   const formSubtitle = selectedUserType === "startup"
-    ? "Start building brand awareness"
-    : "Discover amazing snack companies and explore their products";
+    ? "Share your snacks with snack lovers"
+    : "Discover amazing snacks and explore exciting new brands";
 
   return (
     <>
@@ -158,13 +158,13 @@ export default function SignUpPage() {
                 <div className="user-type-icon">
                   <i className="fas fa-rocket"></i>
                 </div>
-                <h3>Food Startup</h3>
-                <p>I'm a startup snack company looking to build brand awareness through discounted office deals</p>
+                <h3>Snack Company</h3>
+                <p>I'm a snack company looking to share my products with snack lovers</p>
                 <ul className="benefits-list">
-                  <li><i className="fas fa-check"></i> Reach office workers directly</li>
+                  <li><i className="fas fa-check"></i> Reach snack enthusiasts directly</li>
                   <li><i className="fas fa-check"></i> Build brand awareness</li>
                   <li><i className="fas fa-check"></i> Get feedback from real customers</li>
-                  <li><i className="fas fa-check"></i> Create long-term partnerships</li>
+                  <li><i className="fas fa-check"></i> Share your unique snacks</li>
                 </ul>
               </div>
               
@@ -319,7 +319,7 @@ export default function SignUpPage() {
             <div className="modal-body terms-content">
               <div className="terms-section-content">
                 <h3>1. Platform Overview</h3>
-                <p>SnackReach is a marketplace platform that connects food startup companies with office spaces. We facilitate introductions and provide a platform for communication, but we do not participate in transactions, shipping, or product fulfillment.</p>
+                <p>SnackReach is a marketplace platform where snack lovers discover new and exciting snacks from snack companies. We facilitate connections between snack enthusiasts and brands, but we do not participate in transactions, shipping, or product fulfillment.</p>
                 
                 <h3>2. Shipping and Fulfillment</h3>
                 <p><strong>SnackReach is not responsible for shipping, delivery, or fulfillment of any products.</strong> All shipping arrangements, costs, and logistics are the sole responsibility of the snack companies. We do not guarantee delivery times, shipping methods, or product availability. Users are responsible for coordinating directly with companies regarding shipping arrangements.</p>

@@ -82,8 +82,8 @@ export default function HomePage() {
               <div className="feature-icon">
                 <i className="fas fa-store"></i>
               </div>
-              <h3>Discover Startups</h3>
-              <p>Find unique, innovative food products from emerging brands before they hit mainstream markets.</p>
+              <h3>Discover New Snacks</h3>
+              <p>Find unique, innovative snacks from exciting brands before they hit mainstream markets.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">
@@ -97,14 +97,14 @@ export default function HomePage() {
                 <i className="fas fa-dollar-sign"></i>
               </div>
               <h3>Great Deals</h3>
-              <p>Get exclusive discounts and special pricing from startups building brand awareness.</p>
+              <p>Get exclusive discounts and special pricing from exciting new snack brands.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">
                 <i className="fas fa-users"></i>
               </div>
               <h3>Community</h3>
-              <p>Join a community of snack lovers and food startups building the future of snacking.</p>
+              <p>Join a community of snack lovers discovering new and exciting treats.</p>
             </div>
           </div>
         </div>

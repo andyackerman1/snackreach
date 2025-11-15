@@ -6,8 +6,8 @@ export default function SnackerDashboard() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const navigate = useNavigate();
-  const [startups, setStartups] = useState([]);
-  const [selectedStartup, setSelectedStartup] = useState(null);
+  const [companies, setCompanies] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState(null);
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,7 +15,7 @@ export default function SnackerDashboard() {
   useEffect(() => {
     if (!isLoaded || !user) return;
 
-    const fetchStartups = async () => {
+    const fetchCompanies = async () => {
       setIsLoading(true);
       try {
         const token = await getToken();
@@ -30,25 +30,25 @@ export default function SnackerDashboard() {
 
         if (response.ok) {
           const data = await response.json();
-          setStartups(data);
+          setCompanies(data);
         }
       } catch (error) {
-        console.error("Error fetching startups:", error);
+        console.error("Error fetching companies:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchStartups();
+    fetchCompanies();
   }, [isLoaded, user, getToken]);
 
-  const handleStartupClick = async (startup) => {
-    setSelectedStartup(startup);
+  const handleCompanyClick = async (company) => {
+    setSelectedCompany(company);
     try {
       const token = await getToken();
       if (!token) return;
 
-      const response = await fetch(`/api/products/${startup.id}`, {
+      const response = await fetch(`/api/products/${company.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -67,9 +67,9 @@ export default function SnackerDashboard() {
     }
   };
 
-  const filteredStartups = startups.filter((startup) =>
-    startup.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    startup.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCompanies = companies.filter((company) =>
+    company.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (!isLoaded) {
@@ -118,7 +118,7 @@ export default function SnackerDashboard() {
             Welcome, {user.firstName || "Snacker"}!
           </h1>
           <p className="text-gray-600">
-            Discover amazing snack companies and explore their products
+            Discover new and exciting snacks from amazing brands
           </p>
         </div>
 
@@ -126,7 +126,7 @@ export default function SnackerDashboard() {
         <div className="mb-6">
           <input
             type="text"
-            placeholder="Search snack companies..."
+            placeholder="Search snack brands..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full max-w-md px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
@@ -134,43 +134,43 @@ export default function SnackerDashboard() {
         </div>
 
         {/* Companies List or Product View */}
-        {selectedStartup ? (
+        {selectedCompany ? (
           <div className="bg-white rounded-lg shadow p-6">
             <button
               onClick={() => {
-                setSelectedStartup(null);
+                setSelectedCompany(null);
                 setProducts([]);
               }}
               className="mb-4 text-red-600 hover:text-red-700 flex items-center gap-2"
             >
               <i className="fas fa-arrow-left"></i>
-              Back to Companies
+              Back to Brands
             </button>
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
-                {selectedStartup.logo && (
+                {selectedCompany.logo && (
                   <img
-                    src={selectedStartup.logo}
-                    alt={selectedStartup.companyName || selectedStartup.name}
+                    src={selectedCompany.logo}
+                    alt={selectedCompany.companyName || selectedCompany.name}
                     className="w-16 h-16 rounded-lg object-cover"
                   />
                 )}
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {selectedStartup.companyName || selectedStartup.name}
+                    {selectedCompany.companyName || selectedCompany.name}
                   </h2>
-                  {selectedStartup.description && (
-                    <p className="text-gray-600 mt-2">{selectedStartup.description}</p>
+                  {selectedCompany.description && (
+                    <p className="text-gray-600 mt-2">{selectedCompany.description}</p>
                   )}
                 </div>
               </div>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Products</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Snacks</h3>
               {products.length === 0 ? (
                 <div className="text-center py-12">
                   <i className="fas fa-box text-gray-300 text-5xl mb-4"></i>
-                  <p className="text-gray-500">No products listed yet</p>
+                  <p className="text-gray-500">No snacks listed yet</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -208,54 +208,54 @@ export default function SnackerDashboard() {
             <div className="p-6 border-b">
               <h2 className="text-xl font-bold text-gray-900">
                 <i className="fas fa-store mr-2 text-red-600"></i>
-                Snack Companies
+                Snack Brands
               </h2>
               <p className="text-gray-600 text-sm mt-1">
-                Click on a company to explore their products
+                Click on a brand to explore their snacks
               </p>
             </div>
             <div className="p-6">
               {isLoading ? (
                 <div className="text-center py-12">
                   <i className="fas fa-spinner fa-spin text-gray-400 text-5xl mb-4"></i>
-                  <p className="text-gray-500">Loading companies...</p>
+                  <p className="text-gray-500">Loading brands...</p>
                 </div>
-              ) : filteredStartups.length === 0 ? (
+              ) : filteredCompanies.length === 0 ? (
                 <div className="text-center py-12">
                   <i className="fas fa-store text-gray-300 text-5xl mb-4"></i>
                   <p className="text-gray-500">
                     {searchTerm
-                      ? "No companies found matching your search"
-                      : "No snack companies have joined the platform yet"}
+                      ? "No brands found matching your search"
+                      : "No snack brands have joined the platform yet"}
                   </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredStartups.map((startup) => (
+                  {filteredCompanies.map((company) => (
                     <div
-                      key={startup.id}
-                      onClick={() => handleStartupClick(startup)}
+                      key={company.id}
+                      onClick={() => handleCompanyClick(company)}
                       className="border rounded-lg p-6 hover:shadow-lg transition cursor-pointer"
                     >
-                      {startup.logo && (
+                      {company.logo && (
                         <img
-                          src={startup.logo}
-                          alt={startup.companyName}
+                          src={company.logo}
+                          alt={company.companyName}
                           className="w-full h-32 object-cover rounded-lg mb-4"
                         />
                       )}
                       <h3 className="font-bold text-xl mb-2">
-                        {startup.companyName || startup.name}
+                        {company.companyName || company.name}
                       </h3>
-                      {startup.description && (
+                      {company.description && (
                         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                          {startup.description}
+                          {company.description}
                         </p>
                       )}
                       <div className="flex items-center justify-between text-sm text-gray-500">
                         <span>
                           <i className="fas fa-box mr-1"></i>
-                          View Products
+                          View Snacks
                         </span>
                         <i className="fas fa-chevron-right"></i>
                       </div>
