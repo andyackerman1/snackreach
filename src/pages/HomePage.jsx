@@ -37,7 +37,7 @@ export default function HomePage() {
               marginRight: "auto",
               padding: "0 20px"
             }}>
-              Discover <span className="highlight">Amazing Snack Brands</span> and <span className="highlight">Their Snacks</span>
+              Discover <span className="highlight">Start Up Snacks</span> and <span className="highlight">Their Innovative Flavors</span>
             </h1>
             <p className="hero-description" style={{
               fontSize: "1.15rem",
