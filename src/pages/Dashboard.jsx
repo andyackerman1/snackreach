@@ -1,7 +1,7 @@
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import OfficeDashboard from "./OfficeDashboard";
+import SnackerDashboard from "./SnackerDashboard";
 import StartupDashboard from "./StartupDashboard";
 
 export default function Dashboard() {
@@ -96,16 +96,16 @@ export default function Dashboard() {
   }
 
   if (!resolvedUserType) {
-    console.warn("User type could not be determined; defaulting to office dashboard");
+    console.warn("User type could not be determined; defaulting to snacker dashboard");
   }
 
-  const userType = resolvedUserType || "office";
+  const userType = resolvedUserType || "snacker";
 
   if (userType === "startup") {
     return <StartupDashboard />;
   }
 
-  return <OfficeDashboard />;
+  return <SnackerDashboard />;
 }
 
 

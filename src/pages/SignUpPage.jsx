@@ -18,7 +18,6 @@ export default function SignUpPage() {
   });
   const [error, setError] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [showPaymentDisclaimer, setShowPaymentDisclaimer] = useState(false);
 
   if (!isLoaded || !signIn) {
     return (
@@ -75,7 +74,7 @@ export default function SignUpPage() {
           password: formData.password,
           companyName: formData.company,
           phone: formData.phone,
-          userType: selectedUserType === "startup" ? "startup" : "office",
+          userType: selectedUserType === "startup" ? "startup" : "snacker",
         }),
       });
 
@@ -92,8 +91,7 @@ export default function SignUpPage() {
 
           if (signInResult.status === "complete") {
             await setActive({ session: signInResult.createdSessionId });
-            // Show payment disclaimer modal before navigating
-            setShowPaymentDisclaimer(true);
+            navigate("/dashboard");
           } else {
             setError("Please complete the sign-in process.");
           }
@@ -121,19 +119,12 @@ export default function SignUpPage() {
     }
   }
 
-  const handleAcceptPaymentDisclaimer = () => {
-    // Mark disclaimer as seen in localStorage
-    localStorage.setItem("paymentDisclaimerSeen", "true");
-    setShowPaymentDisclaimer(false);
-    navigate("/dashboard");
-  };
-
   const formTitle = selectedUserType === "startup" 
     ? "Join as a Food Startup" 
-    : "Join as an Office Manager";
+    : "Join as a Snacker";
   const formSubtitle = selectedUserType === "startup"
-    ? "Start building brand awareness in offices"
-    : "Start discovering discounted startup snacks";
+    ? "Start building brand awareness"
+    : "Discover amazing snack companies and explore their products";
 
   return (
     <>
@@ -178,19 +169,19 @@ export default function SignUpPage() {
               </div>
               
               <div
-                className={`user-type-card ${selectedUserType === "office" ? "selected" : ""}`}
-                onClick={() => selectUserType("office")}
+                className={`user-type-card ${selectedUserType === "snacker" ? "selected" : ""}`}
+                onClick={() => selectUserType("snacker")}
               >
                 <div className="user-type-icon">
-                  <i className="fas fa-building"></i>
+                  <i className="fas fa-shopping-bag"></i>
                 </div>
-                <h3>Office Manager</h3>
-                <p>I manage an office and want to discover discounted snacks from innovative startups</p>
+                <h3>Snacker</h3>
+                <p>I want to discover amazing snack companies and explore their products</p>
                 <ul className="benefits-list">
-                  <li><i className="fas fa-check"></i> Access to startup discounts</li>
-                  <li><i className="fas fa-check"></i> Discover new brands first</li>
-                  <li><i className="fas fa-check"></i> Support emerging companies</li>
-                  <li><i className="fas fa-check"></i> Custom office deals</li>
+                  <li><i className="fas fa-check"></i> Browse snack companies</li>
+                  <li><i className="fas fa-check"></i> Explore product catalogs</li>
+                  <li><i className="fas fa-check"></i> Discover new brands</li>
+                  <li><i className="fas fa-check"></i> Find your favorite snacks</li>
                 </ul>
               </div>
             </div>
@@ -331,10 +322,10 @@ export default function SignUpPage() {
                 <p>SnackReach is a marketplace platform that connects food startup companies with office spaces. We facilitate introductions and provide a platform for communication, but we do not participate in transactions, shipping, or product fulfillment.</p>
                 
                 <h3>2. Shipping and Fulfillment</h3>
-                <p><strong>SnackReach is not responsible for shipping, delivery, or fulfillment of any products.</strong> All shipping arrangements, costs, and logistics are the sole responsibility of the snack companies and office managers. We do not guarantee delivery times, shipping methods, or product availability. Users are responsible for coordinating directly with each other regarding shipping arrangements.</p>
+                <p><strong>SnackReach is not responsible for shipping, delivery, or fulfillment of any products.</strong> All shipping arrangements, costs, and logistics are the sole responsibility of the snack companies. We do not guarantee delivery times, shipping methods, or product availability. Users are responsible for coordinating directly with companies regarding shipping arrangements.</p>
                 
                 <h3>3. Product Safety and Liability</h3>
-                <p>SnackReach does not verify, test, or guarantee the safety, quality, or compliance of any products listed on the platform. All product safety, quality control, and regulatory compliance is the sole responsibility of the snack companies. Office managers and end consumers assume all risks associated with consuming products purchased through the platform.</p>
+                <p>SnackReach does not verify, test, or guarantee the safety, quality, or compliance of any products listed on the platform. All product safety, quality control, and regulatory compliance is the sole responsibility of the snack companies. Consumers assume all risks associated with consuming products purchased through the platform.</p>
                 
                 <h3>4. User Responsibilities</h3>
                 <p>Users are responsible for all aspects of their transactions, including payment processing, product delivery, quality assurance, and customer service. SnackReach acts solely as a platform for connection and does not participate in or guarantee any transactions.</p>
@@ -377,36 +368,6 @@ export default function SignUpPage() {
         </div>
       )}
 
-      {/* Payment Disclaimer Modal */}
-      {showPaymentDisclaimer && (
-        <div className="modal" style={{ display: "flex" }}>
-          <div className="modal-content" style={{ maxWidth: "600px" }}>
-            <div className="modal-header">
-              <h2>Important Payment Information</h2>
-            </div>
-            <div className="modal-body">
-              <div className="text-center mb-4">
-                <i className="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
-              </div>
-              <p className="text-center text-lg mb-4" style={{ fontWeight: "600" }}>
-                SnackReach does not have payment integrations.
-              </p>
-              <p className="text-center text-gray-700">
-                Payments must be initiated by the two parties independently.
-              </p>
-            </div>
-            <div className="modal-footer" style={{ justifyContent: "center" }}>
-              <button 
-                className="btn btn-primary btn-large" 
-                onClick={handleAcceptPaymentDisclaimer}
-                style={{ minWidth: "200px" }}
-              >
-                I Understand
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

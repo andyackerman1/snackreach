@@ -34,7 +34,7 @@ export default function HomePage() {
               maxWidth: "100%",
               whiteSpace: "nowrap"
             }}>
-              Connect <span className="highlight">Food Startups</span> with <span className="highlight">Office Spaces</span>
+              Discover <span className="highlight">Amazing Snack Companies</span> and <span className="highlight">Their Products</span>
             </h1>
             <p className="hero-description" style={{
               fontSize: "1.15rem",
@@ -43,9 +43,9 @@ export default function HomePage() {
               margin: "0",
               maxWidth: "800px"
             }}>
-              SnackReach is the B2B marketplace where innovative food startups meet office managers 
-              looking for the perfect snacks. Discover unique products, support emerging brands, 
-              and keep your team happy with delicious, exciting, new options.
+              SnackReach is the marketplace where snack lovers discover amazing food companies 
+              and explore their products. Browse unique snacks, support emerging brands, 
+              and find your next favorite treat.
             </p>
             <div style={{
               marginTop: "2.5rem",
@@ -89,8 +89,8 @@ export default function HomePage() {
               <div className="feature-icon">
                 <i className="fas fa-building"></i>
               </div>
-              <h3>Office Solutions</h3>
-              <p>Perfect for office managers looking to provide quality snacks that keep teams energized and happy.</p>
+              <h3>Snack Discovery</h3>
+              <p>Browse amazing snack companies and explore their full product catalogs.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">
@@ -104,7 +104,7 @@ export default function HomePage() {
                 <i className="fas fa-users"></i>
               </div>
               <h3>Community</h3>
-              <p>Join a community of food startups and office managers building the future of workplace snacking.</p>
+              <p>Join a community of snack lovers and food startups building the future of snacking.</p>
             </div>
           </div>
         </div>

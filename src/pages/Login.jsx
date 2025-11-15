@@ -130,7 +130,7 @@ export default function LoginPage() {
             SnackReach
           </Link>
           <p className="mt-2 text-sm text-slate-600 sm:text-base">
-            B2B logistics to connect office managers with emerging snack brands.
+            The marketplace to discover amazing snack companies and explore their products.
           </p>
           <Link
             to="/signup"
