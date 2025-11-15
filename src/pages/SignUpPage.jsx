@@ -63,6 +63,12 @@ export default function SignUpPage() {
       return;
     }
 
+    // Validate required fields based on user type
+    if (selectedUserType === "startup" && !formData.company) {
+      setError("Company name is required for snack companies.");
+      return;
+    }
+
     try {
       // Register via backend API
       const response = await fetch("/api/register", {
@@ -72,7 +78,7 @@ export default function SignUpPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          companyName: formData.company,
+          companyName: selectedUserType === "startup" ? formData.company : formData.name, // Use name for snackers if no company
           phone: formData.phone,
           userType: selectedUserType === "startup" ? "startup" : "snacker",
         }),
@@ -222,17 +228,31 @@ export default function SignUpPage() {
                   </div>
                 </div>
                 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="signup-company">Company Name</label>
-                    <input
-                      type="text"
-                      id="signup-company"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      required
-                    />
+                {selectedUserType === "startup" && (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="signup-company">Company Name</label>
+                      <input
+                        type="text"
+                        id="signup-company"
+                        value={formData.company}
+                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="signup-phone">Phone Number</label>
+                      <input
+                        type="tel"
+                        id="signup-phone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        required
+                      />
+                    </div>
                   </div>
+                )}
+                {selectedUserType === "snacker" && (
                   <div className="form-group">
                     <label htmlFor="signup-phone">Phone Number</label>
                     <input
@@ -243,7 +263,7 @@ export default function SignUpPage() {
                       required
                     />
                   </div>
-                </div>
+                )}
                 
                 <div className="form-group">
                   <label htmlFor="signup-password">Password</label>
