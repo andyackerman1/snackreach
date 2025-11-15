@@ -26,15 +26,18 @@ export default function HomePage() {
             textAlign: "center"
           }}>
             <h1 className="hero-title" style={{
-              fontSize: "3.2rem",
-              lineHeight: "1.2",
+              fontSize: "clamp(2rem, 5vw, 3.2rem)",
+              lineHeight: "1.3",
               letterSpacing: "0.01em",
               marginBottom: "2rem",
               textAlign: "center",
-              maxWidth: "100%",
-              whiteSpace: "nowrap"
+              maxWidth: "900px",
+              width: "100%",
+              marginLeft: "auto",
+              marginRight: "auto",
+              padding: "0 20px"
             }}>
-              Discover <span className="highlight">Amazing Snack Companies</span> and <span className="highlight">Their Products</span>
+              Discover <span className="highlight">Amazing Snack Brands</span> and <span className="highlight">Their Snacks</span>
             </h1>
             <p className="hero-description" style={{
               fontSize: "1.15rem",
