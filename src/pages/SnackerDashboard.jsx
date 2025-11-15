@@ -6,22 +6,35 @@ export default function SnackerDashboard() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const navigate = useNavigate();
-  const [companies, setCompanies] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState(null);
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedNutritionTags, setSelectedNutritionTags] = useState([]);
+
+  const categories = ["chips", "cookies", "bars", "drinks", "candy", "nuts", "jerky", "other"];
+  const nutritionTags = ["lower calorie", "lower carb", "high protein", "vegan", "gluten-free", "low sugar"];
 
   useEffect(() => {
     if (!isLoaded || !user) return;
 
-    const fetchCompanies = async () => {
+    const fetchProducts = async () => {
       setIsLoading(true);
       try {
         const token = await getToken();
         if (!token) return;
 
-        const response = await fetch("/api/startups", {
+        // Build query parameters for filtering
+        const params = new URLSearchParams();
+        if (selectedCategories.length > 0) {
+          params.append("categories", selectedCategories.join(","));
+        }
+        if (selectedNutritionTags.length > 0) {
+          params.append("nutritionTags", selectedNutritionTags.join(","));
+        }
+
+        const url = `/api/products${params.toString() ? `?${params.toString()}` : ""}`;
+        const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -30,47 +43,52 @@ export default function SnackerDashboard() {
 
         if (response.ok) {
           const data = await response.json();
-          setCompanies(data);
+          setProducts(data);
+        } else {
+          setProducts([]);
         }
       } catch (error) {
-        console.error("Error fetching companies:", error);
+        console.error("Error fetching products:", error);
+        setProducts([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchCompanies();
-  }, [isLoaded, user, getToken]);
+    fetchProducts();
+  }, [isLoaded, user, getToken, selectedCategories, selectedNutritionTags]);
 
-  const handleCompanyClick = async (company) => {
-    setSelectedCompany(company);
-    try {
-      const token = await getToken();
-      if (!token) return;
+  const filteredProducts = products.filter((product) => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      product.name?.toLowerCase().includes(searchLower) ||
+      product.description?.toLowerCase().includes(searchLower) ||
+      product.startupName?.toLowerCase().includes(searchLower)
+    );
+  });
 
-      const response = await fetch(`/api/products/${company.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProducts(data);
-      } else {
-        setProducts([]);
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setProducts([]);
-    }
+  const toggleCategory = (category) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
   };
 
-  const filteredCompanies = companies.filter((company) =>
-    company.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const toggleNutritionTag = (tag) => {
+    setSelectedNutritionTags((prev) =>
+      prev.includes(tag)
+        ? prev.filter((t) => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setSelectedNutritionTags([]);
+    setSearchTerm("");
+  };
 
   if (!isLoaded) {
     return (
@@ -122,150 +140,162 @@ export default function SnackerDashboard() {
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Search snack brands..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full max-w-md px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-          />
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search snacks by name, description, or brand..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+            />
+          </div>
+
+          {/* Category Filters */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <i className="fas fa-filter mr-1 text-red-600"></i>
+              Categories
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => toggleCategory(category)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition ${
+                    selectedCategories.includes(category)
+                      ? "bg-red-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Nutrition Tag Filters */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <i className="fas fa-tags mr-1 text-red-600"></i>
+              Nutrition Tags
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {nutritionTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => toggleNutritionTag(tag)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition capitalize ${
+                    selectedNutritionTags.includes(tag)
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Clear Filters */}
+          {(selectedCategories.length > 0 || selectedNutritionTags.length > 0 || searchTerm) && (
+            <button
+              onClick={clearFilters}
+              className="text-sm text-red-600 hover:text-red-700 font-medium"
+            >
+              <i className="fas fa-times mr-1"></i>
+              Clear All Filters
+            </button>
+          )}
         </div>
 
-        {/* Companies List or Product View */}
-        {selectedCompany ? (
-          <div className="bg-white rounded-lg shadow p-6">
-            <button
-              onClick={() => {
-                setSelectedCompany(null);
-                setProducts([]);
-              }}
-              className="mb-4 text-red-600 hover:text-red-700 flex items-center gap-2"
-            >
-              <i className="fas fa-arrow-left"></i>
-              Back to Brands
-            </button>
-            <div className="mb-6">
-              <div className="flex items-center gap-4 mb-4">
-                {selectedCompany.logo && (
-                  <img
-                    src={selectedCompany.logo}
-                    alt={selectedCompany.companyName || selectedCompany.name}
-                    className="w-16 h-16 rounded-lg object-cover"
-                  />
-                )}
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {selectedCompany.companyName || selectedCompany.name}
-                  </h2>
-                  {selectedCompany.description && (
-                    <p className="text-gray-600 mt-2">{selectedCompany.description}</p>
-                  )}
-                </div>
+        {/* Products List */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-bold text-gray-900">
+              <i className="fas fa-box mr-2 text-red-600"></i>
+              All Snacks
+            </h2>
+            <p className="text-gray-600 text-sm mt-1">
+              {filteredProducts.length} {filteredProducts.length === 1 ? "snack" : "snacks"} found
+            </p>
+          </div>
+          <div className="p-6">
+            {isLoading ? (
+              <div className="text-center py-12">
+                <i className="fas fa-spinner fa-spin text-gray-400 text-5xl mb-4"></i>
+                <p className="text-gray-500">Loading snacks...</p>
               </div>
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Snacks</h3>
-              {products.length === 0 ? (
-                <div className="text-center py-12">
-                  <i className="fas fa-box text-gray-300 text-5xl mb-4"></i>
-                  <p className="text-gray-500">No snacks listed yet</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {products.map((product) => (
-                    <div
-                      key={product.id}
-                      className="border rounded-lg overflow-hidden hover:shadow-lg transition"
-                    >
-                      {product.image && (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-48 object-cover"
-                        />
-                      )}
-                      <div className="p-4">
-                        <h4 className="font-bold text-lg mb-2">{product.name}</h4>
-                        {product.price && (
-                          <p className="text-red-600 font-semibold mb-2">{product.price}</p>
-                        )}
-                        {product.description && (
-                          <p className="text-gray-600 text-sm line-clamp-3">
-                            {product.description}
-                          </p>
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <i className="fas fa-box text-gray-300 text-5xl mb-4"></i>
+                <p className="text-gray-500">
+                  {searchTerm || selectedCategories.length > 0 || selectedNutritionTags.length > 0
+                    ? "No snacks found matching your filters"
+                    : "No snacks have been uploaded yet"}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="border rounded-lg overflow-hidden hover:shadow-lg transition"
+                  >
+                    {product.image && (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-48 object-cover"
+                      />
+                    )}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-bold text-lg">{product.name}</h4>
+                        {product.startupLogo && (
+                          <img
+                            src={product.startupLogo}
+                            alt={product.startupName}
+                            className="w-8 h-8 rounded-full object-cover ml-2"
+                          />
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-bold text-gray-900">
-                <i className="fas fa-store mr-2 text-red-600"></i>
-                Snack Brands
-              </h2>
-              <p className="text-gray-600 text-sm mt-1">
-                Click on a brand to explore their snacks
-              </p>
-            </div>
-            <div className="p-6">
-              {isLoading ? (
-                <div className="text-center py-12">
-                  <i className="fas fa-spinner fa-spin text-gray-400 text-5xl mb-4"></i>
-                  <p className="text-gray-500">Loading brands...</p>
-                </div>
-              ) : filteredCompanies.length === 0 ? (
-                <div className="text-center py-12">
-                  <i className="fas fa-store text-gray-300 text-5xl mb-4"></i>
-                  <p className="text-gray-500">
-                    {searchTerm
-                      ? "No brands found matching your search"
-                      : "No snack brands have joined the platform yet"}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredCompanies.map((company) => (
-                    <div
-                      key={company.id}
-                      onClick={() => handleCompanyClick(company)}
-                      className="border rounded-lg p-6 hover:shadow-lg transition cursor-pointer"
-                    >
-                      {company.logo && (
-                        <img
-                          src={company.logo}
-                          alt={company.companyName}
-                          className="w-full h-32 object-cover rounded-lg mb-4"
-                        />
+                      {product.startupName && (
+                        <p className="text-xs text-gray-500 mb-2">By {product.startupName}</p>
                       )}
-                      <h3 className="font-bold text-xl mb-2">
-                        {company.companyName || company.name}
-                      </h3>
-                      {company.description && (
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                          {company.description}
+                      {product.category && (
+                        <span className="inline-block px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded mb-2">
+                          {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+                        </span>
+                      )}
+                      {product.nutritionTags && product.nutritionTags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {product.nutritionTags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="inline-block px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded capitalize"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {product.price && (
+                        <p className="text-red-600 font-semibold mb-2">{product.price}</p>
+                      )}
+                      {product.description && (
+                        <p className="text-gray-600 text-sm line-clamp-2">
+                          {product.description}
                         </p>
                       )}
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span>
-                          <i className="fas fa-box mr-1"></i>
-                          View Snacks
-                        </span>
-                        <i className="fas fa-chevron-right"></i>
-                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </main>
     </div>
   );

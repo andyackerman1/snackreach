@@ -15,6 +15,8 @@ export default function StartupDashboard() {
     name: "",
     description: "",
     price: "",
+    category: "",
+    nutritionTags: [],
     image: null,
     imagePreview: null,
   });
@@ -77,6 +79,8 @@ export default function StartupDashboard() {
       name: "",
       description: "",
       price: "",
+      category: "",
+      nutritionTags: [],
       image: null,
       imagePreview: null,
     });
@@ -88,6 +92,8 @@ export default function StartupDashboard() {
       name: product.name || "",
       description: product.description || "",
       price: product.price || "",
+      category: product.category || "",
+      nutritionTags: product.nutritionTags || [],
       image: null,
       imagePreview: product.image || null,
     });
@@ -101,6 +107,8 @@ export default function StartupDashboard() {
       name: "",
       description: "",
       price: "",
+      category: "",
+      nutritionTags: [],
       image: null,
       imagePreview: null,
     });
@@ -453,6 +461,8 @@ export default function StartupDashboard() {
         name: productData.name,
         description: productData.description,
         price: productData.price,
+        category: productData.category || null,
+        nutritionTags: productData.nutritionTags || [],
         image: productData.imagePreview || null,
       };
 
@@ -504,6 +514,8 @@ export default function StartupDashboard() {
               name: productData.name,
               description: productData.description,
               price: productData.price,
+              category: productData.category || null,
+              nutritionTags: productData.nutritionTags || [],
               image: productData.imagePreview || product.image,
             }
           : product
@@ -871,8 +883,61 @@ export default function StartupDashboard() {
                 />
               </div>
               <div className="mb-6">
+                <label htmlFor="product-category" className="block text-sm font-medium text-gray-700 mb-2">
+                  Category <span className="text-red-600">*</span>
+                </label>
+                <select
+                  id="product-category"
+                  name="category"
+                  value={productData.category}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                >
+                  <option value="">Select a category</option>
+                  <option value="chips">Chips</option>
+                  <option value="cookies">Cookies</option>
+                  <option value="bars">Bars</option>
+                  <option value="drinks">Drinks</option>
+                  <option value="candy">Candy</option>
+                  <option value="nuts">Nuts</option>
+                  <option value="jerky">Jerky</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nutrition Tags
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {["lower calorie", "lower carb", "high protein", "vegan", "gluten-free", "low sugar"].map((tag) => (
+                    <label key={tag} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={productData.nutritionTags.includes(tag)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setProductData({
+                              ...productData,
+                              nutritionTags: [...productData.nutritionTags, tag],
+                            });
+                          } else {
+                            setProductData({
+                              ...productData,
+                              nutritionTags: productData.nutritionTags.filter((t) => t !== tag),
+                            });
+                          }
+                        }}
+                        className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                      />
+                      <span className="text-sm text-gray-700 capitalize">{tag}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-6">
                 <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-2">
-                  Price or Price Range per Unit
+                  Price Per Unit
                 </label>
                 <input
                   type="text"
@@ -881,9 +946,8 @@ export default function StartupDashboard() {
                   value={productData.price}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                  placeholder="e.g., $10.99 or $5-$15"
+                  placeholder="e.g., $10.99"
                 />
-                <p className="text-xs text-gray-500 mt-1">Enter a single price or price range per unit</p>
               </div>
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
@@ -1002,8 +1066,61 @@ export default function StartupDashboard() {
                 />
               </div>
               <div className="mb-6">
+                <label htmlFor="edit-product-category" className="block text-sm font-medium text-gray-700 mb-2">
+                  Category <span className="text-red-600">*</span>
+                </label>
+                <select
+                  id="edit-product-category"
+                  name="category"
+                  value={productData.category}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                >
+                  <option value="">Select a category</option>
+                  <option value="chips">Chips</option>
+                  <option value="cookies">Cookies</option>
+                  <option value="bars">Bars</option>
+                  <option value="drinks">Drinks</option>
+                  <option value="candy">Candy</option>
+                  <option value="nuts">Nuts</option>
+                  <option value="jerky">Jerky</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nutrition Tags
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {["lower calorie", "lower carb", "high protein", "vegan", "gluten-free", "low sugar"].map((tag) => (
+                    <label key={tag} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={productData.nutritionTags.includes(tag)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setProductData({
+                              ...productData,
+                              nutritionTags: [...productData.nutritionTags, tag],
+                            });
+                          } else {
+                            setProductData({
+                              ...productData,
+                              nutritionTags: productData.nutritionTags.filter((t) => t !== tag),
+                            });
+                          }
+                        }}
+                        className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                      />
+                      <span className="text-sm text-gray-700 capitalize">{tag}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-6">
                 <label htmlFor="edit-product-price" className="block text-sm font-medium text-gray-700 mb-2">
-                  Price or Price Range per Unit
+                  Price Per Unit
                 </label>
                 <input
                   type="text"
@@ -1012,9 +1129,8 @@ export default function StartupDashboard() {
                   value={productData.price}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                  placeholder="e.g., $10.99 or $5-$15"
+                  placeholder="e.g., $10.99"
                 />
-                <p className="text-xs text-gray-500 mt-1">Enter a single price or price range per unit</p>
               </div>
               <div className="flex justify-end gap-4 pt-4 border-t">
                 <button
