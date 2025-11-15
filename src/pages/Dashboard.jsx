@@ -11,24 +11,14 @@ export default function Dashboard() {
   const [resolvedUserType, setResolvedUserType] = useState(null);
   const [isDeterminingType, setIsDeterminingType] = useState(true);
 
-  if (!isLoaded) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div>Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    navigate("/login");
-    return null;
-  }
-
   useEffect(() => {
     let cancelled = false;
 
     const determineUserType = async () => {
       if (!isLoaded || !user) {
+        if (!cancelled) {
+          setIsDeterminingType(false);
+        }
         return;
       }
 
@@ -87,14 +77,32 @@ export default function Dashboard() {
     };
   }, [isLoaded, user, getToken]);
 
-  if (isDeterminingType) {
+  // Handle navigation after hooks
+  useEffect(() => {
+    if (isLoaded && !user) {
+      navigate("/login");
+    }
+  }, [isLoaded, user, navigate]);
+
+  // Loading state
+  if (!isLoaded || isDeterminingType) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div>Loading your dashboard...</div>
+        <div>Loading...</div>
       </div>
     );
   }
 
+  // Redirect if no user (handled by useEffect above, but show loading while redirecting)
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div>Redirecting to login...</div>
+      </div>
+    );
+  }
+
+  // Determine which dashboard to show
   if (!resolvedUserType) {
     console.warn("User type could not be determined; defaulting to snacker dashboard");
   }
